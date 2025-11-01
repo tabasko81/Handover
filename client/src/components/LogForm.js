@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import SimpleEditor from './SimpleEditor';
+
+const COLOR_OPTIONS = [
+  { value: '', label: 'None', className: 'bg-white' },
+  { value: 'green', label: 'Green', className: 'bg-green-100' },
+  { value: 'yellow', label: 'Yellow', className: 'bg-yellow-100' },
+  { value: 'light-blue', label: 'Light Blue', className: 'bg-blue-100' },
+  { value: 'light-green', label: 'Light Green', className: 'bg-green-50' },
+  { value: 'red', label: 'Red', className: 'bg-red-100' }
+];
 
 function LogForm({ log, onSubmit, onClose }) {
   const [formData, setFormData] = useState({
     log_date: '',
     short_description: '',
     note: '',
-    worker_name: ''
+    worker_name: '',
+    color: ''
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +30,8 @@ function LogForm({ log, onSubmit, onClose }) {
         log_date: formattedDate,
         short_description: log.short_description || '',
         note: log.note || '',
-        worker_name: log.worker_name || ''
+        worker_name: log.worker_name || '',
+        color: log.color || ''
       });
     } else {
       // New log - set current date/time
@@ -29,7 +41,8 @@ function LogForm({ log, onSubmit, onClose }) {
         log_date: formattedDate,
         short_description: '',
         note: '',
-        worker_name: ''
+        worker_name: '',
+        color: ''
       });
     }
   }, [log]);
@@ -157,30 +170,21 @@ function LogForm({ log, onSubmit, onClose }) {
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Note * (max 1000 characters)
+                Note * (max 1000 characters) - Use formatting buttons for bold, italic, lists
               </label>
-              <textarea
-                value={formData.note}
-                onChange={(e) => handleChange('note', e.target.value)}
-                maxLength={1000}
-                rows={6}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.note
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-              />
-              <div className="flex justify-between mt-1">
-                {errors.note && (
-                  <p className="text-sm text-red-600">{errors.note}</p>
-                )}
-                <span className="text-sm text-gray-500 ml-auto">
-                  {formData.note.length}/1000
-                </span>
+              <div className={errors.note ? 'border-2 border-red-500 rounded-md p-1' : ''}>
+                <SimpleEditor
+                  value={formData.note}
+                  onChange={(value) => handleChange('note', value)}
+                  maxLength={1000}
+                />
               </div>
+              {errors.note && (
+                <p className="mt-1 text-sm text-red-600">{errors.note}</p>
+              )}
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Worker Name * (3-letter code)
               </label>
@@ -199,6 +203,28 @@ function LogForm({ log, onSubmit, onClose }) {
               {errors.worker_name && (
                 <p className="mt-1 text-sm text-red-600">{errors.worker_name}</p>
               )}
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Row Color (Optional)
+              </label>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {COLOR_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleChange('color', option.value)}
+                    className={`px-3 py-2 border-2 rounded-md text-sm font-medium transition-all ${
+                      formData.color === option.value
+                        ? 'border-blue-600 ring-2 ring-blue-300'
+                        : 'border-gray-300 hover:border-gray-400'
+                    } ${option.className}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3">

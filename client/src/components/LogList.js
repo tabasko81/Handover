@@ -21,15 +21,32 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived }) {
     });
   };
 
+  const getColorClass = (color) => {
+    const colorMap = {
+      'green': 'bg-green-100',
+      'yellow': 'bg-yellow-100',
+      'light-blue': 'bg-blue-100',
+      'light-green': 'bg-green-50',
+      'red': 'bg-red-100',
+      '': ''
+    };
+    return colorMap[color] || '';
+  };
+
   const truncateNote = (note, id) => {
+    // Strip HTML tags for length calculation
+    const textContent = note.replace(/<[^>]*>/g, '');
     const maxLength = 100;
-    if (note.length <= maxLength) return note;
+    
+    if (textContent.length <= maxLength) {
+      return <div dangerouslySetInnerHTML={{ __html: note }} />;
+    }
     
     const isExpanded = expandedNotes[id];
     if (isExpanded) {
       return (
         <>
-          {note}
+          <div dangerouslySetInnerHTML={{ __html: note }} />
           <button
             onClick={() => toggleNote(id)}
             className="text-blue-600 hover:text-blue-800 ml-1"
@@ -42,7 +59,7 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived }) {
     
     return (
       <>
-        {note.substring(0, maxLength)}...
+        <div dangerouslySetInnerHTML={{ __html: textContent.substring(0, maxLength) + '...' }} />
         <button
           onClick={() => toggleNote(id)}
           className="text-blue-600 hover:text-blue-800 ml-1"
@@ -96,10 +113,16 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived }) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {logs.map((log) => (
+            {logs.map((log) => {
+              const colorClass = getColorClass(log.color || '');
+              const rowClass = log.is_archived 
+                ? `bg-gray-100 ${colorClass}` 
+                : `hover:bg-gray-50 ${colorClass}`;
+              
+              return (
               <tr
                 key={log.id}
-                className={log.is_archived ? 'bg-gray-100' : 'hover:bg-gray-50'}
+                className={rowClass.trim() || 'bg-white'}
               >
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                   {formatDateTime(log.log_date)}
@@ -146,7 +169,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived }) {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

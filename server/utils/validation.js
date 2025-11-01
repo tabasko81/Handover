@@ -79,11 +79,18 @@ function sanitizeInput(data) {
   }
 
   if (data.note) {
-    // Remove potentially dangerous characters and trim
-    sanitized.note = data.note
-      .trim()
-      .replace(/[<>]/g, '')
-      .substring(0, 1000);
+    // Allow basic HTML formatting but sanitize dangerous tags
+    let note = data.note.trim();
+    
+    // Remove script tags and dangerous attributes
+    note = note.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    note = note.replace(/on\w+="[^"]*"/gi, ''); // Remove event handlers
+    note = note.replace(/javascript:/gi, ''); // Remove javascript: protocol
+    
+    // Only allow basic formatting tags
+    note = note.replace(/<(?!\/?(b|i|u|ul|ol|li|p|br|strong|em)\b)[^>]+>/gi, '');
+    
+    sanitized.note = note.substring(0, 1000);
   }
 
   if (data.worker_name) {
@@ -97,6 +104,14 @@ function sanitizeInput(data) {
     // Pad if less than 3 characters (though validation should catch this)
     if (sanitized.worker_name.length < 3) {
       sanitized.worker_name = sanitized.worker_name.padEnd(3, 'X');
+    }
+  }
+
+  if (data.color !== undefined) {
+    // Validate color value
+    const validColors = ['', 'green', 'yellow', 'light-blue', 'light-green', 'red'];
+    if (validColors.includes(data.color)) {
+      sanitized.color = data.color;
     }
   }
 

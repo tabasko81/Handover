@@ -37,6 +37,7 @@ function initialize() {
           short_description VARCHAR(50) NOT NULL,
           note TEXT NOT NULL,
           worker_name VARCHAR(3) NOT NULL,
+          color VARCHAR(20) DEFAULT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           is_archived BOOLEAN DEFAULT 0,
@@ -48,6 +49,16 @@ function initialize() {
           reject(err);
         } else {
           console.log('Database table initialized');
+          
+          // Add color column if it doesn't exist (for existing databases)
+          database.run(`
+            ALTER TABLE shift_logs ADD COLUMN color VARCHAR(20) DEFAULT NULL
+          `, (alterErr) => {
+            // Ignore error if column already exists
+            if (alterErr && !alterErr.message.includes('duplicate column')) {
+              console.log('Note: color column may already exist');
+            }
+          });
           
           // Create indexes
           database.run('CREATE INDEX IF NOT EXISTS idx_log_date ON shift_logs(log_date)', (err) => {

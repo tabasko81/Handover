@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 function Header() {
-  const currentDateTime = new Date().toLocaleString('en-GB', {
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  useEffect(() => {
+    // Update every second
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDateTime = currentDateTime.toLocaleString('en-GB', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -17,8 +29,8 @@ function Header() {
           <h1 className="text-2xl md:text-3xl font-bold mb-2 md:mb-0">
             Shift Handover Log
           </h1>
-          <div className="text-sm md:text-base">
-            {currentDateTime}
+          <div className="text-sm md:text-base font-mono">
+            {formattedDateTime}
           </div>
         </div>
       </div>

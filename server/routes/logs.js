@@ -174,13 +174,13 @@ router.post('/', (req, res) => {
     });
   }
 
-  const { log_date, short_description, note, worker_name } = sanitizeInput(req.body);
+  const { log_date, short_description, note, worker_name, color } = sanitizeInput(req.body);
   const database = db.getDb();
 
   database.run(
-    `INSERT INTO shift_logs (log_date, short_description, note, worker_name) 
-     VALUES (?, ?, ?, ?)`,
-    [log_date, short_description, note, worker_name],
+    `INSERT INTO shift_logs (log_date, short_description, note, worker_name, color) 
+     VALUES (?, ?, ?, ?, ?)`,
+    [log_date, short_description, note, worker_name, color || null],
     function(err) {
       if (err) {
         return res.status(500).json({
@@ -228,7 +228,7 @@ router.put('/:id', (req, res) => {
     });
   }
 
-  const { log_date, short_description, note, worker_name } = sanitizeInput(req.body);
+  const { log_date, short_description, note, worker_name, color } = sanitizeInput(req.body);
   const database = db.getDb();
 
   // First check if entry exists
@@ -253,9 +253,9 @@ router.put('/:id', (req, res) => {
 
     database.run(
       `UPDATE shift_logs 
-       SET log_date = ?, short_description = ?, note = ?, worker_name = ?, updated_at = CURRENT_TIMESTAMP
+       SET log_date = ?, short_description = ?, note = ?, worker_name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [log_date, short_description, note, worker_name, id],
+      [log_date, short_description, note, worker_name, color || null, id],
       function(err) {
         if (err) {
           return res.status(500).json({
