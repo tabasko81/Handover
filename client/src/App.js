@@ -24,6 +24,7 @@ function App() {
     total_entries: 0
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [flashId, setFlashId] = useState(null);
 
   useEffect(() => {
     loadLogs();
@@ -60,8 +61,11 @@ function App() {
   const handleUpdateLog = async (id, logData) => {
     try {
       await updateLog(id, logData);
-      setEditingLog(null);
+      // Don't close form automatically - let user decide
       loadLogs();
+      // Trigger flash animation on updated item
+      setFlashId(id);
+      setTimeout(() => setFlashId(null), 2000);
     } catch (err) {
       throw err;
     }
@@ -221,6 +225,7 @@ function App() {
           onDelete={handleDeleteLog}
           showArchived={filters.archived}
           onPrint={handlePrint}
+          flashId={flashId}
         />
 
         {pagination.total_pages > 1 && (

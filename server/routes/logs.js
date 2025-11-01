@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const { validateLogEntry, sanitizeInput } = require('../utils/validation');
+const { appendToDailyLog } = require('../utils/dailyLogger');
 
 // Get all logs (with pagination and filters)
 router.get('/', (req, res) => {
@@ -204,13 +205,20 @@ router.post('/', (req, res) => {
           });
         }
 
+        const logEntry = {
+          ...row,
+          is_archived: Boolean(row.is_archived),
+          is_deleted: Boolean(row.is_deleted)
+        };
+
+        // Append to daily log file if enabled
+        appendToDailyLog(logEntry).catch(err => {
+          console.error('Failed to write to daily log:', err);
+        });
+
         res.status(201).json({
           status: 'success',
-          data: {
-            ...row,
-            is_archived: Boolean(row.is_archived),
-            is_deleted: Boolean(row.is_deleted)
-          }
+          data: logEntry
         });
       });
     }

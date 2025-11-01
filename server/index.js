@@ -5,6 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const logRoutes = require('./routes/logs');
+const configRoutes = require('./routes/config');
 const database = require('./database/db');
 
 const app = express();
@@ -51,6 +52,7 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/logs', logRoutes);
+app.use('/api/config', configRoutes);
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {

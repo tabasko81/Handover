@@ -98,6 +98,10 @@ function LogForm({ log, onSubmit, onClose }) {
         log_date: dateTime,
         worker_name: formData.worker_name.toUpperCase().trim()
       });
+      // Only close form if creating new log, not when editing
+      if (!log) {
+        onClose();
+      }
     } catch (error) {
       alert(error.message || 'Failed to save log');
     } finally {

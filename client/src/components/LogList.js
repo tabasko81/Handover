@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint }) {
+function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint, flashId }) {
   const [expandedNotes, setExpandedNotes] = useState({});
 
   const toggleNote = (id) => {
@@ -207,6 +207,7 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
           <tbody className="bg-white divide-y divide-gray-200" id="logs-table-body">
             {logs.map((log) => {
               const colorClass = getColorClass(log.color || '');
+              const isFlashing = flashId === log.id;
               const rowClass = log.is_archived 
                 ? `bg-gray-100 ${colorClass}` 
                 : `hover:bg-gray-50 ${colorClass}`;
@@ -214,7 +215,9 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
               return (
               <tr
                 key={log.id}
-                className={`${rowClass.trim() || 'bg-white'} print-row`}
+                className={`${rowClass.trim() || 'bg-white'} print-row transition-colors duration-200 ${
+                  isFlashing ? 'bg-green-300 animate-pulse' : ''
+                }`}
               >
                 <td className="px-2 py-1.5 whitespace-nowrap text-sm text-gray-900">
                   {formatDateTime(log.log_date)}
