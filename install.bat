@@ -13,6 +13,13 @@ if %errorlevel% neq 0 (
     echo Error installing client dependencies
     exit /b %errorlevel%
 )
+echo.
+echo Installing react-router-dom...
+call npm install react-router-dom
+if %errorlevel% neq 0 (
+    echo Warning: Failed to install react-router-dom
+    echo You may need to install it manually: cd client && npm install react-router-dom
+)
 cd ..
 
 echo.
