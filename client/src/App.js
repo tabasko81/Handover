@@ -11,6 +11,11 @@ function App() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    // Check localStorage for saved preference
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [filters, setFilters] = useState({
     search: '',
     worker_name: '',
@@ -24,6 +29,16 @@ function App() {
     total_entries: 0
   });
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    // Apply dark mode class to document
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
 
   useEffect(() => {
     loadLogs();
@@ -107,9 +122,81 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handlePrint = (logsToPrint) => {
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Shift Handover Logs</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+          h1 { margin-bottom: 10px; }
+          .info { margin-bottom: 20px; color: #666; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+          th { background-color: #f2f2f2; font-weight: bold; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          .worker-badge { background-color: #dbeafe; padding: 2px 6px; border-radius: 12px; font-size: 10px; display: inline-block; }
+          @page { margin: 1cm; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Shift Handover Logs</h1>
+        <div class="info">
+          Generated: ${new Date().toLocaleString()}<br>
+          Total Entries: ${logsToPrint.length}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 15%;">Date</th>
+              <th style="width: 18%;">Short Description</th>
+              <th style="width: 52%;">Note</th>
+              <th style="width: 15%;">Worker</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logsToPrint.map(log => {
+              const noteText = log.note.replace(/<[^>]*>/g, '').replace(/\n/g, ' ');
+              return `
+                <tr>
+                  <td>${formatDateTime(log.log_date)}</td>
+                  <td>${log.short_description}</td>
+                  <td>${noteText}</td>
+                  <td><span class="worker-badge">${log.worker_name}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-GB', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <Header darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
       
       <main className="container mx-auto px-4 py-6">
         {error && (
@@ -131,6 +218,7 @@ function App() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onToggleArchived={() => handleFilterChange({ ...filters, archived: !filters.archived })}
+          darkMode={darkMode}
         />
 
         {showForm && (
@@ -148,6 +236,7 @@ function App() {
           onArchive={handleArchiveLog}
           onDelete={handleDeleteLog}
           showArchived={filters.archived}
+          onPrint={handlePrint}
         />
 
         {pagination.total_pages > 1 && (
