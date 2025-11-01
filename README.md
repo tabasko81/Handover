@@ -2,7 +2,7 @@
 
 Web application for shift handover logging in hotel operations. Allows staff to document and communicate important information between shifts in a structured and accessible format.
 
-![Application Screenshot](screenshots/screenshot.png)
+![Application Screenshot](screenshots/Screenshot.png)
 
 ## Features
 
