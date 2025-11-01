@@ -26,6 +26,20 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Shift Handover Log API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      logs: '/api/logs',
+      search: '/api/logs/search?query=your_search_term'
+    },
+    documentation: 'See README.md for API documentation'
+  });
+});
+
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ 
