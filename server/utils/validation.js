@@ -17,8 +17,14 @@ function validateLogEntry(data, isUpdate = false) {
 
     if (!data.note || data.note.trim() === '') {
       errors.note = 'Note is required';
-    } else if (data.note.length > 1000) {
-      errors.note = 'Note must be 1000 characters or less';
+    } else {
+      // Count text content, not HTML tags
+      const textLength = data.note.replace(/<[^>]*>/g, '').trim().length;
+      if (textLength === 0) {
+        errors.note = 'Note cannot be empty (HTML tags only)';
+      } else if (textLength > 1000) {
+        errors.note = `Note must be 1000 characters or less (currently ${textLength})`;
+      }
     }
 
     if (!data.worker_name || data.worker_name.trim() === '') {
@@ -39,8 +45,13 @@ function validateLogEntry(data, isUpdate = false) {
     if (data.note !== undefined) {
       if (data.note.trim() === '') {
         errors.note = 'Note cannot be empty';
-      } else if (data.note.length > 1000) {
-        errors.note = 'Note must be 1000 characters or less';
+      } else {
+        const textLength = data.note.replace(/<[^>]*>/g, '').trim().length;
+        if (textLength === 0) {
+          errors.note = 'Note cannot be empty (HTML tags only)';
+        } else if (textLength > 1000) {
+          errors.note = `Note must be 1000 characters or less (currently ${textLength})`;
+        }
       }
     }
 
