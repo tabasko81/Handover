@@ -1,50 +1,50 @@
-# Guia de Instalação do Node.js no Windows
+# Node.js Installation Guide for Windows
 
-## Método 1: Instalação direta (Recomendado)
+## Method 1: Direct Installation (Recommended)
 
-### Passo 1: Download
-1. Abra o seu navegador e aceda a: **https://nodejs.org/**
-2. Será automaticamente redirecionado para a versão LTS (Long-Term Support) recomendada
-3. Clique no botão verde grande "LTS" para fazer o download
-4. O ficheiro será algo como `node-v20.x.x-x64.msi` (ou similar)
+### Step 1: Download
+1. Open your browser and go to: **https://nodejs.org/**
+2. You will be automatically redirected to the recommended LTS (Long-Term Support) version
+3. Click the big green "LTS" button to download
+4. The file will be something like `node-v20.x.x-x64.msi` (or similar)
 
-### Passo 2: Instalação
-1. Execute o ficheiro `.msi` descarregado
-2. Clique em "Next" nas várias etapas
-3. **Importante:** Certifique-se de que a opção "Add to PATH" está selecionada (geralmente vem selecionada por padrão)
-4. Aceite os termos e condições
-5. Clique em "Install"
-6. Aguarde a instalação completar
-7. Clique em "Finish"
+### Step 2: Installation
+1. Run the downloaded `.msi` file
+2. Click "Next" through the various steps
+3. **Important:** Make sure the "Add to PATH" option is selected (usually selected by default)
+4. Accept the terms and conditions
+5. Click "Install"
+6. Wait for installation to complete
+7. Click "Finish"
 
-### Passo 3: Verificar Instalação
-1. Abra um **novo** Command Prompt ou PowerShell (importante: feche e reabra se já estava aberto)
-2. Execute os seguintes comandos:
+### Step 3: Verify Installation
+1. Open a **new** Command Prompt or PowerShell (important: close and reopen if already open)
+2. Run the following commands:
 
 ```bash
 node -v
 npm -v
 ```
 
-Se ambos mostrarem números de versão, a instalação foi bem-sucedida!
+If both show version numbers, installation was successful!
 
-## Método 2: Usando o nvm-windows (Para múltiplas versões)
+## Method 2: Using nvm-windows (For multiple versions)
 
-Se precisa de gerir múltiplas versões do Node.js:
+If you need to manage multiple Node.js versions:
 
-1. Aceda a: **https://github.com/coreybutler/nvm-windows/releases**
-2. Descarregue `nvm-setup.exe`
-3. Execute e instale
-4. Depois de instalado, abra um novo Command Prompt e execute:
+1. Go to: **https://github.com/coreybutler/nvm-windows/releases**
+2. Download `nvm-setup.exe`
+3. Run and install
+4. After installation, open a new Command Prompt and run:
 
 ```bash
 nvm install lts
 nvm use lts
 ```
 
-## Após a Instalação
+## After Installation
 
-Depois de instalar o Node.js, volte ao diretório do projeto e execute:
+After installing Node.js, return to the project directory and run:
 
 ```bash
 npm run install-all
@@ -52,7 +52,7 @@ npm run setup-db
 npm run dev
 ```
 
-Ou use os scripts batch:
+Or use the batch scripts:
 
 ```batch
 install.bat
@@ -60,20 +60,19 @@ setup-db.bat
 start.bat
 ```
 
-## Problemas Comuns
+## Common Problems
 
-### "npm não é reconhecido como comando"
-- Certifique-se de que fechou e reabriu o terminal após a instalação
-- Verifique se o Node.js foi adicionado ao PATH: Abra "Variáveis de Ambiente" no Windows e verifique se `C:\Program Files\nodejs\` está no PATH
-- Reinicie o computador se necessário
+### "npm is not recognized as a command"
+- Make sure you closed and reopened the terminal after installation
+- Check if Node.js was added to PATH: Open "Environment Variables" in Windows and verify that `C:\Program Files\nodejs\` is in PATH
+- Restart your computer if necessary
 
-### Versão muito antiga
-- Desinstale a versão antiga
-- Instale a versão LTS mais recente do site oficial
+### Version too old
+- Uninstall the old version
+- Install the latest LTS version from the official website
 
-## Links Úteis
+## Useful Links
 
-- Site oficial: https://nodejs.org/
-- Download direto LTS: https://nodejs.org/en/download/
-- Documentação: https://nodejs.org/en/docs/
-
+- Official site: https://nodejs.org/
+- Direct LTS download: https://nodejs.org/en/download/
+- Documentation: https://nodejs.org/en/docs/

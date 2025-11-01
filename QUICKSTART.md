@@ -1,79 +1,78 @@
-# Início Rápido - Shift Handover Log
+# Quick Start - Shift Handover Log
 
-## Instalação Rápida
+## Quick Installation
 
-1. **Instalar dependências:**
+1. **Install dependencies:**
 ```bash
 npm run install-all
 ```
 
-2. **Configurar base de dados:**
+2. **Setup database:**
 ```bash
 npm run setup-db
 ```
 
-3. **Adicionar dados de exemplo (opcional):**
+3. **Add sample data (optional):**
 ```bash
 npm run seed
 ```
 
-4. **Iniciar aplicação:**
+4. **Start application:**
 ```bash
 npm run dev
 ```
 
-## Acesso
+## Access
 
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:5000
 
-## Primeiros Passos
+## First Steps
 
-1. Abra o browser em `http://localhost:3000`
-2. Clique em "Create New Log"
-3. Preencha o formulário:
-   - Data será preenchida automaticamente
-   - Descrição curta (máx. 50 caracteres)
-   - Nota detalhada (máx. 1000 caracteres)
-   - Código do trabalhador (3 letras, ex: "ABC")
-4. Clique em "Save"
+1. Open your browser at `http://localhost:3000`
+2. Click "Create New Log"
+3. Fill in the form:
+   - Date will be auto-filled
+   - Short description (max 50 characters)
+   - Detailed note (max 1000 characters)
+   - Worker code (3 letters, e.g.: "ABC")
+4. Click "Save"
 
-## Funcionalidades Principais
+## Main Features
 
-- ✅ **Criar Log:** Botão "Create New Log"
-- ✅ **Editar:** Clique em "Edit" em qualquer entrada
-- ✅ **Arquivar:** Clique em "Archive" (aparece em cinza)
-- ✅ **Eliminar:** Clique em "Delete" (confirmação necessária)
-- ✅ **Pesquisar:** Use a barra de pesquisa no topo
-- ✅ **Filtrar:** Use os filtros por data, trabalhador, etc.
+- ✅ **Create Log:** "Create New Log" button
+- ✅ **Edit:** Click "Edit" on any entry
+- ✅ **Archive:** Click "Archive" (appears in gray)
+- ✅ **Delete:** Click "Delete" (confirmation required)
+- ✅ **Search:** Use the search bar at the top
+- ✅ **Filter:** Use filters by date, worker, etc.
 
-## Estrutura de Ficheiros
+## File Structure
 
 ```
 Handover/
 ├── server/          # Backend Node.js/Express
 ├── client/          # Frontend React
-├── data/            # Base de dados SQLite (criado automaticamente)
-└── README.md        # Documentação completa
+├── data/            # SQLite database (created automatically)
+└── README.md        # Complete documentation
 ```
 
-## Problemas Comuns
+## Common Problems
 
-### Porta já em uso
-Se a porta 5000 estiver ocupada, altere no ficheiro `.env`:
+### Port already in use
+If port 5000 is occupied, change it in the `.env` file:
 ```
 PORT=5001
 ```
 
-### Erro ao instalar dependências
-- Certifique-se de ter Node.js 14+ instalado
-- Tente `npm cache clean --force` e depois `npm install`
+### Error installing dependencies
+- Make sure you have Node.js 14+ installed
+- Try `npm cache clean --force` and then `npm install`
 
-### Frontend não carrega
-- Verifique se o servidor está a correr (porta 5000)
-- Verifique os logs do terminal para erros
+### Frontend doesn't load
+- Check if server is running (port 5000)
+- Check terminal logs for errors
 
-## Suporte
+## Support
 
-Consulte o `README.md` para documentação completa.
-
+See `README.md` for complete documentation.
