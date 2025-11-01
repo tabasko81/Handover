@@ -89,25 +89,27 @@ router.get('/', (req, res) => {
 
   database.all(countQuery, countParams, (err, countResult) => {
     if (err) {
+      console.error('Database count error:', err);
       return res.status(500).json({
         status: 'error',
         code: 'DATABASE_ERROR',
         message: 'Failed to count logs',
-        details: {}
+        details: { error: err.message }
       });
     }
 
     const total = countResult[0].total;
 
-    database.all(query, params, (err, rows) => {
-      if (err) {
-        return res.status(500).json({
-          status: 'error',
-          code: 'DATABASE_ERROR',
-          message: 'Failed to fetch logs',
-          details: {}
-        });
-      }
+  database.all(query, params, (err, rows) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({
+        status: 'error',
+        code: 'DATABASE_ERROR',
+        message: 'Failed to fetch logs',
+        details: { error: err.message }
+      });
+    }
 
       res.json({
         status: 'success',
@@ -177,17 +179,18 @@ router.post('/', (req, res) => {
   const { log_date, short_description, note, worker_name, color } = sanitizeInput(req.body);
   const database = db.getDb();
 
-  database.run(
+    database.run(
     `INSERT INTO shift_logs (log_date, short_description, note, worker_name, color) 
      VALUES (?, ?, ?, ?, ?)`,
     [log_date, short_description, note, worker_name, color || null],
     function(err) {
       if (err) {
+        console.error('Database insert error:', err);
         return res.status(500).json({
           status: 'error',
           code: 'DATABASE_ERROR',
           message: 'Failed to create log entry',
-          details: {}
+          details: { error: err.message }
         });
       }
 

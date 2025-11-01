@@ -36,7 +36,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
   const truncateNote = (note, id) => {
     // Strip HTML tags for length calculation
     const textContent = note.replace(/<[^>]*>/g, '');
-    const maxLength = 100;
+    // Show at least 3 lines (~300 characters) before "read more"
+    const maxLength = 300;
     
     if (textContent.length <= maxLength) {
       return <div dangerouslySetInnerHTML={{ __html: note }} />;
@@ -57,9 +58,34 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
       );
     }
     
+    // Truncate HTML while preserving tags
+    let truncatedHtml = note;
+    let textLength = 0;
+    let inTag = false;
+    let result = '';
+    
+    for (let i = 0; i < note.length; i++) {
+      if (note[i] === '<') {
+        inTag = true;
+        result += note[i];
+      } else if (note[i] === '>') {
+        inTag = false;
+        result += note[i];
+      } else if (!inTag) {
+        if (textLength < maxLength) {
+          result += note[i];
+          textLength++;
+        } else {
+          break;
+        }
+      } else {
+        result += note[i];
+      }
+    }
+    
     return (
       <>
-        <div dangerouslySetInnerHTML={{ __html: textContent.substring(0, maxLength) + '...' }} />
+        <div dangerouslySetInnerHTML={{ __html: result + '...' }} />
         <button
           onClick={() => toggleNote(id)}
           className="text-blue-600 hover:text-blue-800 ml-1"

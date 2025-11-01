@@ -14,7 +14,10 @@ export const fetchLogs = async (params = {}) => {
     const response = await api.get('/logs', { params });
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to fetch logs');
+    console.error('Fetch logs error:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch logs';
+    const errorDetails = error.response?.data?.details;
+    throw new Error(errorDetails?.error ? `${errorMessage}: ${errorDetails.error}` : errorMessage);
   }
 };
 
@@ -32,7 +35,17 @@ export const createLog = async (logData) => {
     const response = await api.post('/logs', logData);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to create log');
+    console.error('Create log error:', error);
+    const errorMessage = error.response?.data?.message || error.message || 'Failed to create log';
+    const errorDetails = error.response?.data?.details;
+    const validationErrors = error.response?.data?.details?.errors;
+    
+    if (validationErrors) {
+      const errorList = Object.entries(validationErrors).map(([key, val]) => `${key}: ${val}`).join(', ');
+      throw new Error(`${errorMessage}: ${errorList}`);
+    }
+    
+    throw new Error(errorDetails?.error ? `${errorMessage}: ${errorDetails.error}` : errorMessage);
   }
 };
 

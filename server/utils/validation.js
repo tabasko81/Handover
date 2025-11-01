@@ -84,13 +84,37 @@ function sanitizeInput(data) {
     
     // Remove script tags and dangerous attributes
     note = note.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    note = note.replace(/on\w+="[^"]*"/gi, ''); // Remove event handlers
+    note = note.replace(/on\w+\s*=/gi, ''); // Remove event handlers
     note = note.replace(/javascript:/gi, ''); // Remove javascript: protocol
     
-    // Only allow basic formatting tags
-    note = note.replace(/<(?!\/?(b|i|u|ul|ol|li|p|br|strong|em)\b)[^>]+>/gi, '');
+    // Allow basic formatting tags (b, i, u, ul, ol, li, p, br, strong, em, div, span)
+    // Remove any other tags but keep their content
+    note = note.replace(/<(?!\/?(b|i|u|ul|ol|li|p|br|strong|em|div|span)\b)[^>]*>/gi, '');
     
-    sanitized.note = note.substring(0, 1000);
+    // Limit to 1000 characters (counting text content, not HTML tags)
+    const textLength = note.replace(/<[^>]*>/g, '').length;
+    if (textLength > 1000) {
+      // Truncate intelligently
+      let truncated = '';
+      let count = 0;
+      let inTag = false;
+      
+      for (let i = 0; i < note.length && count < 1000; i++) {
+        if (note[i] === '<') {
+          inTag = true;
+          truncated += note[i];
+        } else if (note[i] === '>') {
+          inTag = false;
+          truncated += note[i];
+        } else {
+          truncated += note[i];
+          if (!inTag) count++;
+        }
+      }
+      note = truncated;
+    }
+    
+    sanitized.note = note;
   }
 
   if (data.worker_name) {
