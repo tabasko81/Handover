@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchConfig, updateConfig } from '../services/configApi';
+import Header from '../components/Header';
 
 function Backoffice() {
   const [config, setConfig] = useState({

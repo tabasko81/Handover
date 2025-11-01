@@ -61,11 +61,12 @@ function App() {
   const handleUpdateLog = async (id, logData) => {
     try {
       await updateLog(id, logData);
-      // Don't close form automatically - let user decide
+      setShowForm(false);
+      setEditingLog(null);
       loadLogs();
-      // Trigger flash animation on updated item
+      // Trigger flash animation on updated item for 3 seconds
       setFlashId(id);
-      setTimeout(() => setFlashId(null), 2000);
+      setTimeout(() => setFlashId(null), 3000);
     } catch (err) {
       throw err;
     }

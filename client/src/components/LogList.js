@@ -33,24 +33,46 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
     return colorMap[color] || '';
   };
 
-  const truncateNote = (note, id) => {
-    // Strip HTML tags for length calculation
-    const textContent = note.replace(/<[^>]*>/g, '');
-    // Show at least 3 lines (~300 characters) before "read more"
-    const maxLength = 300;
+  const formatNote = (note) => {
+    if (!note) return '';
+    // Escape HTML to prevent XSS
+    let escaped = note
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
     
-    if (textContent.length <= maxLength) {
-      return <div dangerouslySetInnerHTML={{ __html: note }} />;
+    // Convert newlines to <br>
+    escaped = escaped.replace(/\n/g, '<br>');
+    
+    // Highlight @mentions
+    const mentionRegex = /(@\w+)/g;
+    escaped = escaped.replace(mentionRegex, '<span class="bg-yellow-200 font-semibold px-1 rounded">$1</span>');
+    
+    return escaped;
+  };
+
+  const truncateNote = (note, id) => {
+    if (!note) return <div></div>;
+    
+    // Show double the characters (600) before "read more"
+    const maxLength = 600;
+    
+    if (note.length <= maxLength) {
+      // Format note with newlines and @mentions
+      const html = formatNote(note);
+      return <div dangerouslySetInnerHTML={{ __html: html }} />;
     }
     
     const isExpanded = expandedNotes[id];
     if (isExpanded) {
+      // Show full note
+      const html = formatNote(note);
       return (
         <>
-          <div dangerouslySetInnerHTML={{ __html: note }} />
+          <div dangerouslySetInnerHTML={{ __html: html }} />
           <button
             onClick={() => toggleNote(id)}
-            className="text-blue-600 hover:text-blue-800 ml-1"
+            className="text-blue-600 hover:text-blue-800 ml-1 font-semibold"
           >
             Read less
           </button>
@@ -58,37 +80,22 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
       );
     }
     
-    // Truncate HTML while preserving tags
-    let truncatedHtml = note;
-    let textLength = 0;
-    let inTag = false;
-    let result = '';
-    
-    for (let i = 0; i < note.length; i++) {
-      if (note[i] === '<') {
-        inTag = true;
-        result += note[i];
-      } else if (note[i] === '>') {
-        inTag = false;
-        result += note[i];
-      } else if (!inTag) {
-        if (textLength < maxLength) {
-          result += note[i];
-          textLength++;
-        } else {
-          break;
-        }
-      } else {
-        result += note[i];
-      }
+    // Truncate text (simple truncation)
+    let truncated = note.substring(0, maxLength);
+    // Try to truncate at word boundary
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLength * 0.8) {
+      truncated = truncated.substring(0, lastSpace);
     }
     
+    // Format truncated note
+    const html = formatNote(truncated + '...');
     return (
       <>
-        <div dangerouslySetInnerHTML={{ __html: result + '...' }} />
+        <div dangerouslySetInnerHTML={{ __html: html }} />
         <button
           onClick={() => toggleNote(id)}
-          className="text-blue-600 hover:text-blue-800 ml-1"
+          className="ml-1 px-2 py-1 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 underline shadow-sm transition-all"
         >
           Read more
         </button>

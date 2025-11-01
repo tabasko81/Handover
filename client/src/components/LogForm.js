@@ -98,10 +98,8 @@ function LogForm({ log, onSubmit, onClose }) {
         log_date: dateTime,
         worker_name: formData.worker_name.toUpperCase().trim()
       });
-      // Only close form if creating new log, not when editing
-      if (!log) {
-        onClose();
-      }
+      // Always close form after submit (both create and update)
+      onClose();
     } catch (error) {
       alert(error.message || 'Failed to save log');
     } finally {
@@ -180,7 +178,7 @@ function LogForm({ log, onSubmit, onClose }) {
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Note * (max 1000 characters) - Use formatting buttons for bold, italic, lists
+                Note * (max 1000 characters) - Press Enter for new lines
               </label>
               <div className={errors.note ? 'border-2 border-red-500 rounded-md p-1' : ''}>
                 <SimpleEditor
