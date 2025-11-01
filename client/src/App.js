@@ -11,11 +11,6 @@ function App() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
-  const [darkMode, setDarkMode] = useState(() => {
-    // Check localStorage for saved preference
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
-  });
   const [filters, setFilters] = useState({
     search: '',
     worker_name: '',
@@ -29,16 +24,6 @@ function App() {
     total_entries: 0
   });
   const [currentPage, setCurrentPage] = useState(1);
-
-  useEffect(() => {
-    // Apply dark mode class to document
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
 
   useEffect(() => {
     loadLogs();
@@ -195,8 +180,8 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <Header darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
       
       <main className="container mx-auto px-4 py-6">
         {error && (
@@ -218,7 +203,6 @@ function App() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onToggleArchived={() => handleFilterChange({ ...filters, archived: !filters.archived })}
-          darkMode={darkMode}
         />
 
         {showForm && (

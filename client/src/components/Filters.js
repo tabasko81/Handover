@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Filters({ filters, onFilterChange, onToggleArchived, darkMode = false }) {
+function Filters({ filters, onFilterChange, onToggleArchived }) {
   const [localFilters, setLocalFilters] = useState(filters);
 
   const handleChange = (field, value) => {
@@ -25,10 +25,10 @@ function Filters({ filters, onFilterChange, onToggleArchived, darkMode = false }
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-4 rounded-lg shadow mb-6`}>
+    <div className="bg-white p-4 rounded-lg shadow mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <div>
-          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Search
           </label>
           <input
@@ -36,12 +36,12 @@ function Filters({ filters, onFilterChange, onToggleArchived, darkMode = false }
             value={localFilters.search}
             onChange={(e) => handleChange('search', e.target.value)}
             placeholder="Search in descriptions, notes..."
-            className={`w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300 bg-white'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Worker Name
           </label>
           <input
@@ -50,31 +50,31 @@ function Filters({ filters, onFilterChange, onToggleArchived, darkMode = false }
             onChange={(e) => handleChange('worker_name', e.target.value.toUpperCase())}
             placeholder="ABC"
             maxLength="3"
-            className={`w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300 bg-white'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
           />
         </div>
 
         <div>
-          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Start Date
           </label>
           <input
             type="datetime-local"
             value={localFilters.start_date}
             onChange={(e) => handleChange('start_date', e.target.value)}
-            className={`w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300 bg-white'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             End Date
           </label>
           <input
             type="datetime-local"
             value={localFilters.end_date}
             onChange={(e) => handleChange('end_date', e.target.value)}
-            className={`w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300 bg-white'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
