@@ -1,0 +1,48 @@
+# Frontend Dockerfile - Multi-stage build
+# Stage 1: Build
+FROM node:18-alpine AS build
+
+# Update system packages to fix vulnerabilities
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache --upgrade libxml2 xz wget nghttp2 libavif util-linux busybox
+
+WORKDIR /app
+
+# Copy package files first
+COPY client/package.json client/package-lock.json* ./
+
+# Install dependencies
+# Use npm install with legacy-peer-deps to handle peer dependency issues
+# This ensures all dependencies including react-scripts are installed
+RUN npm install --legacy-peer-deps
+
+# Copy client source code (excluding node_modules which is in .dockerignore)
+COPY client ./
+
+# Build arguments for environment variables
+ARG REACT_APP_API_URL=http://localhost:5000/api
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# Build the React app
+RUN npm run build
+
+# Stage 2: Production with Nginx
+FROM nginx:alpine
+
+# Update system packages to fix vulnerabilities
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache --upgrade libxml2 xz wget nghttp2 libavif util-linux busybox
+
+# Copy built files to nginx
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Copy custom nginx config if needed
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+
+

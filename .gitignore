@@ -1,0 +1,16 @@
+node_modules/
+client/node_modules/
+client/build/
+data/
+logs/
+.env
+.DS_Store
+*.log
+.vscode/
+.idea/
+# Remove sensitive config data (keep structure only)
+data/config.json
+data/shift_logs.db
+# Remove log files
+logs/*.txt
+
