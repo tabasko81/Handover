@@ -68,80 +68,103 @@ check_root() {
 find_local_storage() {
     print_info "A procurar storage adequado para containers..." >&2
     
-    # Simple approach: find storage with 'rootdir' in content
-    # This is the most reliable way to detect container-capable storage
     local storage=""
     
-    # First, try to find local-lvm (most common)
-    if pvesm status | grep -q "^local-lvm.*rootdir"; then
-        storage="local-lvm"
-        print_success "Storage 'local-lvm' encontrado e suporta containers" >&2
-        printf "%s\n" "$storage"
-        return 0
-    fi
+    # Get list of storages (skip header)
+    local storages=$(pvesm status | awk 'NR>1 {print $1}')
     
-    # If not found, look for any storage with rootdir support
-    print_info "A procurar outros storages com suporte a containers..." >&2
-    while IFS= read -r line; do
-        local storage_name=$(echo "$line" | awk '{print $1}')
-        local storage_content=$(echo "$line" | awk '{print $3}')
-        
-        # Skip header line
-        if [[ "$storage_name" == "Name" ]] || [[ -z "$storage_name" ]]; then
+    # Check each storage for rootdir support using pvesm config
+    for storage_name in $storages; do
+        # Skip USB/external storages
+        if [[ "$storage_name" == *"usb"* ]] || [[ "$storage_name" == *"external"* ]]; then
             continue
         fi
         
+        # Get storage content configuration
+        local storage_content=$(pvesm config "$storage_name" 2>/dev/null | grep "^content:" | cut -d' ' -f2)
+        
         # Check if storage has rootdir in content
         if [[ "$storage_content" == *"rootdir"* ]]; then
-            # Skip USB/external storages
-            if [[ "$storage_name" != *"usb"* ]] && [[ "$storage_name" != *"external"* ]]; then
-                storage="$storage_name"
-                print_success "Storage '$storage' encontrado com suporte a containers" >&2
+            storage="$storage_name"
+            print_success "Storage '$storage' encontrado com suporte a containers" >&2
+            printf "%s\n" "$storage"
+            return 0
+        fi
+    done
+    
+    # If no storage found, try to configure 'local-lvm' first (most common)
+    if pvesm status | grep -q "^local-lvm "; then
+        print_info "Storage 'local-lvm' existe mas sem suporte a containers" >&2
+        print_info "A tentar configurar 'local-lvm' para suportar containers..." >&2
+        
+        # Get current content
+        local current_content=$(pvesm config local-lvm 2>/dev/null | grep "^content:" | cut -d' ' -f2)
+        if [ -n "$current_content" ]; then
+            # Add rootdir if not present
+            if [[ "$current_content" != *"rootdir"* ]]; then
+                local new_content="${current_content},rootdir"
+                if pvesm set local-lvm --content "$new_content" 2>/dev/null; then
+                    print_success "Storage 'local-lvm' configurado para suportar containers" >&2
+                    storage="local-lvm"
+                    printf "%s\n" "$storage"
+                    return 0
+                fi
+            fi
+        fi
+    fi
+    
+    # Try to configure 'local' storage
+    if pvesm status | grep -q "^local "; then
+        print_info "A tentar configurar storage 'local' para suportar containers..." >&2
+        
+        # Get current content
+        local current_content=$(pvesm config local 2>/dev/null | grep "^content:" | cut -d' ' -f2)
+        if [ -n "$current_content" ]; then
+            # Add rootdir if not present
+            if [[ "$current_content" != *"rootdir"* ]]; then
+                local new_content="${current_content},rootdir"
+                if pvesm set local --content "$new_content" 2>/dev/null; then
+                    print_success "Storage 'local' configurado para suportar containers" >&2
+                    storage="local"
+                    printf "%s\n" "$storage"
+                    return 0
+                fi
+            else
+                # Already has rootdir
+                storage="local"
+                print_success "Storage 'local' já suporta containers" >&2
                 printf "%s\n" "$storage"
                 return 0
             fi
-        fi
-    done < <(pvesm status)
-    
-    # If still no storage found, try to configure 'local' to support containers
-    if [ -z "$storage" ]; then
-        print_warning "Nenhum storage com suporte a containers encontrado" >&2
-        print_info "A tentar configurar storage 'local' para suportar containers..." >&2
-        
-        # Check if 'local' storage exists
-        if pvesm status | grep -q "^local "; then
-            # Try to add rootdir support to local storage
+        else
+            # No content configured, set default with rootdir
             if pvesm set local --content backup,iso,vztmpl,rootdir 2>/dev/null; then
                 print_success "Storage 'local' configurado para suportar containers" >&2
                 storage="local"
                 printf "%s\n" "$storage"
                 return 0
-            else
-                print_warning "Não foi possível configurar storage 'local'" >&2
             fi
         fi
-        
-        # If we still don't have a storage, show error with instructions
-        print_error "" >&2
-        print_error "==========================================" >&2
-        print_error "Nenhum storage adequado para containers encontrado!" >&2
-        print_error "==========================================" >&2
-        print_error "" >&2
-        print_error "Storages disponíveis:" >&2
-        pvesm status >&2
-        print_error "" >&2
-        print_error "SOLUÇÕES:" >&2
-        print_error "" >&2
-        print_info "Opção 1: Configurar storage 'local' para suportar containers:" >&2
-        print_info "   pvesm set local --content backup,iso,vztmpl,rootdir" >&2
-        print_info "" >&2
-        print_info "Opção 2: Criar storage 'local-lvm' (recomendado):" >&2
-        print_info "   1. Verificar volume groups: vgs" >&2
-        print_info "   2. Criar storage: pvesm add lvm local-lvm --vgname pve --content rootdir,images" >&2
-        print_info "   3. Verificar: pvesm status" >&2
-        print_error "" >&2
-        exit 1
     fi
+    
+    # If we still don't have a storage, show error with instructions
+    print_error "" >&2
+    print_error "==========================================" >&2
+    print_error "Nenhum storage adequado para containers encontrado!" >&2
+    print_error "==========================================" >&2
+    print_error "" >&2
+    print_error "Storages disponíveis:" >&2
+    pvesm status >&2
+    print_error "" >&2
+    print_error "SOLUÇÕES:" >&2
+    print_error "" >&2
+    print_info "Opção 1: Configurar storage 'local-lvm' para suportar containers:" >&2
+    print_info "   pvesm set local-lvm --content rootdir,images" >&2
+    print_info "" >&2
+    print_info "Opção 2: Configurar storage 'local' para suportar containers:" >&2
+    print_info "   pvesm set local --content backup,iso,vztmpl,rootdir" >&2
+    print_error "" >&2
+    exit 1
 }
 
 find_available_id() {
