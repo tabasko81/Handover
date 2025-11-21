@@ -35,19 +35,51 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [flashId, setFlashId] = useState(null);
   const [pageName, setPageName] = useState('Shift Handover Log');
+  const [theme, setTheme] = useState({
+    mode: 'light',
+    font: 'sans',
+    spacing: 'normal'
+  });
 
   useEffect(() => {
     checkLoginStatus();
+    loadGlobalConfig();
+    
+    // Listen for theme updates from Backoffice
+    const handleConfigUpdate = () => {
+      loadGlobalConfig();
+    };
+    window.addEventListener('pageNameUpdated', handleConfigUpdate);
+    return () => window.removeEventListener('pageNameUpdated', handleConfigUpdate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadLogs();
-      loadPageName();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, currentPage, isAuthenticated]);
+
+  // Apply theme settings
+  useEffect(() => {
+    // Dark Mode
+    if (theme.mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    // Fonts
+    document.body.classList.remove('font-sans', 'font-serif', 'font-mono');
+    if (theme.font === 'serif') {
+      document.body.classList.add('font-serif');
+    } else if (theme.font === 'mono') {
+      document.body.classList.add('font-mono');
+    } else {
+      document.body.classList.add('font-sans');
+    }
+  }, [theme]);
 
   const checkLoginStatus = async () => {
     setCheckingAuth(true);
@@ -71,20 +103,20 @@ function App() {
     }
   };
 
-  const loadPageName = async () => {
+  const loadGlobalConfig = async () => {
     try {
-      const savedPageName = localStorage.getItem('page_name');
-      if (savedPageName) {
-        setPageName(savedPageName);
-      } else {
-        const config = await fetchPublicConfig();
-        if (config && config.page_name) {
+      const config = await fetchPublicConfig();
+      if (config) {
+        if (config.page_name) {
           setPageName(config.page_name);
           localStorage.setItem('page_name', config.page_name);
         }
+        if (config.theme) {
+          setTheme(config.theme);
+        }
       }
     } catch (error) {
-      console.error('Failed to load page name:', error);
+      console.error('Failed to load global config:', error);
     }
   };
 
@@ -308,7 +340,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 ${theme.mode === 'dark' ? 'dark:bg-gray-900' : ''}`}>
       <InfoSlide />
       <Header />
       
@@ -351,6 +383,7 @@ function App() {
           showArchived={filters.archived}
           onPrint={handlePrint}
           flashId={flashId}
+          compactMode={theme.spacing === 'compact'}
         />
 
         <DeleteConfirmationModal

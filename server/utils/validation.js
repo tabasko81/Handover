@@ -29,9 +29,9 @@ function validateLogEntry(data, isUpdate = false) {
 
     if (!data.worker_name || data.worker_name.trim() === '') {
       errors.worker_name = 'Worker name is required';
-    } else if (data.worker_name.trim().length !== 3) {
-      errors.worker_name = 'Worker name must be exactly 3 characters';
-    } else if (!/^[A-Z]{3}$/.test(data.worker_name.trim().toUpperCase())) {
+    } else if (data.worker_name.trim().length < 1 || data.worker_name.trim().length > 3) {
+      errors.worker_name = 'Worker name must be 1 to 3 characters';
+    } else if (!/^[A-Z]{1,3}$/.test(data.worker_name.trim().toUpperCase())) {
       errors.worker_name = 'Worker name must contain only letters (A-Z)';
     }
   } else {
@@ -60,9 +60,9 @@ function validateLogEntry(data, isUpdate = false) {
     if (data.worker_name !== undefined) {
       if (data.worker_name.trim() === '') {
         errors.worker_name = 'Worker name cannot be empty';
-      } else if (data.worker_name.trim().length !== 3) {
-        errors.worker_name = 'Worker name must be exactly 3 characters';
-      } else if (!/^[A-Z]{3}$/.test(data.worker_name.trim().toUpperCase())) {
+      } else if (data.worker_name.trim().length < 1 || data.worker_name.trim().length > 3) {
+        errors.worker_name = 'Worker name must be 1 to 3 characters';
+      } else if (!/^[A-Z]{1,3}$/.test(data.worker_name.trim().toUpperCase())) {
         errors.worker_name = 'Worker name must contain only letters (A-Z)';
       }
     }
@@ -133,17 +133,12 @@ function sanitizeInput(data) {
   }
 
   if (data.worker_name) {
-    // Convert to uppercase and ensure exactly 3 characters
+    // Convert to uppercase and ensure 1-3 characters
     sanitized.worker_name = data.worker_name
       .trim()
       .toUpperCase()
       .replace(/[^A-Z]/g, '')
       .substring(0, 3);
-    
-    // Pad if less than 3 characters (though validation should catch this)
-    if (sanitized.worker_name.length < 3) {
-      sanitized.worker_name = sanitized.worker_name.padEnd(3, 'X');
-    }
   }
 
   if (data.color !== undefined) {

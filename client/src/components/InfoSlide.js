@@ -69,14 +69,14 @@ function InfoSlide() {
 
       {/* Slide panel */}
       <div
-        className={`fixed left-0 top-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ width: '400px', maxWidth: '90vw' }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
+          <div className="bg-blue-600 dark:bg-blue-800 text-white p-4 flex justify-between items-center">
             <h2 className="text-xl font-bold">Permanent Information</h2>
             <button
               onClick={toggleSlide}
@@ -88,10 +88,10 @@ function InfoSlide() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 text-gray-900 dark:text-gray-100">
             {info ? (
               <div
-                className="prose max-w-none"
+                className="prose dark:prose-invert max-w-none"
                 style={{ 
                   lineHeight: '1.6',
                   wordWrap: 'break-word'
@@ -101,7 +101,7 @@ function InfoSlide() {
                 }}
               />
             ) : (
-              <p className="text-gray-500 italic">No permanent information available.</p>
+              <p className="text-gray-500 dark:text-gray-400 italic">No permanent information available.</p>
             )}
           </div>
           

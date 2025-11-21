@@ -14,7 +14,12 @@ function Backoffice() {
     page_name: 'Shift Handover Log',
     permanent_info: '',
     login_expiry_enabled: true,
-    login_expiry_hours: 24
+    login_expiry_hours: 24,
+    theme: {
+      mode: 'light',
+      font: 'sans',
+      spacing: 'normal'
+    }
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,7 +80,12 @@ function Backoffice() {
         page_name: data.page_name || 'Shift Handover Log',
         permanent_info: data.permanent_info || '',
         login_expiry_enabled: data.login_expiry_enabled !== undefined ? data.login_expiry_enabled : true,
-        login_expiry_hours: data.login_expiry_hours || 24
+        login_expiry_hours: data.login_expiry_hours || 24,
+        theme: data.theme || {
+          mode: 'light',
+          font: 'sans',
+          spacing: 'normal'
+        }
       });
     } catch (error) {
       console.error('Failed to load config:', error);
@@ -112,10 +122,21 @@ function Backoffice() {
   };
 
   const handleChange = (field, value) => {
-    setConfig(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (field.startsWith('theme.')) {
+      const themeField = field.split('.')[1];
+      setConfig(prev => ({
+        ...prev,
+        theme: {
+          ...prev.theme,
+          [themeField]: value
+        }
+      }));
+    } else {
+      setConfig(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   if (loading) {
@@ -194,6 +215,58 @@ function Backoffice() {
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   This information will be displayed in the permanent info slide (accessible via the (i) button on the left). Use the formatting buttons to format the text.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Appearance</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Theme Mode
+                    </label>
+                    <select
+                      value={config.theme.mode}
+                      onChange={(e) => handleChange('theme.mode', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="light">Light Mode</option>
+                      <option value="dark">Dark Mode</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Font Style
+                    </label>
+                    <select
+                      value={config.theme.font}
+                      onChange={(e) => handleChange('theme.font', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="sans">Modern (Sans)</option>
+                      <option value="serif">Classic (Serif)</option>
+                      <option value="mono">Technical (Mono)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Spacing Density
+                    </label>
+                    <select
+                      value={config.theme.spacing}
+                      onChange={(e) => handleChange('theme.spacing', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="normal">Comfortable</option>
+                      <option value="compact">Compact</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  These settings affect the look and feel for all users.
                 </p>
               </div>
 

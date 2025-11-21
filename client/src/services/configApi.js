@@ -27,7 +27,12 @@ export const fetchConfig = async () => {
     // Return defaults if API fails
     return {
       page_name: 'Shift Handover Log',
-      permanent_info: ''
+      permanent_info: '',
+      theme: {
+        mode: 'light',
+        font: 'sans',
+        spacing: 'normal'
+      }
     };
   }
 };
@@ -41,7 +46,12 @@ export const fetchPublicConfig = async () => {
     // Return defaults if API fails (network error, server down, etc.)
     return {
       page_name: 'Shift Handover Log',
-      permanent_info: ''
+      permanent_info: '',
+      theme: {
+        mode: 'light',
+        font: 'sans',
+        spacing: 'normal'
+      }
     };
   }
 };

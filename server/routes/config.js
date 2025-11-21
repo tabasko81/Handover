@@ -16,7 +16,12 @@ const DEFAULT_CONFIG = {
   page_name: 'Shift Handover Log',
   permanent_info: '',
   login_expiry_enabled: true,
-  login_expiry_hours: 24
+  login_expiry_hours: 24,
+  theme: {
+    mode: 'light',      // 'light' | 'dark'
+    font: 'sans',       // 'sans' | 'serif' | 'mono'
+    spacing: 'normal'   // 'normal' | 'compact'
+  }
 };
 
 function getConfig() {
@@ -64,7 +69,8 @@ router.get('/public', (req, res) => {
     const config = getConfig();
     res.json({
       page_name: config.page_name || DEFAULT_CONFIG.page_name,
-      permanent_info: config.permanent_info || DEFAULT_CONFIG.permanent_info
+      permanent_info: config.permanent_info || DEFAULT_CONFIG.permanent_info,
+      theme: config.theme || DEFAULT_CONFIG.theme
     });
   } catch (error) {
     res.status(500).json({
@@ -78,7 +84,7 @@ router.get('/public', (req, res) => {
 // Update configuration (requires auth)
 router.put('/', authenticateToken, async (req, res) => {
   try {
-    const { page_name, permanent_info, login_expiry_enabled, login_expiry_hours } = req.body;
+    const { page_name, permanent_info, login_expiry_enabled, login_expiry_hours, theme } = req.body;
     const config = getConfig();
     
     if (page_name !== undefined) {
@@ -100,6 +106,26 @@ router.put('/', authenticateToken, async (req, res) => {
           status: 'error',
           message: 'Login expiry hours must be between 1 and 168 (1 hour to 1 week)'
         });
+      }
+    }
+    
+    if (theme !== undefined) {
+      if (!config.theme) config.theme = { ...DEFAULT_CONFIG.theme };
+      
+      if (theme.mode !== undefined) {
+        if (['light', 'dark'].includes(theme.mode)) {
+          config.theme.mode = theme.mode;
+        }
+      }
+      if (theme.font !== undefined) {
+        if (['sans', 'serif', 'mono'].includes(theme.font)) {
+          config.theme.font = theme.font;
+        }
+      }
+      if (theme.spacing !== undefined) {
+        if (['normal', 'compact'].includes(theme.spacing)) {
+          config.theme.spacing = theme.spacing;
+        }
       }
     }
 

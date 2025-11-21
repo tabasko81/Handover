@@ -76,9 +76,9 @@ function LogForm({ log, onSubmit, onClose }) {
 
     if (!formData.worker_name.trim()) {
       newErrors.worker_name = 'Worker name is required';
-    } else if (formData.worker_name.trim().length !== 3) {
-      newErrors.worker_name = 'Must be exactly 3 characters';
-    } else if (!/^[A-Z]{3}$/.test(formData.worker_name.trim())) {
+    } else if (formData.worker_name.trim().length < 1 || formData.worker_name.trim().length > 3) {
+      newErrors.worker_name = 'Must be 1 to 3 characters';
+    } else if (!/^[A-Z]{1,3}$/.test(formData.worker_name.trim())) {
       newErrors.worker_name = 'Must contain only letters (A-Z)';
     }
 
