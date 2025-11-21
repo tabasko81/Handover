@@ -131,14 +131,21 @@ install_docker_compose() {
 setup_app_directory() {
     print_info "A configurar diretório da aplicação..."
     
+    # Check if directory exists and has the required files (from git clone)
+    if [ -d "$APP_DIR" ] && [ -d "$APP_DIR/server" ] && [ -d "$APP_DIR/client" ]; then
+        print_info "Diretório $APP_DIR já existe com ficheiros da aplicação (git clone)"
+        print_info "A usar diretório existente..."
+        return 0
+    fi
+    
     if [ -d "$APP_DIR" ]; then
-        print_warning "Diretório $APP_DIR já existe"
+        print_warning "Diretório $APP_DIR já existe mas sem ficheiros da aplicação"
         if [ "$NON_INTERACTIVE" != "1" ]; then
-        read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_error "Instalação cancelada"
-            exit 1
+            read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_error "Instalação cancelada"
+                exit 1
             fi
         else
             print_info "Modo não-interativo: a fazer backup e sobrescrever..."
