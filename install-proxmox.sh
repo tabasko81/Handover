@@ -420,20 +420,32 @@ show_final_info() {
     print_success "Instalação concluída com sucesso!"
     print_success "=========================================="
     echo
-    print_info "Informações do Container:"
-    echo "  ID: $container_id"
-    echo "  Hostname: $CONTAINER_HOSTNAME"
-    echo "  IP: $container_ip"
+    print_success "=========================================="
+    print_success "🌐 ACESSE A APLICAÇÃO WEB:"
+    print_success "=========================================="
     echo
-    print_info "Aplicação disponível em:"
-    echo "  Frontend: http://$container_ip:$FRONTEND_PORT"
+    print_success "URL Principal:"
+    echo "  👉 http://$container_ip:$FRONTEND_PORT"
+    echo
+    print_info "Outras URLs:"
     echo "  Backend API: http://$container_ip:$BACKEND_PORT/api"
     echo "  Health Check: http://$container_ip:$BACKEND_PORT/api/health"
     echo
-    print_info "Credenciais padrão do administrador:"
+    print_success "=========================================="
+    print_success "🔐 Credenciais de Acesso:"
+    print_success "=========================================="
+    echo
     echo "  Username: admin"
     echo "  Password: pass123"
-    echo "  ⚠️  ALTERE A PASSWORD IMEDIATAMENTE!"
+    echo
+    print_warning "⚠️  ALTERE A PASSWORD IMEDIATAMENTE após o primeiro login!"
+    echo
+    print_info "=========================================="
+    print_info "Informações do Container:"
+    print_info "=========================================="
+    echo "  ID: $container_id"
+    echo "  Hostname: $CONTAINER_HOSTNAME"
+    echo "  IP: $container_ip"
     echo
     print_info "Comandos úteis:"
     echo "  Entrar no container: pct enter $container_id"

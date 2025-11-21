@@ -134,11 +134,11 @@ setup_app_directory() {
     if [ -d "$APP_DIR" ]; then
         print_warning "Diretório $APP_DIR já existe"
         if [ "$NON_INTERACTIVE" != "1" ]; then
-            read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                print_error "Instalação cancelada"
-                exit 1
+        read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_error "Instalação cancelada"
+            exit 1
             fi
         else
             print_info "Modo não-interativo: a fazer backup e sobrescrever..."
@@ -152,13 +152,23 @@ setup_app_directory() {
 }
 
 copy_files() {
-    print_info "A copiar ficheiros da aplicação..."
+    print_info "A verificar ficheiros da aplicação..."
     
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
     # If script is running from git clone, files are already in place
-    if [ -d "$SCRIPT_DIR/server" ] && [ -d "$SCRIPT_DIR/client" ]; then
-        # Copy essential files
+    # Check if we're already in the target directory (git clone scenario)
+    if [ "$SCRIPT_DIR" == "$APP_DIR" ]; then
+        # Files are already in place from git clone
+        if [ -d "$APP_DIR/server" ] && [ -d "$APP_DIR/client" ]; then
+            print_success "Ficheiros já estão no local correto (git clone)"
+        else
+            print_error "Ficheiros da aplicação não encontrados em $APP_DIR"
+            exit 1
+        fi
+    elif [ -d "$SCRIPT_DIR/server" ] && [ -d "$SCRIPT_DIR/client" ]; then
+        # Copy essential files from script directory
+        print_info "A copiar ficheiros da aplicação..."
         cp -r "$SCRIPT_DIR"/server "$APP_DIR/"
         cp -r "$SCRIPT_DIR"/client "$APP_DIR/"
         cp "$SCRIPT_DIR"/package.json "$APP_DIR/"
@@ -166,6 +176,7 @@ copy_files() {
         cp "$SCRIPT_DIR"/Dockerfile.backend "$APP_DIR/"
         cp "$SCRIPT_DIR"/Dockerfile.frontend "$APP_DIR/"
         cp "$SCRIPT_DIR"/nginx.conf "$APP_DIR/"
+        print_success "Ficheiros copiados"
     else
         print_error "Ficheiros da aplicação não encontrados em $SCRIPT_DIR"
         exit 1
@@ -176,11 +187,9 @@ copy_files() {
     chmod 755 "$APP_DIR/data" "$APP_DIR/logs"
     
     # Copy data files if they exist
-    if [ -d "$SCRIPT_DIR/data" ]; then
+    if [ -d "$SCRIPT_DIR/data" ] && [ "$SCRIPT_DIR" != "$APP_DIR" ]; then
         cp -r "$SCRIPT_DIR/data"/* "$APP_DIR/data/" 2>/dev/null || true
     fi
-    
-    print_success "Ficheiros copiados"
 }
 
 create_docker_compose() {
@@ -376,29 +385,29 @@ main() {
     
     # Configuration (use environment variables if in non-interactive mode)
     if [ "$NON_INTERACTIVE" != "1" ]; then
-        # Prompt for configuration
-        echo
-        read -p "Porta do backend [${BACKEND_PORT}]: " input_backend
-        BACKEND_PORT=${input_backend:-${BACKEND_PORT}}
-        
-        read -p "Porta do frontend [${FRONTEND_PORT}]: " input_frontend
-        FRONTEND_PORT=${input_frontend:-${FRONTEND_PORT}}
-        
-        read -p "Domínio/IP [${DOMAIN}]: " input_domain
-        DOMAIN=${input_domain:-${DOMAIN}}
-        
-        echo
-        print_info "Configuração:"
-        echo "  Backend Port: $BACKEND_PORT"
-        echo "  Frontend Port: $FRONTEND_PORT"
-        echo "  Domain: $DOMAIN"
-        echo
-        
-        read -p "Continuar com a instalação? (Y/n): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Nn]$ ]]; then
-            print_error "Instalação cancelada"
-            exit 1
+    # Prompt for configuration
+    echo
+    read -p "Porta do backend [${BACKEND_PORT}]: " input_backend
+    BACKEND_PORT=${input_backend:-${BACKEND_PORT}}
+    
+    read -p "Porta do frontend [${FRONTEND_PORT}]: " input_frontend
+    FRONTEND_PORT=${input_frontend:-${FRONTEND_PORT}}
+    
+    read -p "Domínio/IP [${DOMAIN}]: " input_domain
+    DOMAIN=${input_domain:-${DOMAIN}}
+    
+    echo
+    print_info "Configuração:"
+    echo "  Backend Port: $BACKEND_PORT"
+    echo "  Frontend Port: $FRONTEND_PORT"
+    echo "  Domain: $DOMAIN"
+    echo
+    
+    read -p "Continuar com a instalação? (Y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        print_error "Instalação cancelada"
+        exit 1
         fi
     else
         # Non-interactive mode: use environment variables
