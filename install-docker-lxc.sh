@@ -191,6 +191,9 @@ copy_files() {
     
     # Create data and logs directories
     mkdir -p "$APP_DIR/data" "$APP_DIR/logs"
+    
+    # Change owner to 1000:1000 (node user in container) to allow writing
+    chown -R 1000:1000 "$APP_DIR/data" "$APP_DIR/logs"
     chmod 755 "$APP_DIR/data" "$APP_DIR/logs"
     
     # Copy data files if they exist
