@@ -18,10 +18,28 @@ Cole este comando no shell do Proxmox:
 curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
 ```
 
-**Ou se preferir usar wget:**
+**Alternativas se o URL acima não funcionar:**
 
+**Opção 1: Usar commit SHA específico (mais confiável)**
+```bash
+curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/bb930b099366bd7b07a671a4494b1ee1b65618ae/install-proxmox.sh | bash
+```
+
+**Opção 2: Usar wget**
 ```bash
 wget -qO- https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
+```
+
+**Opção 3: Download manual e execução**
+```bash
+# Baixar o ficheiro
+wget https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh
+
+# Tornar executável
+chmod +x install-proxmox.sh
+
+# Executar
+bash install-proxmox.sh
 ```
 
 ### Passo 3: Aguardar Instalação

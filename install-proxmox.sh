@@ -8,6 +8,9 @@
 #
 # Uso: Cole este comando no shell do Proxmox:
 # curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
+#
+# Alternativa (usando commit SHA específico):
+# curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/bb930b099366bd7b07a671a4494b1ee1b65618ae/install-proxmox.sh | bash
 ###############################################################################
 
 set -e  # Exit on error
