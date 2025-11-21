@@ -77,11 +77,15 @@ find_local_storage() {
     for storage_name in $storages; do
         # Skip USB/external storages
         if [[ "$storage_name" == *"usb"* ]] || [[ "$storage_name" == *"external"* ]]; then
+            print_info "A ignorar storage USB/external: $storage_name" >&2
             continue
         fi
         
         # Get storage content configuration
-        local storage_content=$(pvesm config "$storage_name" 2>/dev/null | grep "^content:" | cut -d' ' -f2)
+        local storage_config=$(pvesm config "$storage_name" 2>/dev/null)
+        local storage_content=$(echo "$storage_config" | grep "^content:" | cut -d' ' -f2- | tr -d ' ')
+        
+        print_info "A verificar storage: $storage_name (conteúdo: ${storage_content:-nenhum})" >&2
         
         # Check if storage has rootdir in content
         if [[ "$storage_content" == *"rootdir"* ]]; then
@@ -98,17 +102,44 @@ find_local_storage() {
         print_info "A tentar configurar 'local-lvm' para suportar containers..." >&2
         
         # Get current content
-        local current_content=$(pvesm config local-lvm 2>/dev/null | grep "^content:" | cut -d' ' -f2)
+        local storage_config=$(pvesm config local-lvm 2>/dev/null)
+        local current_content=$(echo "$storage_config" | grep "^content:" | cut -d' ' -f2- | tr -d ' ')
+        
         if [ -n "$current_content" ]; then
             # Add rootdir if not present
             if [[ "$current_content" != *"rootdir"* ]]; then
                 local new_content="${current_content},rootdir"
+                print_info "A configurar 'local-lvm' com conteúdo: $new_content" >&2
                 if pvesm set local-lvm --content "$new_content" 2>/dev/null; then
                     print_success "Storage 'local-lvm' configurado para suportar containers" >&2
                     storage="local-lvm"
                     printf "%s\n" "$storage"
                     return 0
+                else
+                    print_warning "Falha ao configurar 'local-lvm', a tentar com conteúdo mínimo..." >&2
+                    # Try with minimal content
+                    if pvesm set local-lvm --content rootdir,images 2>/dev/null; then
+                        print_success "Storage 'local-lvm' configurado com conteúdo mínimo" >&2
+                        storage="local-lvm"
+                        printf "%s\n" "$storage"
+                        return 0
+                    fi
                 fi
+            else
+                # Already has rootdir
+                storage="local-lvm"
+                print_success "Storage 'local-lvm' já suporta containers" >&2
+                printf "%s\n" "$storage"
+                return 0
+            fi
+        else
+            # No content configured, set default with rootdir
+            print_info "Storage 'local-lvm' sem conteúdo configurado, a configurar..." >&2
+            if pvesm set local-lvm --content rootdir,images 2>/dev/null; then
+                print_success "Storage 'local-lvm' configurado para suportar containers" >&2
+                storage="local-lvm"
+                printf "%s\n" "$storage"
+                return 0
             fi
         fi
     fi
@@ -118,16 +149,28 @@ find_local_storage() {
         print_info "A tentar configurar storage 'local' para suportar containers..." >&2
         
         # Get current content
-        local current_content=$(pvesm config local 2>/dev/null | grep "^content:" | cut -d' ' -f2)
+        local storage_config=$(pvesm config local 2>/dev/null)
+        local current_content=$(echo "$storage_config" | grep "^content:" | cut -d' ' -f2- | tr -d ' ')
+        
         if [ -n "$current_content" ]; then
             # Add rootdir if not present
             if [[ "$current_content" != *"rootdir"* ]]; then
                 local new_content="${current_content},rootdir"
+                print_info "A configurar 'local' com conteúdo: $new_content" >&2
                 if pvesm set local --content "$new_content" 2>/dev/null; then
                     print_success "Storage 'local' configurado para suportar containers" >&2
                     storage="local"
                     printf "%s\n" "$storage"
                     return 0
+                else
+                    print_warning "Falha ao configurar 'local', a tentar com conteúdo padrão..." >&2
+                    # Try with standard content
+                    if pvesm set local --content backup,iso,vztmpl,rootdir 2>/dev/null; then
+                        print_success "Storage 'local' configurado com conteúdo padrão" >&2
+                        storage="local"
+                        printf "%s\n" "$storage"
+                        return 0
+                    fi
                 fi
             else
                 # Already has rootdir
@@ -138,6 +181,7 @@ find_local_storage() {
             fi
         else
             # No content configured, set default with rootdir
+            print_info "Storage 'local' sem conteúdo configurado, a configurar..." >&2
             if pvesm set local --content backup,iso,vztmpl,rootdir 2>/dev/null; then
                 print_success "Storage 'local' configurado para suportar containers" >&2
                 storage="local"
