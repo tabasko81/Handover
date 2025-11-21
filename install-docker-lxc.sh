@@ -3,8 +3,8 @@
 ###############################################################################
 # Shift Handover Log - Docker Installation Script for LXC/Proxmox
 # 
-# Este script instala e configura a aplicação Shift Handover Log
-# num container LXC no Proxmox usando Docker e Docker Compose
+# This script installs and configures the Shift Handover Log application
+# in an LXC container on Proxmox using Docker and Docker Compose
 ###############################################################################
 
 set -e  # Exit on error
@@ -42,31 +42,31 @@ print_error() {
 
 check_root() {
     if [ "$EUID" -ne 0 ]; then 
-        print_error "Por favor execute como root ou com sudo"
+        print_error "Please run as root or with sudo"
         exit 1
     fi
 }
 
 check_lxc() {
     if [ ! -f /.dockerenv ] && [ -f /proc/1/environ ] && grep -q "container=lxc" /proc/1/environ 2>/dev/null; then
-        print_info "Detectado ambiente LXC"
+        print_info "LXC environment detected"
         return 0
     elif [ -d /sys/class/dmi/id ] && [ -f /sys/class/dmi/id/product_name ]; then
-        print_info "Ambiente detectado (pode não ser LXC)"
+        print_info "Environment detected (might not be LXC)"
     fi
     return 0
 }
 
 install_docker() {
-    print_info "A verificar instalação do Docker..."
+    print_info "Checking Docker installation..."
     
     if command -v docker &> /dev/null; then
-        print_success "Docker já está instalado"
+        print_success "Docker is already installed"
         docker --version
         return 0
     fi
     
-    print_info "A instalar Docker..."
+    print_info "Installing Docker..."
     
     # Update package index
     apt-get update -qq
@@ -100,66 +100,66 @@ install_docker() {
     # Add current user to docker group (if not root)
     if [ "$SUDO_USER" ]; then
         usermod -aG docker "$SUDO_USER"
-        print_info "Utilizador $SUDO_USER adicionado ao grupo docker"
+        print_info "User $SUDO_USER added to docker group"
     fi
     
-    print_success "Docker instalado com sucesso"
+    print_success "Docker installed successfully"
     docker --version
 }
 
 install_docker_compose() {
-    print_info "A verificar Docker Compose..."
+    print_info "Checking Docker Compose..."
     
     if docker compose version &> /dev/null; then
-        print_success "Docker Compose já está instalado"
+        print_success "Docker Compose is already installed"
         docker compose version
         return 0
     fi
     
-    # Docker Compose V2 já vem com docker-compose-plugin
+    # Docker Compose V2 already comes with docker-compose-plugin
     if command -v docker-compose &> /dev/null; then
-        print_success "Docker Compose (v1) encontrado"
+        print_success "Docker Compose (v1) found"
         docker-compose --version
         return 0
     fi
     
-    print_error "Docker Compose não encontrado. A instalar..."
+    print_error "Docker Compose not found. Installing..."
     apt-get install -y -qq docker-compose-plugin
-    print_success "Docker Compose instalado"
+    print_success "Docker Compose installed"
 }
 
 setup_app_directory() {
-    print_info "A configurar diretório da aplicação..."
+    print_info "Configuring application directory..."
     
     # Check if directory exists and has the required files (from git clone)
     if [ -d "$APP_DIR" ] && [ -d "$APP_DIR/server" ] && [ -d "$APP_DIR/client" ]; then
-        print_info "Diretório $APP_DIR já existe com ficheiros da aplicação (git clone)"
-        print_info "A usar diretório existente..."
+        print_info "Directory $APP_DIR already exists with application files (git clone)"
+        print_info "Using existing directory..."
         return 0
     fi
     
     if [ -d "$APP_DIR" ]; then
-        print_warning "Diretório $APP_DIR já existe mas sem ficheiros da aplicação"
+        print_warning "Directory $APP_DIR already exists but without application files"
         if [ "$NON_INTERACTIVE" != "1" ]; then
-            read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
+            read -p "Do you want to continue and overwrite? (y/N): " -n 1 -r
             echo
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                print_error "Instalação cancelada"
+                print_error "Installation cancelled"
                 exit 1
             fi
         else
-            print_info "Modo não-interativo: a fazer backup e sobrescrever..."
+            print_info "Non-interactive mode: backing up and overwriting..."
         fi
-        print_info "A fazer backup do diretório existente..."
+        print_info "Backing up existing directory..."
         mv "$APP_DIR" "${APP_DIR}.backup.$(date +%Y%m%d_%H%M%S)"
     fi
     
     mkdir -p "$APP_DIR"
-    print_success "Diretório criado: $APP_DIR"
+    print_success "Directory created: $APP_DIR"
 }
 
 copy_files() {
-    print_info "A verificar ficheiros da aplicação..."
+    print_info "Checking application files..."
     
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
@@ -168,14 +168,14 @@ copy_files() {
     if [ "$SCRIPT_DIR" == "$APP_DIR" ]; then
         # Files are already in place from git clone
         if [ -d "$APP_DIR/server" ] && [ -d "$APP_DIR/client" ]; then
-            print_success "Ficheiros já estão no local correto (git clone)"
+            print_success "Files are already in the correct location (git clone)"
         else
-            print_error "Ficheiros da aplicação não encontrados em $APP_DIR"
+            print_error "Application files not found in $APP_DIR"
             exit 1
         fi
     elif [ -d "$SCRIPT_DIR/server" ] && [ -d "$SCRIPT_DIR/client" ]; then
         # Copy essential files from script directory
-        print_info "A copiar ficheiros da aplicação..."
+        print_info "Copying application files..."
         cp -r "$SCRIPT_DIR"/server "$APP_DIR/"
         cp -r "$SCRIPT_DIR"/client "$APP_DIR/"
         cp "$SCRIPT_DIR"/package.json "$APP_DIR/"
@@ -183,9 +183,9 @@ copy_files() {
         cp "$SCRIPT_DIR"/Dockerfile.backend "$APP_DIR/"
         cp "$SCRIPT_DIR"/Dockerfile.frontend "$APP_DIR/"
         cp "$SCRIPT_DIR"/nginx.conf "$APP_DIR/"
-        print_success "Ficheiros copiados"
+        print_success "Files copied"
     else
-        print_error "Ficheiros da aplicação não encontrados em $SCRIPT_DIR"
+        print_error "Application files not found in $SCRIPT_DIR"
         exit 1
     fi
     
@@ -203,7 +203,7 @@ copy_files() {
 }
 
 create_docker_compose() {
-    print_info "A criar docker-compose.yml..."
+    print_info "Creating docker-compose.yml..."
     
     cat > "$APP_DIR/docker-compose.yml" <<EOF
 services:
@@ -255,11 +255,11 @@ networks:
     driver: bridge
 EOF
 
-    print_success "docker-compose.yml criado"
+    print_success "docker-compose.yml created"
 }
 
 create_env_file() {
-    print_info "A criar ficheiro .env..."
+    print_info "Creating .env file..."
     
     if [ ! -f "$APP_DIR/.env" ]; then
         cat > "$APP_DIR/.env" <<EOF
@@ -273,14 +273,14 @@ DOMAIN=${DOMAIN}
 BACKEND_PORT=${BACKEND_PORT}
 FRONTEND_PORT=${FRONTEND_PORT}
 EOF
-        print_success "Ficheiro .env criado"
+        print_success ".env file created"
     else
-        print_info "Ficheiro .env já existe, a manter configuração existente"
+        print_info ".env file already exists, keeping existing configuration"
     fi
 }
 
 create_dockerignore() {
-    print_info "A criar .dockerignore..."
+    print_info "Creating .dockerignore..."
     
     cat > "$APP_DIR/.dockerignore" <<EOF
 node_modules
@@ -302,32 +302,32 @@ docker-compose*.yml
 .DS_Store
 EOF
 
-    print_success ".dockerignore criado"
+    print_success ".dockerignore created"
 }
 
 build_and_start() {
-    print_info "A construir imagens Docker..."
+    print_info "Building Docker images..."
     
     cd "$APP_DIR"
     
     # Build images
     docker compose build --no-cache
     
-    print_info "A iniciar containers..."
+    print_info "Starting containers..."
     docker compose up -d
     
-    print_success "Containers iniciados"
+    print_success "Containers started"
 }
 
 wait_for_services() {
-    print_info "A aguardar serviços ficarem prontos..."
+    print_info "Waiting for services to be ready..."
     
     local max_attempts=30
     local attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
         if docker compose exec -T backend wget --quiet --tries=1 --spider http://localhost:5000/api/health 2>/dev/null; then
-            print_success "Backend está a responder"
+            print_success "Backend is responding"
             return 0
         fi
         attempt=$((attempt + 1))
@@ -336,48 +336,48 @@ wait_for_services() {
     done
     
     echo
-    print_warning "Backend pode não estar totalmente pronto"
+    print_warning "Backend might not be fully ready yet"
     return 1
 }
 
 show_status() {
-    print_info "Estado dos containers:"
+    print_info "Container status:"
     docker compose -f "$APP_DIR/docker-compose.yml" ps
     
     echo
-    print_info "Logs recentes do backend:"
+    print_info "Recent backend logs:"
     docker compose -f "$APP_DIR/docker-compose.yml" logs --tail=10 backend
     
     echo
-    print_info "Logs recentes do frontend:"
+    print_info "Recent frontend logs:"
     docker compose -f "$APP_DIR/docker-compose.yml" logs --tail=10 frontend
 }
 
 show_info() {
     echo
     print_success "=========================================="
-    print_success "Instalação concluída com sucesso!"
+    print_success "Installation completed successfully!"
     print_success "=========================================="
     echo
-    print_info "Aplicação disponível em:"
+    print_info "Application available at:"
     echo "  Frontend: http://${DOMAIN}:${FRONTEND_PORT}"
     echo "  Backend API: http://${DOMAIN}:${BACKEND_PORT}/api"
     echo "  Health Check: http://${DOMAIN}:${BACKEND_PORT}/api/health"
     echo
-    print_info "Credenciais padrão do administrador:"
+    print_info "Default Admin Credentials:"
     echo "  Username: admin"
     echo "  Password: pass123"
-    echo "  ⚠️  ALTERE A PASSWORD IMEDIATAMENTE!"
+    echo "  ⚠️  CHANGE PASSWORD IMMEDIATELY!"
     echo
-    print_info "Comandos úteis:"
-    echo "  Ver logs: docker compose -f $APP_DIR/docker-compose.yml logs -f"
-    echo "  Parar: docker compose -f $APP_DIR/docker-compose.yml down"
-    echo "  Iniciar: docker compose -f $APP_DIR/docker-compose.yml up -d"
-    echo "  Reiniciar: docker compose -f $APP_DIR/docker-compose.yml restart"
-    echo "  Estado: docker compose -f $APP_DIR/docker-compose.yml ps"
+    print_info "Useful Commands:"
+    echo "  View logs: docker compose -f $APP_DIR/docker-compose.yml logs -f"
+    echo "  Stop: docker compose -f $APP_DIR/docker-compose.yml down"
+    echo "  Start: docker compose -f $APP_DIR/docker-compose.yml up -d"
+    echo "  Restart: docker compose -f $APP_DIR/docker-compose.yml restart"
+    echo "  Status: docker compose -f $APP_DIR/docker-compose.yml ps"
     echo
-    print_info "Diretório da aplicação: $APP_DIR"
-    echo "  Dados: $APP_DIR/data"
+    print_info "Application Directory: $APP_DIR"
+    echo "  Data: $APP_DIR/data"
     echo "  Logs: $APP_DIR/logs"
     echo
 }
@@ -386,7 +386,7 @@ show_info() {
 main() {
     echo
     print_info "=========================================="
-    print_info "Shift Handover Log - Instalação Docker"
+    print_info "Shift Handover Log - Docker Installation"
     print_info "=========================================="
     echo
     
@@ -397,32 +397,32 @@ main() {
     if [ "$NON_INTERACTIVE" != "1" ]; then
     # Prompt for configuration
     echo
-    read -p "Porta do backend [${BACKEND_PORT}]: " input_backend
+    read -p "Backend Port [${BACKEND_PORT}]: " input_backend
     BACKEND_PORT=${input_backend:-${BACKEND_PORT}}
     
-    read -p "Porta do frontend [${FRONTEND_PORT}]: " input_frontend
+    read -p "Frontend Port [${FRONTEND_PORT}]: " input_frontend
     FRONTEND_PORT=${input_frontend:-${FRONTEND_PORT}}
     
-    read -p "Domínio/IP [${DOMAIN}]: " input_domain
+    read -p "Domain/IP [${DOMAIN}]: " input_domain
     DOMAIN=${input_domain:-${DOMAIN}}
     
     echo
-    print_info "Configuração:"
+    print_info "Configuration:"
     echo "  Backend Port: $BACKEND_PORT"
     echo "  Frontend Port: $FRONTEND_PORT"
     echo "  Domain: $DOMAIN"
     echo
     
-    read -p "Continuar com a instalação? (Y/n): " -n 1 -r
+    read -p "Continue with installation? (Y/n): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Nn]$ ]]; then
-        print_error "Instalação cancelada"
+        print_error "Installation cancelled"
         exit 1
         fi
     else
         # Non-interactive mode: use environment variables
-        print_info "Modo não-interativo ativado"
-        print_info "Configuração:"
+        print_info "Non-interactive mode enabled"
+        print_info "Configuration:"
         echo "  Backend Port: $BACKEND_PORT"
         echo "  Frontend Port: $FRONTEND_PORT"
         echo "  Domain: $DOMAIN"

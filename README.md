@@ -83,7 +83,27 @@
 
 ## 🚀 Quick Start
 
-### Using Docker (Recommended)
+### 📦 Automatic Proxmox Installation (Recommended)
+
+Easily install the application on your Proxmox server with a single command. This script sets up an LXC container, installs Docker, and deploys the application automatically.
+
+**How to install:**
+1. Open your Proxmox Shell (Host)
+2. Run the following command:
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
+   ```
+3. Follow the on-screen instructions.
+
+👉 **See detailed guide:** [PROXMOX-SETUP.md](PROXMOX-SETUP.md)
+
+**New to Proxmox? Check these tutorials:**
+- 📺 [How to Install Proxmox VE 8](https://www.youtube.com/watch?v=5j0l5kE8Wjg)
+- 📺 [Proxmox Beginners Guide](https://www.youtube.com/watch?v=AZtJ9s0vDXw)
+
+---
+
+### Using Docker (Manual)
 
 **For Windows Users (Non-Technical):**  
 👉 See **[docs/INSTALL_GUIDE_WINDOWS.md](docs/INSTALL_GUIDE_WINDOWS.md)** for a complete step-by-step guide with screenshots and troubleshooting.

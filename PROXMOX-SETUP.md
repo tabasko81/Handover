@@ -1,224 +1,224 @@
-# Instalação Automática no Proxmox LXC
+# Automatic Installation on Proxmox LXC
 
-Guia simples para instalar a aplicação Shift Handover Log num container LXC no Proxmox de forma totalmente automática.
+Simple guide to install the Shift Handover Log application in an LXC container on Proxmox fully automatically.
 
-## 🚀 Instalação Rápida
+## 🚀 Quick Installation
 
-### Passo 1: Aceder ao Shell do Proxmox
+### Step 1: Access Proxmox Shell
 
-1. Abra a interface web do Proxmox
-2. Clique em **"Shell"** no canto superior direito (ou aceda via SSH)
-3. Certifique-se de que está no **host Proxmox** (não dentro de um container)
+1. Open the Proxmox web interface
+2. Click on **"Shell"** in the top right corner (or access via SSH)
+3. Ensure you are on the **Proxmox host** (not inside a container)
 
-### Passo 2: Executar Script de Instalação
+### Step 2: Run Installation Script
 
-Cole este comando no shell do Proxmox:
+Paste this command into the Proxmox shell:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
 ```
 
-**Alternativas se o URL acima não funcionar:**
+**Alternatives if the above URL doesn't work:**
 
-**Opção 1: Usar commit SHA específico (mais confiável)**
+**Option 1: Use specific commit SHA (more reliable)**
 ```bash
 curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/bb930b099366bd7b07a671a4494b1ee1b65618ae/install-proxmox.sh | bash
 ```
 
-**Opção 2: Usar wget**
+**Option 2: Use wget**
 ```bash
 wget -qO- https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
 ```
 
-**Opção 3: Download manual e execução**
+**Option 3: Manual download and execution**
 ```bash
-# Baixar o ficheiro
+# Download the file
 wget https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh
 
-# Tornar executável
+# Make executable
 chmod +x install-proxmox.sh
 
-# Executar
+# Execute
 bash install-proxmox.sh
 ```
 
-### Passo 3: Aguardar Instalação
+### Step 3: Wait for Installation
 
-O script irá automaticamente:
+The script will automatically:
 
-1. ✅ Detectar storage local disponível (exclui USB)
-2. ✅ Encontrar próximo ID de container disponível
-3. ✅ Criar container LXC com Debian
-4. ✅ Instalar Docker dentro do container
-5. ✅ Fazer clone do repositório Git
-6. ✅ Instalar e iniciar a aplicação
-7. ✅ Mostrar informações de acesso
+1. ✅ Detect available local storage (excludes USB)
+2. ✅ Find the next available container ID
+3. ✅ Create an LXC container with Debian
+4. ✅ Install Docker inside the container
+5. ✅ Clone the Git repository
+6. ✅ Install and start the application
+7. ✅ Display access information
 
-**Tempo estimado:** 5-10 minutos (dependendo da velocidade de download)
+**Estimated time:** 5-10 minutes (depending on download speed)
 
-### Passo 4: Aceder à Aplicação
+### Step 4: Access the Application
 
-Após a instalação, o script mostrará:
+After installation, the script will show:
 
-- **IP do container** (ex: `192.168.1.100`)
-- **URL do Frontend:** `http://<IP>:3000`
-- **URL do Backend:** `http://<IP>:5000/api`
+- **Container IP** (e.g., `192.168.1.100`)
+- **Frontend URL:** `http://<IP>:3000`
+- **Backend URL:** `http://<IP>:5000/api`
 
-**Credenciais padrão:**
+**Default Credentials:**
 - Username: `admin`
 - Password: `pass123`
 
-⚠️ **IMPORTANTE:** Altere a password imediatamente após o primeiro login!
+⚠️ **IMPORTANT:** Change the password immediately after the first login!
 
 ---
 
-## 📋 Pré-requisitos
+## 📋 Prerequisites
 
-- Proxmox VE instalado e configurado
-- Acesso root ao host Proxmox
-- Pelo menos 2GB de RAM disponível
-- Pelo menos 8GB de espaço em disco local (não USB)
-- Conectividade de rede (para download de templates e Git)
+- Proxmox VE installed and configured
+- Root access to the Proxmox host
+- At least 2GB of available RAM
+- At least 8GB of available local disk space (not USB)
+- Network connectivity (for downloading templates and Git)
 
 ---
 
-## ⚙️ Configurações Padrão
+## ⚙️ Default Settings
 
-O script usa as seguintes configurações padrão:
+The script uses the following default settings:
 
-- **Template:** Debian (mais recente disponível)
+- **Template:** Debian (latest available)
 - **Hostname:** `handover-log`
 - **RAM:** 2048 MB
 - **CPU:** 2 cores
-- **Disco:** 8 GB
-- **Rede:** DHCP (bridge vmbr0)
+- **Disk:** 8 GB
+- **Network:** DHCP (bridge vmbr0)
 - **Backend Port:** 5000
 - **Frontend Port:** 3000
 
-Estas configurações podem ser alteradas editando o script `install-proxmox.sh` antes de executar.
+These settings can be changed by editing the `install-proxmox.sh` script before executing.
 
 ---
 
-## 🔧 Gestão do Container
+## 🔧 Container Management
 
-### Entrar no Container
+### Enter the Container
 
 ```bash
-pct enter <ID_DO_CONTAINER>
+pct enter <CONTAINER_ID>
 ```
 
-### Ver Logs da Aplicação
+### View Application Logs
 
 ```bash
-pct exec <ID_DO_CONTAINER> -- bash -c 'cd /opt/shift-handover-log && docker compose logs -f'
+pct exec <CONTAINER_ID> -- bash -c 'cd /opt/shift-handover-log && docker compose logs -f'
 ```
 
-### Parar Aplicação
+### Stop Application
 
 ```bash
-pct exec <ID_DO_CONTAINER> -- bash -c 'cd /opt/shift-handover-log && docker compose down'
+pct exec <CONTAINER_ID> -- bash -c 'cd /opt/shift-handover-log && docker compose down'
 ```
 
-### Iniciar Aplicação
+### Start Application
 
 ```bash
-pct exec <ID_DO_CONTAINER> -- bash -c 'cd /opt/shift-handover-log && docker compose up -d'
+pct exec <CONTAINER_ID> -- bash -c 'cd /opt/shift-handover-log && docker compose up -d'
 ```
 
-### Ver Estado
+### View Status
 
 ```bash
-pct exec <ID_DO_CONTAINER> -- bash -c 'cd /opt/shift-handover-log && docker compose ps'
+pct exec <CONTAINER_ID> -- bash -c 'cd /opt/shift-handover-log && docker compose ps'
 ```
 
-### Reiniciar Container
+### Restart Container
 
 ```bash
-pct restart <ID_DO_CONTAINER>
+pct restart <CONTAINER_ID>
 ```
 
-### Parar Container
+### Stop Container
 
 ```bash
-pct stop <ID_DO_CONTAINER>
+pct stop <CONTAINER_ID>
 ```
 
-### Iniciar Container
+### Start Container
 
 ```bash
-pct start <ID_DO_CONTAINER>
+pct start <CONTAINER_ID>
 ```
 
 ---
 
-## 🐛 Resolução de Problemas
+## 🐛 Troubleshooting
 
-### Erro: "Storage local não encontrado"
+### Error: "Local storage not found"
 
-**Solução:**
-- Verifique se tem storage local configurado no Proxmox
-- O script exclui automaticamente storages USB
-- Configure um storage local (local-lvm ou local) no Proxmox
+**Solution:**
+- Verify you have local storage configured in Proxmox
+- The script automatically excludes USB storage
+- Configure a local storage (local-lvm or local) in Proxmox
 
-### Erro: "Template Debian não encontrado"
+### Error: "Debian template not found"
 
-**Solução:**
-- O script tenta baixar automaticamente o template
-- Verifique conectividade de rede
-- Pode baixar manualmente: `pveam update && pveam download local debian-XX-standard`
+**Solution:**
+- The script tries to automatically download the template
+- Check network connectivity
+- You can download manually: `pveam update && pveam download local debian-XX-standard`
 
-### Container não inicia
+### Container fails to start
 
-**Solução:**
+**Solution:**
 ```bash
-# Ver logs do container
+# View container logs
 pct status <ID> --verbose
 
-# Verificar configuração
+# Check configuration
 pct config <ID>
 ```
 
-### Aplicação não responde
+### Application not responding
 
-**Solução:**
+**Solution:**
 ```bash
-# Entrar no container
+# Enter container
 pct enter <ID>
 
-# Verificar se Docker está a correr
+# Check if Docker is running
 systemctl status docker
 
-# Ver logs da aplicação
+# View application logs
 cd /opt/shift-handover-log
 docker compose logs
 ```
 
-### IP não detectado
+### IP not detected
 
-**Solução:**
+**Solution:**
 ```bash
-# Descobrir IP manualmente
+# Find IP manually
 pct exec <ID> -- hostname -I
 
-# Ou verificar configuração de rede
+# Or check network configuration
 pct config <ID> | grep ip
 ```
 
 ---
 
-## 📊 Verificar Recursos
+## 📊 Resource Monitoring
 
-### Ver Utilização de Recursos do Container
+### Check Container Resource Usage
 
 ```bash
 pct enter <ID>
 htop
-# ou
+# or
 free -h
 df -h
 ```
 
-### Ver Utilização de Recursos dos Containers Docker
+### Check Docker Containers Resource Usage
 
 ```bash
 pct exec <ID> -- docker stats
@@ -226,25 +226,25 @@ pct exec <ID> -- docker stats
 
 ---
 
-## 🔄 Atualizar Aplicação
+## 🔄 Update Application
 
-Para atualizar a aplicação para a versão mais recente:
+To update the application to the latest version:
 
 ```bash
-# Entrar no container
+# Enter container
 pct enter <ID>
 
-# Ir para diretório da aplicação
+# Go to application directory
 cd /opt/shift-handover-log
 
-# Fazer backup
+# Backup
 docker compose down
 cp -r data data.backup.$(date +%Y%m%d)
 
-# Atualizar código
+# Update code
 git pull
 
-# Reconstruir e reiniciar
+# Rebuild and restart
 docker compose build --no-cache
 docker compose up -d
 ```
@@ -253,69 +253,68 @@ docker compose up -d
 
 ## 💾 Backup
 
-### Criar Backup Manual
+### Create Manual Backup
 
 ```bash
-# Parar aplicação
+# Stop application
 pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose down'
 
-# Fazer backup do diretório data
+# Backup data directory
 pct exec <ID> -- tar -czf /tmp/backup-$(date +%Y%m%d).tar.gz -C /opt/shift-handover-log data
 
-# Copiar backup para host
+# Copy backup to host
 pct pull <ID> /tmp/backup-*.tar.gz /root/backups/
 
-# Reiniciar aplicação
+# Restart application
 pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose up -d'
 ```
 
-### Restaurar Backup
+### Restore Backup
 
 ```bash
-# Parar aplicação
+# Stop application
 pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose down'
 
-# Copiar backup para container
+# Copy backup to container
 pct push <ID> /root/backups/backup-YYYYMMDD.tar.gz /tmp/
 
-# Extrair backup
+# Extract backup
 pct exec <ID> -- tar -xzf /tmp/backup-YYYYMMDD.tar.gz -C /opt/shift-handover-log
 
-# Reiniciar aplicação
+# Restart application
 pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose up -d'
 ```
 
 ---
 
-## 📝 Notas Importantes
+## 📝 Important Notes
 
-1. **Storage Local:** O script instala sempre no disco local, nunca em USB
-2. **ID Automático:** O script encontra automaticamente o próximo ID disponível (100, 101, 102...)
-3. **IP Automático:** O IP é atribuído via DHCP e detectado automaticamente
-4. **Modo Não-Interativo:** O script executa tudo automaticamente sem pedir confirmações (exceto confirmação inicial)
-5. **Templates:** O script baixa automaticamente o template Debian se não estiver disponível
-
----
-
-## 🔒 Segurança
-
-- ⚠️ Altere a password padrão imediatamente após instalação
-- ⚠️ Configure firewall se necessário
-- ⚠️ Considere usar HTTPS em produção (reverse proxy)
-- ⚠️ Faça backups regulares dos dados
+1. **Local Storage:** The script always installs on local disk, never on USB
+2. **Automatic ID:** The script automatically finds the next available ID (100, 101, 102...)
+3. **Automatic IP:** The IP is assigned via DHCP and automatically detected
+4. **Non-Interactive Mode:** The script runs everything automatically without asking for confirmations (except initial confirmation)
+5. **Templates:** The script automatically downloads the Debian template if not available
 
 ---
 
-## 📞 Suporte
+## 🔒 Security
 
-Para problemas ou questões:
-
-1. Verifique os logs: `pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose logs'`
-2. Consulte a documentação em `docs/`
-3. Verifique o estado: `pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose ps'`
+- ⚠️ Change default password immediately after installation
+- ⚠️ Configure firewall if necessary
+- ⚠️ Consider using HTTPS in production (reverse proxy)
+- ⚠️ Perform regular data backups
 
 ---
 
-**Versão:** Alpha v0.25.11-alpha.6  
-**Última atualização:** 2025
+## 📞 Support
 
+For issues or questions:
+
+1. Check logs: `pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose logs'`
+2. Consult documentation in `docs/`
+3. Check status: `pct exec <ID> -- bash -c 'cd /opt/shift-handover-log && docker compose ps'`
+
+---
+
+**Version:** Alpha v0.25.11-alpha.6  
+**Last Updated:** 2025

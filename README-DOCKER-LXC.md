@@ -1,22 +1,22 @@
-# Shift Handover Log - Instalação Docker em LXC/Proxmox
+# Shift Handover Log - Docker Installation on LXC/Proxmox
 
-Guia completo para instalar a aplicação Shift Handover Log num container LXC no Proxmox usando Docker.
+Complete guide to install the Shift Handover Log application in an LXC container on Proxmox using Docker.
 
-## 📋 Pré-requisitos
+## 📋 Prerequisites
 
-- Container LXC no Proxmox (Debian/Ubuntu recomendado)
-- Acesso root ao container
-- Pelo menos 2GB de RAM disponível
-- Pelo menos 5GB de espaço em disco
+- LXC Container on Proxmox (Debian/Ubuntu recommended)
+- Root access to the container
+- At least 2GB of available RAM
+- At least 5GB of disk space
 
-## 🚀 Instalação Rápida
+## 🚀 Quick Installation
 
-### 1. Preparar o Container LXC
+### 1. Prepare the LXC Container
 
-No Proxmox, crie ou configure um container LXC:
+In Proxmox, create or configure an LXC container:
 
 ```bash
-# No host Proxmox, criar container LXC
+# On Proxmox host, create LXC container
 pct create 100 local:vztmpl/debian-11-standard_11.7-1_amd64.tar.zst \
   --hostname handover-log \
   --memory 2048 \
@@ -26,131 +26,117 @@ pct create 100 local:vztmpl/debian-11-standard_11.7-1_amd64.tar.zst \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp
 ```
 
-### 2. Aceder ao Container
+### 2. Access the Container
 
 ```bash
-# No host Proxmox
+# On Proxmox host
 pct enter 100
 
-# Ou via SSH se configurado
-ssh root@<ip-do-container>
+# Or via SSH if configured
+ssh root@<container-ip>
 ```
 
-### 3. Transferir Ficheiros
+### 3. Transfer Files
 
-Copie os ficheiros da aplicação para o container:
+Copy application files to the container:
 
 ```bash
-# Opção 1: Via SCP (do seu computador)
-scp -r /caminho/para/Handover root@<ip-container>:/root/
+# Option 1: Via SCP (from your computer)
+scp -r /path/to/Handover root@<container-ip>:/root/
 
-# Opção 2: Via Git (se o projeto estiver no GitHub)
+# Option 2: Via Git (if project is on GitHub)
 apt-get update
 apt-get install -y git
-git clone <url-do-repositorio> /opt/shift-handover-log
+git clone <repository-url> /opt/shift-handover-log
 ```
 
-### 4. Executar Script de Instalação
+### 4. Run Installation Script
 
 ```bash
-cd /root/Handover  # ou /opt/shift-handover-log se usou git
+cd /root/Handover  # or /opt/shift-handover-log if used git
 chmod +x install-docker-lxc.sh
 ./install-docker-lxc.sh
 ```
 
-O script irá:
-- ✅ Verificar e instalar Docker se necessário
-- ✅ Instalar Docker Compose
-- ✅ Configurar a aplicação
-- ✅ Construir imagens Docker
-- ✅ Iniciar os containers
+The script will:
+- ✅ Verify and install Docker if needed
+- ✅ Install Docker Compose
+- ✅ Configure the application
+- ✅ Build Docker images
+- ✅ Start the containers
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-### Variáveis de Ambiente
+### Environment Variables
 
-Durante a instalação, o script pedirá:
-- **Backend Port**: Porta para o backend (padrão: 5000)
-- **Frontend Port**: Porta para o frontend (padrão: 3000)
-- **Domain**: Domínio ou IP do servidor
+During installation, the script will ask for:
+- **Backend Port**: Port for backend (default: 5000)
+- **Frontend Port**: Port for frontend (default: 3000)
+- **Domain**: Domain or IP of the server
 
-### Configuração Manual
+### Manual Configuration
 
-Edite o ficheiro `.env` em `/opt/shift-handover-log/`:
+Edit the `.env` file in `/opt/shift-handover-log/`:
 
 ```bash
 nano /opt/shift-handover-log/.env
 ```
 
-Variáveis disponíveis:
+Available variables:
 ```env
 NODE_ENV=production
 PORT=5000
-JWT_SECRET=seu-secret-aqui
-FRONTEND_URL=http://seu-dominio:3000
-REACT_APP_API_URL=http://seu-dominio:5000/api
-DOMAIN=seu-dominio
+JWT_SECRET=your-secret-here
+FRONTEND_URL=http://your-domain:3000
+REACT_APP_API_URL=http://your-domain:5000/api
+DOMAIN=your-domain
 BACKEND_PORT=5000
 FRONTEND_PORT=3000
 ```
 
-## 🛠️ Gestão da Aplicação
+## 🛠️ Application Management
 
-Use o script de gestão `docker-manage.sh`:
+Use the management script `docker-manage.sh` (if available) or standard docker commands:
 
 ```bash
-# Tornar executável (se necessário)
-chmod +x docker-manage.sh
+# Start containers
+docker compose up -d
 
-# Iniciar containers
-./docker-manage.sh start
+# Stop containers
+docker compose down
 
-# Parar containers
-./docker-manage.sh stop
+# Restart containers
+docker compose restart
 
-# Reiniciar containers
-./docker-manage.sh restart
+# View status
+docker compose ps
 
-# Ver estado
-./docker-manage.sh status
-
-# Ver logs
-./docker-manage.sh logs              # Todos os serviços
-./docker-manage.sh logs backend      # Apenas backend
-./docker-manage.sh logs frontend     # Apenas frontend
-
-# Reconstruir imagens
-./docker-manage.sh rebuild
-
-# Criar backup
-./docker-manage.sh backup
-
-# Atualizar aplicação
-./docker-manage.sh update
+# View logs
+docker compose logs -f
 ```
 
-## 🌐 Acesso à Aplicação
+## 🌐 Accessing the Application
 
-Após a instalação, a aplicação estará disponível em:
+After installation, the application will be available at:
 
-- **Frontend**: `http://<ip-do-container>:3000`
-- **Backend API**: `http://<ip-do-container>:5000/api`
-- **Health Check**: `http://<ip-do-container>:5000/api/health`
+- **Frontend**: `http://<container-ip>:3000`
+- **Backend API**: `http://<container-ip>:5000/api`
+- **Health Check**: `http://<container-ip>:5000/api/health`
 
-### Credenciais Padrão
+### Default Credentials
 
 - **Username**: `admin`
 - **Password**: `pass123`
 
-⚠️ **IMPORTANTE**: Altere a password imediatamente após o primeiro login!
+⚠️ **IMPORTANT**: Change the password immediately after first login!
 
-## 🔧 Configuração de Rede no Proxmox
+## 🔧 Network Configuration in Proxmox
 
 ### Port Forwarding
 
-Se precisar de aceder de fora da rede local, configure port forwarding no Proxmox:
+If you need to access from outside the local network, configure port forwarding in Proxmox:
 
-1. No host Proxmox, edite `/etc/pve/lxc/<id>.conf`:
+1. On Proxmox host, edit `/etc/pve/lxc/<id>.conf`:
 
 ```
 lxc.net.0.type = veth
@@ -160,190 +146,115 @@ lxc.net.0.ipv4.address = 10.0.0.100/24
 lxc.net.0.ipv4.gateway = 10.0.0.1
 ```
 
-2. Configure port forwarding no router/firewall do Proxmox
+2. Configure port forwarding on your router/firewall
 
 ### Firewall
 
-Se usar firewall no Proxmox, permita as portas:
+If using firewall in Proxmox, allow ports:
 
 ```bash
-# No host Proxmox
+# On Proxmox host
 pct set <id> -net0 name=eth0,bridge=vmbr0,firewall=1
 ```
 
-## 📊 Monitorização
+## 📊 Monitoring
 
-### Ver Logs em Tempo Real
+### View Real-time Logs
 
 ```bash
 docker compose -f /opt/shift-handover-log/docker-compose.yml logs -f
 ```
 
-### Verificar Estado dos Containers
+### Check Container Status
 
 ```bash
 docker compose -f /opt/shift-handover-log/docker-compose.yml ps
 ```
 
-### Verificar Utilização de Recursos
+### Check Resource Usage
 
 ```bash
 docker stats
 ```
 
-## 🔄 Atualização
+## 🔄 Update
 
-### Atualizar Aplicação
-
-```bash
-cd /opt/shift-handover-log
-./docker-manage.sh update
-```
-
-Ou manualmente:
+### Update Application
 
 ```bash
 cd /opt/shift-handover-log
-./docker-manage.sh backup
-git pull  # Se usar git
+git pull  # If using git
 docker compose build --no-cache
 docker compose up -d
 ```
 
-## 💾 Backup e Restauro
+## 💾 Backup and Restore
 
-### Criar Backup
+### Create Backup
+
+You can backup the `data` directory:
 
 ```bash
-./docker-manage.sh backup
+tar -czf backup.tar.gz -C /opt/shift-handover-log data
 ```
 
-O backup será guardado em `/opt/shift-handover-log/backups/`
-
-### Restaurar Backup
+### Restore Backup
 
 ```bash
-# Parar containers
-./docker-manage.sh stop
+# Stop containers
+docker compose down
 
-# Extrair backup
-tar -xzf backups/backup_YYYYMMDD_HHMMSS.tar.gz -C /opt/shift-handover-log/
+# Extract backup
+tar -xzf backup.tar.gz -C /opt/shift-handover-log/
 
-# Reiniciar containers
-./docker-manage.sh start
+# Restart containers
+docker compose up -d
 ```
 
-## 🐛 Resolução de Problemas
+## 🐛 Troubleshooting
 
-### Containers não iniciam
+### Containers fail to start
 
 ```bash
-# Ver logs detalhados
+# View detailed logs
 docker compose -f /opt/shift-handover-log/docker-compose.yml logs
 
-# Verificar estado
+# Check status
 docker compose -f /opt/shift-handover-log/docker-compose.yml ps
 ```
 
-### Porta já em uso
+### Port already in use
 
-Altere as portas no `docker-compose.yml`:
+Change ports in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "5001:5000"  # Backend na porta 5001
-  - "3001:80"    # Frontend na porta 3001
+  - "5001:5000"  # Backend on port 5001
+  - "3001:80"    # Frontend on port 3001
 ```
 
-### Problemas de permissões
+### Permission issues
 
 ```bash
-# Corrigir permissões dos diretórios
+# Fix directory permissions (UID 1000 is node user)
 chown -R 1000:1000 /opt/shift-handover-log/data
 chown -R 1000:1000 /opt/shift-handover-log/logs
 ```
 
-### Reconstruir tudo do zero
+## 🔒 Security
 
-```bash
-cd /opt/shift-handover-log
-./docker-manage.sh stop
-docker compose down -v
-rm -rf data/*.db logs/*
-docker compose build --no-cache
-docker compose up -d
-```
+### Recommendations
 
-## 📁 Estrutura de Diretórios
+1. **Change default password** immediately
+2. **Configure strong JWT_SECRET** in `.env`
+3. **Use HTTPS** in production (configure reverse proxy)
+4. **Keep system updated**: `apt-get update && apt-get upgrade`
+5. **Configure firewall** to limit access
+6. **Perform regular backups**
 
-```
-/opt/shift-handover-log/
-├── client/              # Código fonte do frontend
-├── server/              # Código fonte do backend
-├── data/                # Base de dados SQLite
-├── logs/                # Ficheiros de log
-├── backups/             # Backups automáticos
-├── docker-compose.yml   # Configuração Docker Compose
-├── Dockerfile.backend   # Dockerfile do backend
-├── Dockerfile.frontend  # Dockerfile do frontend
-├── .env                 # Variáveis de ambiente
-└── nginx.conf           # Configuração Nginx
-```
+## 📞 Support
 
-## 🔒 Segurança
-
-### Recomendações
-
-1. **Altere a password padrão** imediatamente
-2. **Configure JWT_SECRET** forte no `.env`
-3. **Use HTTPS** em produção (configure reverse proxy)
-4. **Mantenha o sistema atualizado**: `apt-get update && apt-get upgrade`
-5. **Configure firewall** para limitar acesso
-6. **Faça backups regulares**
-
-### Configurar HTTPS com Nginx Reverse Proxy
-
-No host Proxmox ou num container separado, configure Nginx:
-
-```nginx
-server {
-    listen 80;
-    server_name seu-dominio.com;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name seu-dominio.com;
-
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-
-    location / {
-        proxy_pass http://<ip-container>:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /api {
-        proxy_pass http://<ip-container>:5000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-## 📞 Suporte
-
-Para problemas ou questões:
-1. Verifique os logs: `./docker-manage.sh logs`
-2. Consulte a documentação em `docs/`
-3. Verifique o estado: `./docker-manage.sh status`
-
-## 📝 Notas
-
-- O script de instalação foi testado em Debian 11/12 em containers LXC
-- Requer pelo menos 2GB de RAM para funcionar adequadamente
-- A primeira inicialização pode demorar alguns minutos (build das imagens)
-- Os dados são persistidos em `/opt/shift-handover-log/data/`
-
+For issues or questions:
+1. Check logs: `docker compose logs`
+2. Consult documentation in `docs/`
+3. Check status: `docker compose ps`
