@@ -34,19 +34,19 @@ APP_DIR="/opt/shift-handover-log"
 
 # Functions
 print_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo -e "${BLUE}[INFO]${NC} $1" >&2
 }
 
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[SUCCESS]${NC} $1" >&2
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[WARNING]${NC} $1" >&2
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
 check_proxmox() {
@@ -135,7 +135,12 @@ find_debian_template() {
     
     if [ -n "$local_templates" ]; then
         print_success "Template local encontrado: $local_templates"
-        echo "$local_templates"
+        # Format: local:vztmpl/template-name
+        if [[ "$local_templates" == *"vztmpl"* ]]; then
+            echo "$local_templates"
+        else
+            echo "local:vztmpl/$local_templates"
+        fi
         return
     fi
     
