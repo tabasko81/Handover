@@ -290,8 +290,8 @@ create_container() {
         --cores $CONTAINER_CORES \
         --rootfs "$storage:$CONTAINER_DISK" \
         --net0 name=eth0,bridge=vmbr0,ip=dhcp \
-        --unprivileged 0 \
-        --features nesting=1 \
+        --unprivileged 1 \
+        --features nesting=1,keyctl=1 \
         --onboot 1 \
         --start 1 || {
         print_error "Falha ao criar container"
@@ -299,10 +299,6 @@ create_container() {
     }
     
     print_success "Container criado e iniciado"
-    
-    # Configure sysctls for Docker to work properly in LXC
-    print_info "A configurar sysctls para Docker..."
-    configure_container_sysctls $container_id
     
     # Wait for container to be ready
     print_info "A aguardar container ficar pronto..."
@@ -318,105 +314,6 @@ create_container() {
         sleep 1
         waited=$((waited + 1))
     done
-}
-
-configure_container_sysctls() {
-    local container_id=$1
-    
-    print_info "A configurar sysctls necessários para Docker..."
-    
-    # Get container config file path
-    local config_file="/etc/pve/lxc/${container_id}.conf"
-    
-    # Check if config file exists
-    if [ ! -f "$config_file" ]; then
-        print_warning "Ficheiro de configuração não encontrado: $config_file"
-        print_warning "Sysctls não podem ser configurados automaticamente"
-        return 0
-    fi
-    
-    # Add sysctls to container configuration
-    # These are required for Docker to work properly in LXC containers
-    local sysctls=(
-        "net.ipv4.ip_unprivileged_port_start=0"
-        "net.ipv4.ip_forward=1"
-        "net.ipv6.conf.all.forwarding=1"
-        "net.ipv4.ping_group_range=0 2147483647"
-        "kernel.keys.maxkeys=2000"
-        "kernel.keys.maxbytes=2000000"
-    )
-    
-    # Check if sysctls are already configured
-    local needs_update=0
-    for sysctl in "${sysctls[@]}"; do
-        local key=$(echo "$sysctl" | cut -d'=' -f1)
-        # Escape dots in key for grep pattern
-        local grep_pattern=$(echo "$key" | sed 's/\./\\./g')
-        if ! grep -q "^lxc\.sysctl\.$grep_pattern" "$config_file" 2>/dev/null; then
-            needs_update=1
-            break
-        fi
-    done
-    
-    if [ $needs_update -eq 1 ]; then
-        print_info "A adicionar sysctls ao ficheiro de configuração..."
-        
-        # Stop container temporarily to modify config
-        local was_running=0
-        if pct status $container_id 2>/dev/null | grep -q "running"; then
-            was_running=1
-            print_info "A parar container temporariamente para configurar sysctls..."
-            pct stop $container_id || {
-                print_error "Não foi possível parar container para configurar sysctls"
-                print_warning "Tente configurar manualmente após a instalação"
-                return 1
-            }
-        fi
-        
-        # Add sysctls to config file
-        for sysctl in "${sysctls[@]}"; do
-            local key=$(echo "$sysctl" | cut -d'=' -f1)
-            local value=$(echo "$sysctl" | cut -d'=' -f2)
-            
-            # Escape dots in key for sed pattern
-            local sed_pattern=$(echo "$key" | sed 's/\./\\./g')
-            
-            # Remove existing entry if present (no spaces around =)
-            sed -i "/^lxc\.sysctl\.$sed_pattern=/d" "$config_file" 2>/dev/null || true
-            
-            # Add new entry (Proxmox format without spaces: lxc.sysctl.key=value)
-            echo "lxc.sysctl.$key=$value" >> "$config_file"
-        done
-        
-        # Restart container if it was running
-        if [ $was_running -eq 1 ]; then
-            print_info "A reiniciar container..."
-            pct start $container_id || {
-                print_error "Falha ao reiniciar container"
-                exit 1
-            }
-            
-            # Wait for container to be ready again
-            sleep 5
-            local max_wait=30
-            local waited=0
-            while [ $waited -lt $max_wait ]; do
-                if pct exec $container_id -- ping -c 1 8.8.8.8 &> /dev/null 2>&1; then
-                    break
-                fi
-                sleep 1
-                waited=$((waited + 1))
-            done
-            
-            if [ $waited -eq $max_wait ]; then
-                print_warning "Container reiniciado mas rede pode ainda não estar pronta"
-            fi
-        fi
-        
-        print_success "Sysctls configurados com sucesso"
-    else
-        print_info "Sysctls já estão configurados"
-    fi
 }
 
 get_container_ip() {
