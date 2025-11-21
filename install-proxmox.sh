@@ -290,8 +290,8 @@ create_container() {
         --cores $CONTAINER_CORES \
         --rootfs "$storage:$CONTAINER_DISK" \
         --net0 name=eth0,bridge=vmbr0,ip=dhcp \
-        --unprivileged 1 \
-        --features nesting=1,keyctl=1 \
+        --unprivileged 0 \
+        --features nesting=1 \
         --onboot 1 \
         --start 1 || {
         print_error "Falha ao criar container"
@@ -299,6 +299,20 @@ create_container() {
     }
     
     print_success "Container criado e iniciado"
+    
+    # Configure privileged container settings (unconfined)
+    # This resolves permission issues with Docker overlay/sysctls
+    print_info "A aplicar configurações de segurança para Docker..."
+    local config_file="/etc/pve/lxc/${container_id}.conf"
+    if [ -f "$config_file" ]; then
+        echo "lxc.apparmor.profile: unconfined" >> "$config_file"
+        echo "lxc.cgroup.devices.allow: a" >> "$config_file"
+        echo "lxc.cap.drop:" >> "$config_file"
+        
+        print_info "A reiniciar container para aplicar alterações..."
+        pct stop $container_id
+        pct start $container_id
+    fi
     
     # Wait for container to be ready
     print_info "A aguardar container ficar pronto..."
