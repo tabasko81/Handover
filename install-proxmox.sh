@@ -341,6 +341,9 @@ configure_container_sysctls() {
         "net.ipv4.ip_unprivileged_port_start=0"
         "net.ipv4.ip_forward=1"
         "net.ipv6.conf.all.forwarding=1"
+        "net.ipv4.ping_group_range=0 2147483647"
+        "kernel.keys.maxkeys=2000"
+        "kernel.keys.maxbytes=2000000"
     )
     
     # Check if sysctls are already configured
@@ -378,11 +381,11 @@ configure_container_sysctls() {
             # Escape dots in key for sed pattern
             local sed_pattern=$(echo "$key" | sed 's/\./\\./g')
             
-            # Remove existing entry if present (handle both with and without spaces around =)
-            sed -i "/^lxc\.sysctl\.$sed_pattern[[:space:]]*=/d" "$config_file" 2>/dev/null || true
+            # Remove existing entry if present (no spaces around =)
+            sed -i "/^lxc\.sysctl\.$sed_pattern=/d" "$config_file" 2>/dev/null || true
             
-            # Add new entry (Proxmox format: lxc.sysctl.key = value)
-            echo "lxc.sysctl.$key = $value" >> "$config_file"
+            # Add new entry (Proxmox format without spaces: lxc.sysctl.key=value)
+            echo "lxc.sysctl.$key=$value" >> "$config_file"
         done
         
         # Restart container if it was running
