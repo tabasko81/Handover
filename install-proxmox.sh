@@ -66,14 +66,15 @@ check_root() {
 }
 
 find_local_storage() {
-    print_info "A procurar storage local disponível..." >&2
+    print_info "A procurar storage local disponível para containers..." >&2
     
     # List all storages
     local storages=$(pvesm status | awk 'NR>1 {print $1}')
     local local_storage=""
+    local preferred_storage=""
     
     for storage in $storages; do
-        # Get storage type
+        # Get storage type and content
         local storage_type=$(pvesm status | grep "^$storage" | awk '{print $2}')
         local storage_content=$(pvesm status | grep "^$storage" | awk '{print $3}')
         
@@ -82,29 +83,58 @@ find_local_storage() {
             continue
         fi
         
-        # Check if storage supports container templates
-        if [[ "$storage_content" == *"vztmpl"* ]] || [[ "$storage_content" == *"images"* ]]; then
-            # Prefer local-lvm, then local
-            if [[ "$storage" == "local-lvm" ]] || [[ "$storage" == "local" ]]; then
-                local_storage="$storage"
-                break
-            fi
+        # Check if storage supports containers (rootdir)
+        # Storage types that support containers: lvm, zfspool, dir, btrfs
+        # Storage 'local' (type dir) usually only supports vztmpl/iso, not containers
+        local supports_containers=false
+        
+        # Check content field for rootdir support
+        if [[ "$storage_content" == *"rootdir"* ]] || [[ "$storage_content" == *"images"* ]]; then
+            supports_containers=true
         fi
         
-        # If no preferred storage found yet, use first valid one
-        if [ -z "$local_storage" ]; then
-            local_storage="$storage"
+        # For LVM and ZFS types, they typically support containers
+        if [[ "$storage_type" == "lvm" ]] || [[ "$storage_type" == "zfspool" ]] || [[ "$storage_type" == "btrfs" ]]; then
+            supports_containers=true
+        fi
+        
+        # Explicitly exclude 'local' storage if it doesn't support containers
+        if [[ "$storage" == "local" ]] && [[ "$storage_content" != *"rootdir"* ]]; then
+            print_info "Storage 'local' não suporta containers, a ignorar..." >&2
+            continue
+        fi
+        
+        # If storage supports containers, consider it
+        if [ "$supports_containers" = true ]; then
+            # Prefer local-lvm first
+            if [[ "$storage" == "local-lvm" ]]; then
+                preferred_storage="$storage"
+                break
+            fi
+            
+            # If no preferred storage found yet, use first valid one
+            if [ -z "$local_storage" ]; then
+                local_storage="$storage"
+            fi
         fi
     done
     
+    # Use preferred storage if found, otherwise use first valid one
+    if [ -n "$preferred_storage" ]; then
+        local_storage="$preferred_storage"
+    fi
+    
     if [ -z "$local_storage" ]; then
-        print_error "Nenhum storage local encontrado!" >&2
+        print_error "Nenhum storage adequado para containers encontrado!" >&2
         print_error "Storages disponíveis:" >&2
         pvesm status >&2
+        print_error "" >&2
+        print_error "Dica: Configure um storage que suporte containers (ex: local-lvm)" >&2
+        print_error "Ou use um storage do tipo LVM, ZFS ou BTRFS que suporte rootdir" >&2
         exit 1
     fi
     
-    print_success "Storage local encontrado: $local_storage" >&2
+    print_success "Storage adequado encontrado: $local_storage" >&2
     # Output only the value, no extra spaces or characters
     printf "%s\n" "$local_storage"
     return 0
@@ -412,6 +442,15 @@ main() {
             print_error "Instalação cancelada"
             exit 1
         fi
+    fi
+    
+    # Validate storage supports containers before creating
+    print_info "A validar storage antes de criar container..." >&2
+    local storage_content=$(pvesm status | grep "^$storage" | awk '{print $3}')
+    if [[ "$storage" == "local" ]] && [[ "$storage_content" != *"rootdir"* ]]; then
+        print_error "Storage '$storage' não suporta containers!" >&2
+        print_error "Por favor configure um storage que suporte containers (ex: local-lvm)" >&2
+        exit 1
     fi
     
     # Create container
