@@ -133,11 +133,15 @@ setup_app_directory() {
     
     if [ -d "$APP_DIR" ]; then
         print_warning "Diretório $APP_DIR já existe"
-        read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_error "Instalação cancelada"
-            exit 1
+        if [ "$NON_INTERACTIVE" != "1" ]; then
+            read -p "Deseja continuar e sobrescrever? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_error "Instalação cancelada"
+                exit 1
+            fi
+        else
+            print_info "Modo não-interativo: a fazer backup e sobrescrever..."
         fi
         print_info "A fazer backup do diretório existente..."
         mv "$APP_DIR" "${APP_DIR}.backup.$(date +%Y%m%d_%H%M%S)"
@@ -152,14 +156,20 @@ copy_files() {
     
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
-    # Copy essential files
-    cp -r "$SCRIPT_DIR"/server "$APP_DIR/"
-    cp -r "$SCRIPT_DIR"/client "$APP_DIR/"
-    cp "$SCRIPT_DIR"/package.json "$APP_DIR/"
-    cp "$SCRIPT_DIR"/package-lock.json "$APP_DIR/" 2>/dev/null || true
-    cp "$SCRIPT_DIR"/Dockerfile.backend "$APP_DIR/"
-    cp "$SCRIPT_DIR"/Dockerfile.frontend "$APP_DIR/"
-    cp "$SCRIPT_DIR"/nginx.conf "$APP_DIR/"
+    # If script is running from git clone, files are already in place
+    if [ -d "$SCRIPT_DIR/server" ] && [ -d "$SCRIPT_DIR/client" ]; then
+        # Copy essential files
+        cp -r "$SCRIPT_DIR"/server "$APP_DIR/"
+        cp -r "$SCRIPT_DIR"/client "$APP_DIR/"
+        cp "$SCRIPT_DIR"/package.json "$APP_DIR/"
+        cp "$SCRIPT_DIR"/package-lock.json "$APP_DIR/" 2>/dev/null || true
+        cp "$SCRIPT_DIR"/Dockerfile.backend "$APP_DIR/"
+        cp "$SCRIPT_DIR"/Dockerfile.frontend "$APP_DIR/"
+        cp "$SCRIPT_DIR"/nginx.conf "$APP_DIR/"
+    else
+        print_error "Ficheiros da aplicação não encontrados em $SCRIPT_DIR"
+        exit 1
+    fi
     
     # Create data and logs directories
     mkdir -p "$APP_DIR/data" "$APP_DIR/logs"
@@ -364,29 +374,40 @@ main() {
     check_root
     check_lxc
     
-    # Prompt for configuration
-    echo
-    read -p "Porta do backend [${BACKEND_PORT}]: " input_backend
-    BACKEND_PORT=${input_backend:-${BACKEND_PORT}}
-    
-    read -p "Porta do frontend [${FRONTEND_PORT}]: " input_frontend
-    FRONTEND_PORT=${input_frontend:-${FRONTEND_PORT}}
-    
-    read -p "Domínio/IP [${DOMAIN}]: " input_domain
-    DOMAIN=${input_domain:-${DOMAIN}}
-    
-    echo
-    print_info "Configuração:"
-    echo "  Backend Port: $BACKEND_PORT"
-    echo "  Frontend Port: $FRONTEND_PORT"
-    echo "  Domain: $DOMAIN"
-    echo
-    
-    read -p "Continuar com a instalação? (Y/n): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
-        print_error "Instalação cancelada"
-        exit 1
+    # Configuration (use environment variables if in non-interactive mode)
+    if [ "$NON_INTERACTIVE" != "1" ]; then
+        # Prompt for configuration
+        echo
+        read -p "Porta do backend [${BACKEND_PORT}]: " input_backend
+        BACKEND_PORT=${input_backend:-${BACKEND_PORT}}
+        
+        read -p "Porta do frontend [${FRONTEND_PORT}]: " input_frontend
+        FRONTEND_PORT=${input_frontend:-${FRONTEND_PORT}}
+        
+        read -p "Domínio/IP [${DOMAIN}]: " input_domain
+        DOMAIN=${input_domain:-${DOMAIN}}
+        
+        echo
+        print_info "Configuração:"
+        echo "  Backend Port: $BACKEND_PORT"
+        echo "  Frontend Port: $FRONTEND_PORT"
+        echo "  Domain: $DOMAIN"
+        echo
+        
+        read -p "Continuar com a instalação? (Y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            print_error "Instalação cancelada"
+            exit 1
+        fi
+    else
+        # Non-interactive mode: use environment variables
+        print_info "Modo não-interativo ativado"
+        print_info "Configuração:"
+        echo "  Backend Port: $BACKEND_PORT"
+        echo "  Frontend Port: $FRONTEND_PORT"
+        echo "  Domain: $DOMAIN"
+        echo
     fi
     
     # Installation steps
