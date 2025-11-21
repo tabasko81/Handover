@@ -35,11 +35,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [flashId, setFlashId] = useState(null);
   const [pageName, setPageName] = useState('Shift Handover Log');
-  const [theme, setTheme] = useState({
-    mode: 'light',
-    font: 'sans',
-    spacing: 'normal'
-  });
 
   useEffect(() => {
     checkLoginStatus();
@@ -60,26 +55,6 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, currentPage, isAuthenticated]);
-
-  // Apply theme settings
-  useEffect(() => {
-    // Dark Mode
-    if (theme.mode === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    // Fonts
-    document.body.classList.remove('font-sans', 'font-serif', 'font-mono');
-    if (theme.font === 'serif') {
-      document.body.classList.add('font-serif');
-    } else if (theme.font === 'mono') {
-      document.body.classList.add('font-mono');
-    } else {
-      document.body.classList.add('font-sans');
-    }
-  }, [theme]);
 
   const checkLoginStatus = async () => {
     setCheckingAuth(true);
@@ -111,8 +86,9 @@ function App() {
           setPageName(config.page_name);
           localStorage.setItem('page_name', config.page_name);
         }
-        if (config.theme) {
-          setTheme(config.theme);
+        if (config.header_color) {
+          localStorage.setItem('header_color', config.header_color);
+          window.dispatchEvent(new CustomEvent('headerColorUpdated'));
         }
       }
     } catch (error) {
@@ -340,7 +316,7 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${theme.mode === 'dark' ? 'dark:bg-gray-900' : ''}`}>
+    <div className="min-h-screen bg-gray-50">
       <InfoSlide />
       <Header />
       
@@ -383,7 +359,6 @@ function App() {
           showArchived={filters.archived}
           onPrint={handlePrint}
           flashId={flashId}
-          compactMode={theme.spacing === 'compact'}
         />
 
         <DeleteConfirmationModal

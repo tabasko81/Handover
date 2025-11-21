@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ExpandedLogView from './ExpandedLogView';
 import { parseMarkdown } from '../utils/markdownParser';
 
-function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint, flashId, compactMode }) {
+function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint, flashId }) {
   const [expandedNotes, setExpandedNotes] = useState({});
   const [expandedLog, setExpandedLog] = useState(null);
 
@@ -26,11 +26,11 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
 
   const getColorClass = (color) => {
     const colorMap = {
-      'green': 'bg-green-100 dark:bg-green-900 dark:bg-opacity-40',
-      'yellow': 'bg-yellow-100 dark:bg-yellow-900 dark:bg-opacity-40',
-      'light-blue': 'bg-blue-100 dark:bg-blue-900 dark:bg-opacity-40',
-      'light-green': 'bg-green-50 dark:bg-green-900 dark:bg-opacity-20',
-      'red': 'bg-red-100 dark:bg-red-900 dark:bg-opacity-40',
+      'green': 'bg-green-100',
+      'yellow': 'bg-yellow-100',
+      'light-blue': 'bg-blue-100',
+      'light-green': 'bg-green-50',
+      'red': 'bg-red-100',
       '': ''
     };
     return colorMap[color] || '';
@@ -119,9 +119,9 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-      <div className="flex justify-between items-center p-2 border-b dark:border-gray-700">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="flex justify-between items-center p-2 border-b">
+        <h2 className="text-sm font-semibold text-gray-700">
           Logs {logs.length > 0 && `(${logs.length})`}
         </h2>
         <button
@@ -132,50 +132,50 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
-          <thead className="bg-gray-50 dark:bg-gray-700">
+        <table className="min-w-full divide-y divide-gray-200 text-xs">
+          <thead className="bg-gray-50">
             <tr>
-              <th className={`px-2 ${compactMode ? 'py-1' : 'py-2'} text-left font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider`} style={{ width: '12%' }}>
+              <th className="px-2 py-1.5 text-left font-medium text-gray-500 uppercase tracking-wider" style={{ width: '12%' }}>
                 Date
               </th>
-              <th className={`px-2 ${compactMode ? 'py-1' : 'py-2'} text-left font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider`} style={{ width: '15%' }}>
+              <th className="px-2 py-1.5 text-left font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
                 Short Description
               </th>
-              <th className={`px-2 ${compactMode ? 'py-1' : 'py-2'} text-left font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider`} style={{ width: '45%' }}>
+              <th className="px-2 py-1.5 text-left font-medium text-gray-500 uppercase tracking-wider" style={{ width: '45%' }}>
                 Note
               </th>
-              <th className={`px-2 ${compactMode ? 'py-1' : 'py-2'} text-left font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider`} style={{ width: '8%' }}>
+              <th className="px-2 py-1.5 text-left font-medium text-gray-500 uppercase tracking-wider" style={{ width: '8%' }}>
                 Worker
               </th>
-              <th className={`px-2 ${compactMode ? 'py-1' : 'py-2'} text-left font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider`} style={{ width: '20%' }}>
+              <th className="px-2 py-1.5 text-left font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="logs-table-body">
+          <tbody className="bg-white divide-y divide-gray-200" id="logs-table-body">
             {logs.map((log) => {
               const colorClass = getColorClass(log.color || '');
               const isFlashing = flashId === log.id;
               const rowClass = log.is_archived 
-                ? `bg-gray-100 dark:bg-gray-900 ${colorClass}` 
-                : `hover:bg-gray-50 dark:hover:bg-gray-700 ${colorClass}`;
+                ? `bg-gray-100 ${colorClass}` 
+                : `hover:bg-gray-50 ${colorClass}`;
               
               return (
               <tr
                 key={log.id}
-                className={`${rowClass.trim() || 'bg-white dark:bg-gray-800'} print-row transition-colors duration-200 ${
-                  isFlashing ? 'bg-green-300 dark:bg-green-700 animate-pulse' : ''
+                className={`${rowClass.trim() || 'bg-white'} print-row transition-colors duration-200 ${
+                  isFlashing ? 'bg-green-300 animate-pulse' : ''
                 }`}
               >
-                <td className={`px-2 ${compactMode ? 'py-1' : 'py-2'} whitespace-nowrap text-sm text-gray-900 dark:text-gray-200`}>
+                <td className="px-2 py-1.5 whitespace-nowrap text-sm text-gray-900">
                   {formatDateTime(log.log_date)}
                 </td>
-                <td className={`px-2 ${compactMode ? 'py-1' : 'py-2'} whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200`}>
+                <td className="px-2 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900">
                   <div className="flex items-center space-x-1">
                     <span>{log.short_description}</span>
                     <button
                       onClick={() => setExpandedLog(log)}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 ml-1 flex-shrink-0"
+                      className="text-blue-600 hover:text-blue-800 ml-1 flex-shrink-0"
                       title="View expanded"
                     >
                       <svg
@@ -195,21 +195,21 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                     </button>
                   </div>
                 </td>
-                <td className={`px-2 ${compactMode ? 'py-1' : 'py-2'} text-sm text-gray-700 dark:text-gray-300`}>
+                <td className="px-2 py-1.5 text-sm text-gray-700">
                   <div className="max-w-full">
                     {truncateNote(log.note, log.id)}
                   </div>
                 </td>
-                <td className={`px-2 ${compactMode ? 'py-1' : 'py-2'} whitespace-nowrap text-sm text-gray-900 dark:text-gray-200`}>
-                  <span className="px-1.5 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                <td className="px-2 py-1.5 whitespace-nowrap text-sm text-gray-900">
+                  <span className="px-1.5 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
                     {log.worker_name}
                   </span>
                 </td>
-                <td className={`px-2 ${compactMode ? 'py-1' : 'py-2'} whitespace-nowrap text-sm font-medium no-print`}>
+                <td className="px-2 py-1.5 whitespace-nowrap text-sm font-medium no-print">
                   <div className="flex space-x-1">
                     <button
                       onClick={() => onEdit(log)}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-xs"
+                      className="text-blue-600 hover:text-blue-900 text-xs"
                       title="Edit"
                     >
                       Edit
@@ -217,8 +217,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                     <button
                       onClick={() => onArchive(log.id, !log.is_archived)}
                       className={log.is_archived 
-                        ? "text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
-                        : "text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300"
+                        ? "text-green-600 hover:text-green-900"
+                        : "text-yellow-600 hover:text-yellow-900"
                       }
                       title={log.is_archived ? "Restore" : "Archive"}
                     >
@@ -226,7 +226,7 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                     </button>
                     <button
                       onClick={() => onDelete(log)}
-                      className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                      className="text-red-600 hover:text-red-900"
                       title="Delete"
                     >
                       Delete
@@ -248,6 +248,7 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
           onClose={() => setExpandedLog(null)}
           onEdit={onEdit}
           onArchive={onArchive}
+          onDelete={onDelete}
           onNavigate={(newLog) => setExpandedLog(newLog)}
         />
       )}

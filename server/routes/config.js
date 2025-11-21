@@ -17,11 +17,7 @@ const DEFAULT_CONFIG = {
   permanent_info: '',
   login_expiry_enabled: true,
   login_expiry_hours: 24,
-  theme: {
-    mode: 'light',      // 'light' | 'dark'
-    font: 'sans',       // 'sans' | 'serif' | 'mono'
-    spacing: 'normal'   // 'normal' | 'compact'
-  }
+  header_color: '#2563eb' // Default blue-600
 };
 
 function getConfig() {
@@ -70,7 +66,7 @@ router.get('/public', (req, res) => {
     res.json({
       page_name: config.page_name || DEFAULT_CONFIG.page_name,
       permanent_info: config.permanent_info || DEFAULT_CONFIG.permanent_info,
-      theme: config.theme || DEFAULT_CONFIG.theme
+      header_color: config.header_color || DEFAULT_CONFIG.header_color
     });
   } catch (error) {
     res.status(500).json({
@@ -84,7 +80,7 @@ router.get('/public', (req, res) => {
 // Update configuration (requires auth)
 router.put('/', authenticateToken, async (req, res) => {
   try {
-    const { page_name, permanent_info, login_expiry_enabled, login_expiry_hours, theme } = req.body;
+    const { page_name, permanent_info, login_expiry_enabled, login_expiry_hours, header_color } = req.body;
     const config = getConfig();
     
     if (page_name !== undefined) {
@@ -92,6 +88,9 @@ router.put('/', authenticateToken, async (req, res) => {
     }
     if (permanent_info !== undefined) {
       config.permanent_info = permanent_info || '';
+    }
+    if (header_color !== undefined) {
+      config.header_color = header_color || DEFAULT_CONFIG.header_color;
     }
     if (login_expiry_enabled !== undefined) {
       config.login_expiry_enabled = Boolean(login_expiry_enabled);
@@ -109,24 +108,9 @@ router.put('/', authenticateToken, async (req, res) => {
       }
     }
     
-    if (theme !== undefined) {
-      if (!config.theme) config.theme = { ...DEFAULT_CONFIG.theme };
-      
-      if (theme.mode !== undefined) {
-        if (['light', 'dark'].includes(theme.mode)) {
-          config.theme.mode = theme.mode;
-        }
-      }
-      if (theme.font !== undefined) {
-        if (['sans', 'serif', 'mono'].includes(theme.font)) {
-          config.theme.font = theme.font;
-        }
-      }
-      if (theme.spacing !== undefined) {
-        if (['normal', 'compact'].includes(theme.spacing)) {
-          config.theme.spacing = theme.spacing;
-        }
-      }
+    // Cleanup old config fields if they exist
+    if (config.theme !== undefined) {
+      delete config.theme;
     }
 
     // Cleanup old config fields if they exist

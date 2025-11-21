@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { parseMarkdown } from '../utils/markdownParser';
 
-function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate }) {
+function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, onDelete }) {
   const [currentLog, setCurrentLog] = useState(log);
 
   useEffect(() => {
@@ -227,6 +227,17 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate }) 
               }`}
             >
               {currentLog.is_archived ? 'Restore' : 'Archive'}
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete this log?')) {
+                  onDelete(currentLog);
+                  onClose();
+                }
+              }}
+              className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium text-lg"
+            >
+              Delete
             </button>
             <button
               onClick={onClose}

@@ -5,9 +5,21 @@ import { parseMarkdown } from '../utils/markdownParser';
 function InfoSlide() {
   const [isOpen, setIsOpen] = useState(false);
   const [info, setInfo] = useState('');
+  const [headerColor, setHeaderColor] = useState('#2563eb');
 
   useEffect(() => {
     loadInfo();
+    
+    const savedColor = localStorage.getItem('header_color');
+    if (savedColor) setHeaderColor(savedColor);
+
+    const handleCustomUpdate = () => {
+      const savedColor = localStorage.getItem('header_color');
+      if (savedColor) setHeaderColor(savedColor);
+    };
+
+    window.addEventListener('headerColorUpdated', handleCustomUpdate);
+    return () => window.removeEventListener('headerColorUpdated', handleCustomUpdate);
   }, []);
 
   const loadInfo = async () => {
@@ -38,9 +50,10 @@ function InfoSlide() {
       {/* Info button (fixed on left side) */}
       <button
         onClick={toggleSlide}
-        className={`fixed left-0 top-1/2 transform -translate-y-1/2 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-r-lg shadow-lg transition-all duration-300 ${
+        className={`fixed left-0 top-1/2 transform -translate-y-1/2 z-40 text-white p-3 rounded-r-lg shadow-lg transition-all duration-300 ${
           isOpen ? 'opacity-50' : 'opacity-100'
         }`}
+        style={{ backgroundColor: headerColor }}
         title="Permanent Information"
       >
         <svg
@@ -69,14 +82,17 @@ function InfoSlide() {
 
       {/* Slide panel */}
       <div
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ width: '400px', maxWidth: '90vw' }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-blue-600 dark:bg-blue-800 text-white p-4 flex justify-between items-center">
+          <div 
+            className="text-white p-4 flex justify-between items-center transition-colors duration-200"
+            style={{ backgroundColor: headerColor }}
+          >
             <h2 className="text-xl font-bold">Permanent Information</h2>
             <button
               onClick={toggleSlide}
@@ -88,10 +104,10 @@ function InfoSlide() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 text-gray-900 dark:text-gray-100">
+          <div className="flex-1 overflow-y-auto p-6 text-gray-900">
             {info ? (
               <div
-                className="prose dark:prose-invert max-w-none"
+                className="prose max-w-none"
                 style={{ 
                   lineHeight: '1.6',
                   wordWrap: 'break-word'
@@ -101,7 +117,7 @@ function InfoSlide() {
                 }}
               />
             ) : (
-              <p className="text-gray-500 dark:text-gray-400 italic">No permanent information available.</p>
+              <p className="text-gray-500 italic">No permanent information available.</p>
             )}
           </div>
           

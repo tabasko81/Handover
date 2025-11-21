@@ -28,11 +28,7 @@ export const fetchConfig = async () => {
     return {
       page_name: 'Shift Handover Log',
       permanent_info: '',
-      theme: {
-        mode: 'light',
-        font: 'sans',
-        spacing: 'normal'
-      }
+      header_color: '#2563eb'
     };
   }
 };
@@ -47,11 +43,7 @@ export const fetchPublicConfig = async () => {
     return {
       page_name: 'Shift Handover Log',
       permanent_info: '',
-      theme: {
-        mode: 'light',
-        font: 'sans',
-        spacing: 'normal'
-      }
+      header_color: '#2563eb'
     };
   }
 };
