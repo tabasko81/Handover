@@ -66,7 +66,7 @@ check_root() {
 }
 
 find_local_storage() {
-    print_info "A procurar storage local disponível..."
+    print_info "A procurar storage local disponível..." >&2
     
     # List all storages
     local storages=$(pvesm status | awk 'NR>1 {print $1}')
@@ -98,74 +98,82 @@ find_local_storage() {
     done
     
     if [ -z "$local_storage" ]; then
-        print_error "Nenhum storage local encontrado!"
-        print_error "Storages disponíveis:"
-        pvesm status
+        print_error "Nenhum storage local encontrado!" >&2
+        print_error "Storages disponíveis:" >&2
+        pvesm status >&2
         exit 1
     fi
     
-    print_success "Storage local encontrado: $local_storage"
-    echo "$local_storage"
+    print_success "Storage local encontrado: $local_storage" >&2
+    # Output only the value, no extra spaces or characters
+    printf "%s\n" "$local_storage"
+    return 0
 }
 
 find_available_id() {
-    print_info "A procurar próximo ID de container disponível..."
+    print_info "A procurar próximo ID de container disponível..." >&2
     
     local start_id=100
     local id=$start_id
     
     while [ $id -lt 1000 ]; do
         if ! pct status $id &> /dev/null; then
-            print_success "ID disponível encontrado: $id"
-            echo "$id"
-            return
+            print_success "ID disponível encontrado: $id" >&2
+            # Output only the numeric ID, no extra spaces or characters
+            printf "%d\n" "$id"
+            return 0
         fi
         id=$((id + 1))
     done
     
-    print_error "Não foi possível encontrar um ID disponível (100-999)"
+    print_error "Não foi possível encontrar um ID disponível (100-999)" >&2
     exit 1
 }
 
 find_debian_template() {
-    print_info "A procurar template Debian..."
+    print_info "A procurar template Debian..." >&2
     
     # Check local templates first
     local local_templates=$(pveam list local 2>/dev/null | grep -i debian | head -1 | awk '{print $1}')
     
     if [ -n "$local_templates" ]; then
-        print_success "Template local encontrado: $local_templates"
+        print_success "Template local encontrado: $local_templates" >&2
         # Format: local:vztmpl/template-name
+        local template_path=""
         if [[ "$local_templates" == *"vztmpl"* ]]; then
-            echo "$local_templates"
+            template_path="$local_templates"
         else
-            echo "local:vztmpl/$local_templates"
+            template_path="local:vztmpl/$local_templates"
         fi
-        return
+        # Output only the template path, no extra spaces or characters
+        printf "%s\n" "$template_path"
+        return 0
     fi
     
     # If no local template, try to find available one
-    print_info "Template local não encontrado, a procurar templates disponíveis..."
+    print_info "Template local não encontrado, a procurar templates disponíveis..." >&2
     pveam update &> /dev/null || true
     
     # Try to find latest Debian template
     local available_template=$(pveam available 2>/dev/null | grep -i "debian.*standard" | tail -1 | awk '{print $1}')
     
     if [ -z "$available_template" ]; then
-        print_error "Template Debian não encontrado!"
-        print_info "Templates disponíveis:"
-        pveam available 2>/dev/null | head -20
+        print_error "Template Debian não encontrado!" >&2
+        print_info "Templates disponíveis:" >&2
+        pveam available 2>/dev/null | head -20 >&2
         exit 1
     fi
     
-    print_info "A baixar template: $available_template"
-    pveam download local "$available_template" || {
-        print_error "Falha ao baixar template"
+    print_info "A baixar template: $available_template" >&2
+    pveam download local "$available_template" >&2 || {
+        print_error "Falha ao baixar template" >&2
         exit 1
     }
     
-    print_success "Template baixado: $available_template"
-    echo "local:vztmpl/$available_template"
+    print_success "Template baixado: $available_template" >&2
+    # Output only the template path, no extra spaces or characters
+    printf "local:vztmpl/%s\n" "$available_template"
+    return 0
 }
 
 create_container() {
@@ -212,32 +220,35 @@ get_container_ip() {
     local max_attempts=10
     local attempt=0
     
-    print_info "A obter IP do container..."
+    print_info "A obter IP do container..." >&2
     
     while [ $attempt -lt $max_attempts ]; do
         # Try to get IP from container
         local ip=$(pct exec $container_id -- hostname -I 2>/dev/null | awk '{print $1}')
         
         if [ -n "$ip" ] && [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            print_success "IP do container: $ip"
-            echo "$ip"
-            return
+            print_success "IP do container: $ip" >&2
+            # Output only the IP, no extra spaces or characters
+            printf "%s\n" "$ip"
+            return 0
         fi
         
         # Alternative: get from config
         ip=$(pct config $container_id 2>/dev/null | grep "ip=" | cut -d'=' -f2 | cut -d'/' -f1)
         if [ -n "$ip" ] && [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            print_success "IP do container: $ip"
-            echo "$ip"
-            return
+            print_success "IP do container: $ip" >&2
+            # Output only the IP, no extra spaces or characters
+            printf "%s\n" "$ip"
+            return 0
         fi
         
         sleep 2
         attempt=$((attempt + 1))
     done
     
-    print_warning "Não foi possível obter IP automaticamente"
-    echo ""
+    print_warning "Não foi possível obter IP automaticamente" >&2
+    printf "\n"
+    return 1
 }
 
 install_inside_container() {
@@ -349,6 +360,35 @@ main() {
     local storage=$(find_local_storage)
     local container_id=$(find_available_id)
     local template=$(find_debian_template)
+    
+    # Debug: Show raw captured values (trimmed)
+    storage=$(echo "$storage" | tr -d '[:space:]')
+    container_id=$(echo "$container_id" | tr -d '[:space:]')
+    template=$(echo "$template" | tr -d '[:space:]')
+    
+    # Validate captured values
+    if [ -z "$storage" ] || [[ ! "$storage" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        print_error "Valor de storage inválido capturado: '$storage'"
+        exit 1
+    fi
+    
+    if [ -z "$container_id" ] || [[ ! "$container_id" =~ ^[0-9]+$ ]] || [ "$container_id" -lt 100 ] || [ "$container_id" -ge 1000 ]; then
+        print_error "Valor de container_id inválido capturado: '$container_id'"
+        print_error "Esperado: número entre 100-999"
+        exit 1
+    fi
+    
+    if [ -z "$template" ] || [[ ! "$template" =~ ^local:vztmpl/ ]]; then
+        print_error "Valor de template inválido capturado: '$template'"
+        print_error "Esperado: formato 'local:vztmpl/...'"
+        exit 1
+    fi
+    
+    # Debug output
+    print_info "Valores capturados e validados:" >&2
+    print_info "  Storage: '$storage'" >&2
+    print_info "  Container ID: '$container_id'" >&2
+    print_info "  Template: '$template'" >&2
     
     # Show summary
     echo
