@@ -1,7 +1,5 @@
-const createDOMPurify = require('isomorphic-dompurify');
-
-// Configure DOMPurify with safe defaults
-const DOMPurify = createDOMPurify();
+// isomorphic-dompurify exports the sanitize function directly
+const DOMPurify = require('isomorphic-dompurify');
 
 // Function to sanitize style attribute manually
 function sanitizeStyleAttribute(styleValue) {
@@ -171,39 +169,63 @@ function sanitizeInput(data) {
   }
 
   if (data.note) {
-    // Sanitize HTML using DOMPurify
-    let note = data.note.trim();
-    
-    // First, check text length before sanitization (for validation)
-    const textLength = note.replace(/<[^>]*>/g, '').length;
-    if (textLength > 1000) {
-      // Truncate intelligently before sanitization
-      let truncated = '';
-      let count = 0;
-      let inTag = false;
+    try {
+      // Sanitize HTML using DOMPurify
+      let note = data.note.trim();
       
-      for (let i = 0; i < note.length && count < 1000; i++) {
-        if (note[i] === '<') {
-          inTag = true;
-          truncated += note[i];
-        } else if (note[i] === '>') {
-          inTag = false;
-          truncated += note[i];
-        } else {
-          truncated += note[i];
-          if (!inTag) count++;
+      // First, check text length before sanitization (for validation)
+      const textLength = note.replace(/<[^>]*>/g, '').length;
+      if (textLength > 1000) {
+        // Truncate intelligently before sanitization
+        let truncated = '';
+        let count = 0;
+        let inTag = false;
+        
+        for (let i = 0; i < note.length && count < 1000; i++) {
+          if (note[i] === '<') {
+            inTag = true;
+            truncated += note[i];
+          } else if (note[i] === '>') {
+            inTag = false;
+            truncated += note[i];
+          } else {
+            truncated += note[i];
+            if (!inTag) count++;
+          }
         }
+        note = truncated;
       }
-      note = truncated;
+      
+      // Pre-sanitize style and href attributes
+      note = preSanitizeHTML(note);
+      
+      // Sanitize with DOMPurify
+      // isomorphic-dompurify exports the sanitize function directly
+      // Wrap in try-catch in case DOMPurify throws an error
+      try {
+        note = DOMPurify.sanitize(note, sanitizeConfig);
+      } catch (purifyError) {
+        console.error('DOMPurify sanitization error:', purifyError);
+        // If DOMPurify fails, fall back to basic HTML escaping
+        note = note
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+      
+      sanitized.note = note;
+    } catch (error) {
+      console.error('Error sanitizing note:', error);
+      // Fall back to basic HTML escaping if anything fails
+      sanitized.note = data.note
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
-    
-    // Pre-sanitize style and href attributes
-    note = preSanitizeHTML(note);
-    
-    // Sanitize with DOMPurify
-    note = DOMPurify.sanitize(note, sanitizeConfig);
-    
-    sanitized.note = note;
   }
 
   if (data.worker_name) {
