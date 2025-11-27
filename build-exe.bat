@@ -1,65 +1,65 @@
 @echo off
 echo ========================================
-echo Criar Executavel do Servidor Python
+echo Create Python Server Executable
 echo ========================================
 echo.
 
-REM Verificar se Python esta instalado
+REM Check if Python is installed
 python --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ERRO: Python nao encontrado!
+    echo ERROR: Python not found!
     echo.
-    echo Por favor, instale Python 3.8 ou superior de:
+    echo Please install Python 3.8 or higher from:
     echo   https://www.python.org/downloads/
     echo.
     pause
     exit /b 1
 )
 
-REM Verificar se PyInstaller esta instalado
+REM Check if PyInstaller is installed
 python -c "import PyInstaller" >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo PyInstaller nao encontrado. A instalar...
+    echo PyInstaller not found. Installing...
     echo.
     python -m pip install pyinstaller
     if %ERRORLEVEL% NEQ 0 (
         echo.
-        echo ERRO: Falha ao instalar PyInstaller!
+        echo ERROR: Failed to install PyInstaller!
         echo.
-        echo Por favor, instale manualmente:
+        echo Please install manually:
         echo   python -m pip install pyinstaller
         echo.
         pause
         exit /b 1
     )
     echo.
-    echo PyInstaller instalado com sucesso!
+    echo PyInstaller installed successfully!
     echo.
 ) else (
-    echo PyInstaller ja esta instalado.
+    echo PyInstaller is already installed.
     echo.
 )
 
-echo Criando executavel...
+echo Creating executable...
 echo.
 
-REM Criar executavel com PyInstaller
-REM --onefile: cria um unico ficheiro executavel
-REM --windowed: nao mostra janela de console (GUI only)
-REM --name: nome do executavel
-REM --icon: opcional, pode adicionar um ficheiro .ico se tiver
-REM --add-data: adicionar dados se necessario
-REM --hidden-import: importar modulos ocultos se necessario
+REM Create executable with PyInstaller
+REM --onefile: creates a single executable file
+REM --windowed: doesn't show console window (GUI only)
+REM --name: executable name
+REM --icon: optional, can add a .ico file if available
+REM --add-data: add data if necessary
+REM --hidden-import: import hidden modules if necessary
 
 python -m PyInstaller --onefile --windowed --name "HandoverServer" --clean server.py
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo ========================================
-    echo ERRO ao criar executavel!
+    echo ERROR creating executable!
     echo ========================================
     echo.
-    echo Verifique os erros acima e tente novamente.
+    echo Check the errors above and try again.
     echo.
     pause
     exit /b 1
@@ -67,76 +67,76 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo ========================================
-echo Copiando ficheiros necessarios...
+echo Copying required files...
 echo ========================================
 echo.
 
-REM Criar pasta data se nao existir
+REM Create data folder if it doesn't exist
 if not exist "dist\data" (
     mkdir "dist\data"
-    echo Pasta 'data' criada.
+    echo Folder 'data' created.
 )
 
-REM Copiar pasta nodejs
+REM Copy nodejs folder
 if exist "nodejs" (
-    echo Copiando pasta 'nodejs'...
+    echo Copying 'nodejs' folder...
     xcopy /E /I /Y "nodejs" "dist\nodejs" >nul
     if %ERRORLEVEL% EQU 0 (
-        echo   [OK] Pasta 'nodejs' copiada.
+        echo   [OK] Folder 'nodejs' copied.
     ) else (
-        echo   [AVISO] Erro ao copiar pasta 'nodejs'
+        echo   [WARNING] Error copying 'nodejs' folder
     )
 ) else (
-    echo [AVISO] Pasta 'nodejs' nao encontrada!
-    echo          O executavel precisa de Node.js portatil nesta pasta.
+    echo [WARNING] Folder 'nodejs' not found!
+    echo          The executable needs portable Node.js in this folder.
 )
 
-REM Copiar pasta server
+REM Copy server folder
 if exist "server" (
-    echo Copiando pasta 'server'...
+    echo Copying 'server' folder...
     xcopy /E /I /Y "server" "dist\server" >nul
     if %ERRORLEVEL% EQU 0 (
-        echo   [OK] Pasta 'server' copiada.
+        echo   [OK] Folder 'server' copied.
     ) else (
-        echo   [AVISO] Erro ao copiar pasta 'server'
+        echo   [WARNING] Error copying 'server' folder
     )
 ) else (
-    echo [ERRO] Pasta 'server' nao encontrada!
-    echo        Esta pasta e essencial para o funcionamento.
+    echo [ERROR] Folder 'server' not found!
+    echo        This folder is essential for operation.
 )
 
-REM Copiar pasta client/build
+REM Copy client/build folder
 if exist "client\build" (
-    echo Copiando pasta 'client\build'...
+    echo Copying 'client\build' folder...
     if not exist "dist\client" mkdir "dist\client"
     xcopy /E /I /Y "client\build" "dist\client\build" >nul
     if %ERRORLEVEL% EQU 0 (
-        echo   [OK] Pasta 'client\build' copiada.
+        echo   [OK] Folder 'client\build' copied.
     ) else (
-        echo   [AVISO] Erro ao copiar pasta 'client\build'
+        echo   [WARNING] Error copying 'client\build' folder
     )
 ) else (
-    echo [ERRO] Pasta 'client\build' nao encontrada!
-    echo        O frontend precisa estar compilado.
-    echo        Execute 'rebuild-frontend.bat' primeiro.
+    echo [ERROR] Folder 'client\build' not found!
+    echo        The frontend needs to be compiled.
+    echo        Run 'rebuild-frontend.bat' first.
 )
 
-REM Copiar ficheiro de config exemplo se existir
+REM Copy config example file if it exists
 if exist "data\config.json.example" (
     if not exist "dist\data\config.json" (
         copy "data\config.json.example" "dist\data\config.json.example" >nul
-        echo   [OK] Ficheiro de config exemplo copiado.
+        echo   [OK] Config example file copied.
     )
 )
 
 echo.
 echo ========================================
-echo Executavel criado com sucesso!
+echo Executable created successfully!
 echo ========================================
 echo.
-echo O executavel e ficheiros estao em: dist\
+echo The executable and files are in: dist\
 echo.
-echo Estrutura criada:
+echo Structure created:
 echo   dist\
 echo   +-- HandoverServer.exe
 echo   +-- nodejs\
@@ -144,8 +144,7 @@ echo   +-- server\
 echo   +-- client\build\
 echo   +-- data\
 echo.
-echo Pode distribuir toda a pasta 'dist\' como um pacote completo!
+echo You can distribute the entire 'dist\' folder as a complete package!
 echo.
 
 pause
-

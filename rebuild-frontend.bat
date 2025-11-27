@@ -1,74 +1,74 @@
 @echo off
 echo ========================================
-echo Recompilando Frontend com URL Relativa
+echo Rebuild Frontend with Relative URL
 echo ========================================
 echo.
-echo Este script recompila o frontend para usar URLs relativas (/api)
-echo em vez de URLs absolutas (http://localhost:5000/api).
+echo This script rebuilds the frontend to use relative URLs (/api)
+echo instead of absolute URLs (http://localhost:5000/api).
 echo.
-echo Isso permite que o servidor funcione em qualquer porta.
+echo This allows the server to work on any port.
 echo.
 
 cd client
 
-REM Verificar se Node.js está disponível
+REM Check if Node.js is available
 where node >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ERRO: Node.js nao encontrado!
+    echo ERROR: Node.js not found!
     echo.
-    echo Por favor, certifique-se de que:
-    echo 1. Node.js esta instalado OU
-    echo 2. Node.js portatil esta na pasta nodejs/
+    echo Please make sure that:
+    echo 1. Node.js is installed OR
+    echo 2. Portable Node.js is in the nodejs/ folder
     echo.
     pause
     exit /b 1
 )
 
-REM Definir REACT_APP_API_URL como URL relativa para funcionar em qualquer porta
+REM Set REACT_APP_API_URL as relative URL to work on any port
 set REACT_APP_API_URL=/api
 
-echo Configuracao:
+echo Configuration:
 echo   REACT_APP_API_URL=%REACT_APP_API_URL%
 echo.
 
-REM Instalar dependências se necessário
+REM Install dependencies if necessary
 if not exist "node_modules" (
-    echo Instalando dependencias...
+    echo Installing dependencies...
     call npm install
     if %ERRORLEVEL% NEQ 0 (
         echo.
-        echo ERRO: Falha ao instalar dependencias!
+        echo ERROR: Failed to install dependencies!
         pause
         exit /b 1
     )
     echo.
 )
 
-REM Compilar o frontend
-echo Compilando frontend (isto pode demorar alguns minutos)...
+REM Compile the frontend
+echo Compiling frontend (this may take a few minutes)...
 echo.
 call npm run build
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ========================================
-    echo Frontend compilado com sucesso!
+    echo Frontend compiled successfully!
     echo ========================================
     echo.
-    echo A API agora usa URLs relativas (/api) e funcionara em qualquer porta.
+    echo The API now uses relative URLs (/api) and will work on any port.
     echo.
-    echo Proximos passos:
-    echo 1. Pare o servidor Python (se estiver a correr)
-    echo 2. Inicie novamente o servidor Python
-    echo 3. A aplicacao deve funcionar sem erros de rede
+    echo Next steps:
+    echo 1. Stop the Python server (if running)
+    echo 2. Start the Python server again
+    echo 3. The application should work without network errors
     echo.
 ) else (
     echo.
     echo ========================================
-    echo ERRO ao compilar frontend!
+    echo ERROR compiling frontend!
     echo ========================================
     echo.
-    echo Verifique os erros acima e tente novamente.
+    echo Check the errors above and try again.
     echo.
     pause
     exit /b 1
@@ -76,4 +76,3 @@ if %ERRORLEVEL% EQU 0 (
 
 cd ..
 pause
-
