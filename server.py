@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Servidor Python Standalone para Shift Handover Log
-Permite executar a aplicação sem instalações no Windows
+Python Standalone Server for Shift Handover Log
+Allows running the application without installations on Windows
 """
 
 import os
@@ -16,7 +16,7 @@ from pathlib import Path
 from tkinter import Tk, Label, Entry, Button, Text, Scrollbar, Frame, messagebox
 from tkinter.scrolledtext import ScrolledText
 
-# Configurações
+# Configuration
 CONFIG_FILE = "server_config.json"
 DEFAULT_PORT = 8500
 NODEJS_DIR = Path("nodejs")
@@ -37,7 +37,7 @@ class ServerManager:
         self.stop_button = None
         
     def log(self, message):
-        """Adiciona mensagem à área de logs"""
+        """Adds message to the logs area"""
         if self.log_text:
             self.log_text.insert("end", f"{message}\n")
             self.log_text.see("end")
@@ -45,13 +45,13 @@ class ServerManager:
         print(message)
     
     def check_nodejs(self):
-        """Verifica se Node.js portátil está disponível"""
+        """Checks if portable Node.js is available"""
         if not NODEJS_EXE.exists():
-            return False, f"Node.js não encontrado em {NODEJS_EXE}\n\nPor favor, extraia Node.js portátil para a pasta 'nodejs/'\nVeja README_SERVER.md para instruções."
+            return False, f"Node.js not found at {NODEJS_EXE}\n\nPlease extract portable Node.js to the 'nodejs/' folder\nSee README_SERVER.md for instructions."
         return True, None
     
     def check_port_available(self, port):
-        """Verifica se a porta está disponível"""
+        """Checks if the port is available"""
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind(('localhost', port))
@@ -60,95 +60,95 @@ class ServerManager:
             return False
     
     def check_directories(self):
-        """Verifica se as pastas necessárias existem"""
+        """Checks if necessary folders exist"""
         errors = []
         if not SERVER_DIR.exists():
-            errors.append(f"Pasta 'server' não encontrada")
+            errors.append(f"Folder 'server' not found")
         if not CLIENT_BUILD_DIR.exists():
-            errors.append(f"Pasta 'client/build' não encontrada (frontend não compilado)")
+            errors.append(f"Folder 'client/build' not found (frontend not compiled)")
         if not DATA_DIR.exists():
             DATA_DIR.mkdir(parents=True, exist_ok=True)
-            self.log(f"Pasta 'data' criada")
+            self.log(f"Folder 'data' created")
         return errors
     
     def load_config(self):
-        """Carrega configuração guardada"""
+        """Loads saved configuration"""
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.port = config.get('port', DEFAULT_PORT)
             except Exception as e:
-                self.log(f"Erro ao carregar configuração: {e}")
+                self.log(f"Error loading configuration: {e}")
                 self.port = DEFAULT_PORT
         else:
             self.port = DEFAULT_PORT
     
     def save_config(self):
-        """Guarda configuração"""
+        """Saves configuration"""
         try:
             config = {'port': self.port}
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2)
         except Exception as e:
-            self.log(f"Erro ao guardar configuração: {e}")
+            self.log(f"Error saving configuration: {e}")
     
     def start_server(self):
-        """Inicia o servidor Node.js"""
+        """Starts the Node.js server"""
         if self.is_running:
-            messagebox.showwarning("Aviso", "O servidor já está em execução!")
+            messagebox.showwarning("Warning", "The server is already running!")
             return
         
-        # Validar Node.js
+        # Validate Node.js
         node_ok, error_msg = self.check_nodejs()
         if not node_ok:
-            messagebox.showerror("Erro", error_msg)
+            messagebox.showerror("Error", error_msg)
             return
         
-        # Validar pastas
+        # Validate folders
         errors = self.check_directories()
         if errors:
-            messagebox.showerror("Erro", "Problemas encontrados:\n\n" + "\n".join(errors))
+            messagebox.showerror("Error", "Problems found:\n\n" + "\n".join(errors))
             return
         
-        # Obter porta do campo de entrada
+        # Get port from input field
         try:
             port = int(self.port_entry.get())
             if port < 1 or port > 65535:
-                raise ValueError("Porta inválida")
+                raise ValueError("Invalid port")
         except ValueError:
-            messagebox.showerror("Erro", "Por favor, insira uma porta válida (1-65535)")
+            messagebox.showerror("Error", "Please enter a valid port (1-65535)")
             return
         
-        # Verificar se porta está disponível
+        # Check if port is available
         if not self.check_port_available(port):
-            messagebox.showerror("Erro", f"A porta {port} já está em uso. Por favor, escolha outra porta.")
+            messagebox.showerror("Error", f"Port {port} is already in use. Please choose another port.")
             return
         
         self.port = port
         self.save_config()
         
-        # Configurar variáveis de ambiente
+        # Configure environment variables
         env = os.environ.copy()
         env['NODE_ENV'] = 'production'
         env['PORT'] = str(self.port)
         env['FRONTEND_URL'] = f'http://localhost:{self.port}'
-        # Nota: REACT_APP_API_URL é definida no build, mas como servimos tudo na mesma porta,
-        # os pedidos relativos /api funcionarão corretamente
+        # Note: REACT_APP_API_URL is defined at build time, but since we serve everything on the same port,
+        # relative requests /api will work correctly
         
-        # Caminho para o servidor
+        # Server path
         server_path = SERVER_DIR / "index.js"
         if not server_path.exists():
-            messagebox.showerror("Erro", f"Ficheiro do servidor não encontrado: {server_path}")
+            messagebox.showerror("Error", f"Server file not found: {server_path}")
             return
         
-        # Iniciar processo Node.js
+        # Start Node.js process
         try:
-            self.log(f"Iniciando servidor na porta {self.port}...")
+            self.log(f"Starting server on port {self.port}...")
             self.log(f"Node.js: {NODEJS_EXE}")
-            self.log(f"Servidor: {server_path}")
+            self.log(f"Server: {server_path}")
             
-            # Usar Node.js portátil
+            # Use portable Node.js
             node_path = str(NODEJS_EXE)
             server_script = str(server_path)
             
@@ -166,86 +166,86 @@ class ServerManager:
             self.is_running = True
             self.update_ui_state()
             
-            # Thread para ler output do processo
+            # Thread to read process output
             def read_output():
                 try:
                     for line in iter(self.process.stdout.readline, ''):
                         if line:
-                            self.log(f"[Servidor] {line.strip()}")
+                            self.log(f"[Server] {line.strip()}")
                     self.process.stdout.close()
                     self.process.wait()
                     self.is_running = False
                     self.update_ui_state()
-                    self.log("Servidor parado.")
+                    self.log("Server stopped.")
                 except Exception as e:
-                    self.log(f"Erro ao ler output: {e}")
+                    self.log(f"Error reading output: {e}")
                     self.is_running = False
                     self.update_ui_state()
             
             thread = threading.Thread(target=read_output, daemon=True)
             thread.start()
             
-            # Aguardar um pouco e verificar se o processo ainda está a correr
+            # Wait a bit and check if the process is still running
             threading.Timer(2.0, self.check_server_started).start()
             
-            self.log(f"Servidor iniciado! Acesse: http://localhost:{self.port}")
+            self.log(f"Server started! Access: http://localhost:{self.port}")
             
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao iniciar servidor:\n{str(e)}")
+            messagebox.showerror("Error", f"Error starting server:\n{str(e)}")
             self.is_running = False
             self.update_ui_state()
     
     def check_server_started(self):
-        """Verifica se o servidor iniciou corretamente"""
+        """Checks if the server started correctly"""
         if self.process and self.process.poll() is not None:
-            # Processo terminou
+            # Process terminated
             self.is_running = False
             self.update_ui_state()
-            messagebox.showerror("Erro", "O servidor terminou inesperadamente. Verifique os logs.")
+            messagebox.showerror("Error", "The server terminated unexpectedly. Check the logs.")
         elif self.is_running:
-            # Servidor está a correr, abrir browser após alguns segundos
+            # Server is running, open browser after a few seconds
             threading.Timer(3.0, self.open_browser).start()
     
     def open_browser(self):
-        """Abre o browser no endereço do servidor"""
+        """Opens the browser at the server address"""
         if self.is_running:
             url = f"http://localhost:{self.port}"
             try:
                 webbrowser.open(url)
-                self.log(f"Browser aberto: {url}")
+                self.log(f"Browser opened: {url}")
             except Exception as e:
-                self.log(f"Erro ao abrir browser: {e}")
+                self.log(f"Error opening browser: {e}")
     
     def stop_server(self):
-        """Para o servidor Node.js"""
+        """Stops the Node.js server"""
         if not self.is_running or not self.process:
-            messagebox.showinfo("Info", "O servidor não está em execução.")
+            messagebox.showinfo("Info", "The server is not running.")
             return
         
         try:
-            self.log("A parar servidor...")
+            self.log("Stopping server...")
             self.process.terminate()
             
-            # Aguardar até 5 segundos para terminar graciosamente
+            # Wait up to 5 seconds for graceful termination
             try:
                 self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                # Forçar terminação
-                self.log("Forçando terminação do servidor...")
+                # Force termination
+                self.log("Forcing server termination...")
                 self.process.kill()
                 self.process.wait()
             
             self.is_running = False
             self.update_ui_state()
-            self.log("Servidor parado com sucesso.")
+            self.log("Server stopped successfully.")
             
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao parar servidor:\n{str(e)}")
+            messagebox.showerror("Error", f"Error stopping server:\n{str(e)}")
             self.is_running = False
             self.update_ui_state()
     
     def update_ui_state(self):
-        """Atualiza o estado da interface"""
+        """Updates the interface state"""
         if self.start_button and self.stop_button:
             if self.is_running:
                 self.start_button.config(state='disabled')
@@ -257,56 +257,56 @@ class ServerManager:
                 self.port_entry.config(state='normal')
     
     def on_closing(self):
-        """Chamado quando a janela é fechada"""
+        """Called when the window is closed"""
         if self.is_running:
-            if messagebox.askokcancel("Sair", "O servidor está em execução. Deseja parar e sair?"):
+            if messagebox.askokcancel("Exit", "The server is running. Do you want to stop and exit?"):
                 self.stop_server()
                 self.root.after(1000, self.root.destroy)
         else:
             self.root.destroy()
     
     def create_gui(self):
-        """Cria a interface gráfica"""
+        """Creates the graphical interface"""
         self.root = Tk()
-        self.root.title("Shift Handover Log - Servidor")
+        self.root.title("Shift Handover Log - Server")
         self.root.geometry("700x600")
         self.root.resizable(True, True)
         
-        # Carregar configuração
+        # Load configuration
         self.load_config()
         
-        # Frame principal
+        # Main frame
         main_frame = Frame(self.root, padx=20, pady=20)
         main_frame.pack(fill='both', expand=True)
         
-        # Título
-        title_label = Label(main_frame, text="Shift Handover Log - Servidor", 
+        # Title
+        title_label = Label(main_frame, text="Shift Handover Log - Server", 
                            font=("Arial", 16, "bold"))
         title_label.pack(pady=(0, 20))
         
-        # Frame de configuração
+        # Configuration frame
         config_frame = Frame(main_frame)
         config_frame.pack(fill='x', pady=(0, 10))
         
-        port_label = Label(config_frame, text="Porta:", font=("Arial", 10))
+        port_label = Label(config_frame, text="Port:", font=("Arial", 10))
         port_label.pack(side='left', padx=(0, 10))
         
         self.port_entry = Entry(config_frame, width=10, font=("Arial", 10))
         self.port_entry.insert(0, str(self.port))
         self.port_entry.pack(side='left', padx=(0, 10))
         
-        # Botões de controlo
+        # Control buttons
         button_frame = Frame(main_frame)
         button_frame.pack(fill='x', pady=(0, 10))
         
-        self.start_button = Button(button_frame, text="Iniciar Servidor", 
+        self.start_button = Button(button_frame, text="Start Server", 
                                    command=self.start_server,
                                    bg="#4CAF50", fg="white", 
                                    font=("Arial", 10, "bold"),
                                    padx=20, pady=10)
         self.start_button.pack(side='left', padx=(0, 10))
         
-        self.stop_button = Button(button_frame, text="Parar Servidor", 
+        self.stop_button = Button(button_frame, text="Stop Server", 
                                  command=self.stop_server,
                                  bg="#f44336", fg="white",
                                  font=("Arial", 10, "bold"),
@@ -314,14 +314,14 @@ class ServerManager:
                                  state='disabled')
         self.stop_button.pack(side='left', padx=(0, 10))
         
-        open_browser_button = Button(button_frame, text="Abrir no Browser", 
+        open_browser_button = Button(button_frame, text="Open in Browser", 
                                      command=self.open_browser,
                                      bg="#2196F3", fg="white",
                                      font=("Arial", 10),
                                      padx=15, pady=10)
         open_browser_button.pack(side='left')
         
-        # Área de logs
+        # Logs area
         log_label = Label(main_frame, text="Logs:", font=("Arial", 10, "bold"))
         log_label.pack(anchor='w', pady=(10, 5))
         
@@ -330,38 +330,37 @@ class ServerManager:
                                      wrap='word')
         self.log_text.pack(fill='both', expand=True)
         
-        # Status inicial
-        self.log("Servidor pronto. Configure a porta e clique em 'Iniciar Servidor'.")
+        # Initial status
+        self.log("Server ready. Configure the port and click 'Start Server'.")
         
-        # Verificar Node.js
+        # Check Node.js
         node_ok, error_msg = self.check_nodejs()
         if not node_ok:
             self.log(f"⚠️ {error_msg}")
         else:
-            self.log(f"✓ Node.js encontrado: {NODEJS_EXE}")
+            self.log(f"✓ Node.js found: {NODEJS_EXE}")
         
-        # Verificar pastas
+        # Check folders
         errors = self.check_directories()
         if errors:
             for error in errors:
                 self.log(f"⚠️ {error}")
         else:
-            self.log("✓ Todas as pastas necessárias encontradas")
+            self.log("✓ All necessary folders found")
         
-        # Atualizar estado da UI
+        # Update UI state
         self.update_ui_state()
         
-        # Handler para fechar janela
+        # Handler for window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-        # Iniciar loop da interface
+        # Start interface loop
         self.root.mainloop()
 
 def main():
-    """Função principal"""
+    """Main function"""
     manager = ServerManager()
     manager.create_gui()
 
 if __name__ == "__main__":
     main()
-
