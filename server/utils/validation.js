@@ -1,3 +1,63 @@
+const createDOMPurify = require('isomorphic-dompurify');
+
+// Configure DOMPurify with safe defaults
+const DOMPurify = createDOMPurify();
+
+// Configure allowed tags and attributes
+const sanitizeConfig = {
+  ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'ol', 'li', 'p', 'br', 'strong', 'em', 'div', 'span', 'a', 'code', 'pre'],
+  ALLOWED_ATTR: ['style', 'class', 'href', 'target', 'rel'],
+  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  // Remove dangerous CSS expressions
+  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+  // Sanitize style attributes
+  ALLOW_DATA_ATTR: false,
+  KEEP_CONTENT: true,
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  RETURN_TRUSTED_TYPE: false
+};
+
+// Custom hook to sanitize style attributes
+DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+  // Sanitize style attribute
+  if (data.attrName === 'style' && data.attrValue) {
+    // Remove dangerous CSS expressions
+    let style = data.attrValue;
+    
+    // Remove javascript: in URLs
+    style = style.replace(/javascript:/gi, '');
+    // Remove expression() (IE)
+    style = style.replace(/expression\s*\(/gi, '');
+    // Remove url() with javascript
+    style = style.replace(/url\s*\(\s*['"]?\s*javascript:/gi, '');
+    
+    // Only allow safe CSS properties
+    const safeProperties = [
+      'color', 'background-color', 'background', 'font-weight', 'font-size',
+      'text-decoration', 'text-align', 'margin', 'padding', 'border',
+      'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom'
+    ];
+    
+    // Filter out dangerous properties
+    const properties = style.split(';').filter(prop => {
+      const propName = prop.split(':')[0].trim().toLowerCase();
+      return safeProperties.some(safe => propName.includes(safe));
+    });
+    
+    data.attrValue = properties.join('; ');
+  }
+  
+  // Sanitize href attribute - only allow http/https
+  if (data.attrName === 'href' && data.attrValue) {
+    const href = data.attrValue.trim();
+    if (!/^https?:\/\//i.test(href) && !href.startsWith('#') && !href.startsWith('/')) {
+      // Block javascript:, data:, and other dangerous protocols
+      data.keepAttr = false;
+    }
+  }
+});
+
 function validateLogEntry(data, isUpdate = false) {
   const errors = {};
 
@@ -94,22 +154,13 @@ function sanitizeInput(data) {
   }
 
   if (data.note) {
-    // Allow basic HTML formatting but sanitize dangerous tags
+    // Sanitize HTML using DOMPurify
     let note = data.note.trim();
     
-    // Remove script tags and dangerous attributes
-    note = note.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    note = note.replace(/on\w+\s*=/gi, ''); // Remove event handlers
-    note = note.replace(/javascript:/gi, ''); // Remove javascript: protocol
-    
-    // Allow basic formatting tags (b, i, u, ul, ol, li, p, br, strong, em, div, span)
-    // Remove any other tags but keep their content
-    note = note.replace(/<(?!\/?(b|i|u|ul|ol|li|p|br|strong|em|div|span)\b)[^>]*>/gi, '');
-    
-    // Limit to 1000 characters (counting text content, not HTML tags)
+    // First, check text length before sanitization (for validation)
     const textLength = note.replace(/<[^>]*>/g, '').length;
     if (textLength > 1000) {
-      // Truncate intelligently
+      // Truncate intelligently before sanitization
       let truncated = '';
       let count = 0;
       let inTag = false;
@@ -128,6 +179,9 @@ function sanitizeInput(data) {
       }
       note = truncated;
     }
+    
+    // Sanitize with DOMPurify
+    note = DOMPurify.sanitize(note, sanitizeConfig);
     
     sanitized.note = note;
   }
