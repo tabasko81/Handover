@@ -3,60 +3,77 @@ const createDOMPurify = require('isomorphic-dompurify');
 // Configure DOMPurify with safe defaults
 const DOMPurify = createDOMPurify();
 
+// Function to sanitize style attribute manually
+function sanitizeStyleAttribute(styleValue) {
+  if (!styleValue) return '';
+  
+  let style = styleValue;
+  
+  // Remove dangerous CSS expressions
+  style = style.replace(/javascript:/gi, '');
+  style = style.replace(/expression\s*\(/gi, '');
+  style = style.replace(/url\s*\(\s*['"]?\s*javascript:/gi, '');
+  
+  // Only allow safe CSS properties
+  const safeProperties = [
+    'color', 'background-color', 'background', 'font-weight', 'font-size',
+    'text-decoration', 'text-align', 'margin', 'padding', 'border',
+    'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom'
+  ];
+  
+  // Filter out dangerous properties
+  const properties = style.split(';').filter(prop => {
+    const trimmed = prop.trim();
+    if (!trimmed) return false;
+    const propName = trimmed.split(':')[0].trim().toLowerCase();
+    return safeProperties.some(safe => propName.includes(safe));
+  });
+  
+  return properties.join('; ');
+}
+
+// Function to sanitize href attribute
+function sanitizeHrefAttribute(hrefValue) {
+  if (!hrefValue) return '';
+  
+  const href = hrefValue.trim();
+  // Only allow http/https, relative paths, and anchors
+  if (/^https?:\/\//i.test(href) || href.startsWith('#') || href.startsWith('/')) {
+    return href;
+  }
+  // Block dangerous protocols
+  return '';
+}
+
+// Pre-process HTML to sanitize style and href attributes before DOMPurify
+function preSanitizeHTML(html) {
+  // Sanitize style attributes
+  html = html.replace(/style\s*=\s*["']([^"']*)["']/gi, (match, styleValue) => {
+    const sanitized = sanitizeStyleAttribute(styleValue);
+    return sanitized ? `style="${sanitized}"` : '';
+  });
+  
+  // Sanitize href attributes
+  html = html.replace(/href\s*=\s*["']([^"']*)["']/gi, (match, hrefValue) => {
+    const sanitized = sanitizeHrefAttribute(hrefValue);
+    return sanitized ? `href="${sanitized}"` : '';
+  });
+  
+  return html;
+}
+
 // Configure allowed tags and attributes
 const sanitizeConfig = {
   ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'ol', 'li', 'p', 'br', 'strong', 'em', 'div', 'span', 'a', 'code', 'pre'],
   ALLOWED_ATTR: ['style', 'class', 'href', 'target', 'rel'],
   ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-  // Remove dangerous CSS expressions
   FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
-  // Sanitize style attributes
   ALLOW_DATA_ATTR: false,
   KEEP_CONTENT: true,
   RETURN_DOM: false,
   RETURN_DOM_FRAGMENT: false,
   RETURN_TRUSTED_TYPE: false
 };
-
-// Custom hook to sanitize style attributes
-DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
-  // Sanitize style attribute
-  if (data.attrName === 'style' && data.attrValue) {
-    // Remove dangerous CSS expressions
-    let style = data.attrValue;
-    
-    // Remove javascript: in URLs
-    style = style.replace(/javascript:/gi, '');
-    // Remove expression() (IE)
-    style = style.replace(/expression\s*\(/gi, '');
-    // Remove url() with javascript
-    style = style.replace(/url\s*\(\s*['"]?\s*javascript:/gi, '');
-    
-    // Only allow safe CSS properties
-    const safeProperties = [
-      'color', 'background-color', 'background', 'font-weight', 'font-size',
-      'text-decoration', 'text-align', 'margin', 'padding', 'border',
-      'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom'
-    ];
-    
-    // Filter out dangerous properties
-    const properties = style.split(';').filter(prop => {
-      const propName = prop.split(':')[0].trim().toLowerCase();
-      return safeProperties.some(safe => propName.includes(safe));
-    });
-    
-    data.attrValue = properties.join('; ');
-  }
-  
-  // Sanitize href attribute - only allow http/https
-  if (data.attrName === 'href' && data.attrValue) {
-    const href = data.attrValue.trim();
-    if (!/^https?:\/\//i.test(href) && !href.startsWith('#') && !href.startsWith('/')) {
-      // Block javascript:, data:, and other dangerous protocols
-      data.keepAttr = false;
-    }
-  }
-});
 
 function validateLogEntry(data, isUpdate = false) {
   const errors = {};
@@ -179,6 +196,9 @@ function sanitizeInput(data) {
       }
       note = truncated;
     }
+    
+    // Pre-sanitize style and href attributes
+    note = preSanitizeHTML(note);
     
     // Sanitize with DOMPurify
     note = DOMPurify.sanitize(note, sanitizeConfig);
