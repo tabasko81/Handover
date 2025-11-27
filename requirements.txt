@@ -1,0 +1,11 @@
+# Dependências Python para o Servidor Standalone
+# Nota: tkinter vem incluído com Python padrão, não precisa de instalação
+
+# Este ficheiro está vazio porque todas as dependências necessárias
+# (tkinter, subprocess, threading, etc.) já vêm com Python padrão.
+
+# Se precisar de instalar Python:
+# 1. Baixe Python 3.8+ de https://www.python.org/downloads/
+# 2. Durante a instalação, certifique-se de que "tcl/tk" está selecionado
+#    (geralmente vem por padrão)
+
