@@ -13,4 +13,11 @@ data/config.json
 data/shift_logs.db
 # Remove log files
 logs/*.txt
+# Python standalone server generated files
+server_config.json
+build/
+dist/
+*.spec
+# Node.js portable (should be added manually)
+nodejs/
 

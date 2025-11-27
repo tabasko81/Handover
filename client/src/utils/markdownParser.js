@@ -7,12 +7,23 @@ export function parseMarkdown(text) {
   if (!text) return '';
 
   // Check if content is already HTML (starts with < and contains HTML tags)
-  const isHTML = /^[\s]*<[^>]+>/.test(text) || text.includes('<div') || text.includes('<p') || text.includes('<h1') || text.includes('<h2') || text.includes('<h3') || text.includes('<ul') || text.includes('<ol') || text.includes('<strong') || text.includes('<em') || text.includes('<u');
+  // Also check for escaped HTML entities - if found, unescape them first
+  let processedText = text;
+  if (text.includes('&lt;') || text.includes('&gt;')) {
+    // Text contains escaped HTML - unescape it to check if it's HTML
+    processedText = text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+  
+  const isHTML = /^[\s]*<[^>]+>/.test(processedText) || processedText.includes('<div') || processedText.includes('<p') || processedText.includes('<h1') || processedText.includes('<h2') || processedText.includes('<h3') || processedText.includes('<ul') || processedText.includes('<ol') || processedText.includes('<strong') || processedText.includes('<em') || processedText.includes('<u');
   
   if (isHTML) {
     // Content is HTML from rich text editor
     // Process @mentions in text content, but exclude emails
-    let html = text;
+    let html = processedText;
     
     // Normalize line breaks and paragraphs for WYSIWYG display
     // The editor now uses <p> tags by default, but we still handle <div> tags for compatibility
@@ -92,11 +103,8 @@ export function parseMarkdown(text) {
   }
 
   // Original markdown processing
-  // Escape HTML first to prevent XSS
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  // Process markdown on the processed text first, then escape remaining HTML
+  let html = processedText;
 
   // Code blocks (```code```)
   html = html.replace(/```([^`]+)```/g, '<pre class="bg-gray-100 p-2 rounded my-2"><code>$1</code></pre>');
@@ -161,6 +169,22 @@ export function parseMarkdown(text) {
 
   // Clean up: remove <br> tags inside list items
   html = html.replace(/(<li[^>]*>)(.*?)<br>(.*?)(<\/li>)/g, '$1$2$3$4');
+  
+  // Now escape any remaining raw HTML that wasn't converted from markdown
+  // We'll protect our created HTML tags and escape everything else
+  // Split by our created HTML tags, escape the text parts, then rejoin
+  const parts = html.split(/(<[^>]+>)/g);
+  html = parts.map((part, index) => {
+    // If it's an HTML tag (starts with <), keep it as-is
+    if (part.startsWith('<') && part.endsWith('>')) {
+      return part;
+    }
+    // Otherwise, escape HTML in text content
+    return part
+      .replace(/&(?!amp;|lt;|gt;|quot;|#\d+;)/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }).join('');
 
   return html;
 }
