@@ -16,6 +16,9 @@ from pathlib import Path
 from tkinter import Tk, Label, Entry, Button, Text, Scrollbar, Frame, messagebox
 from tkinter.scrolledtext import ScrolledText
 
+# Debug flag - set to True to enable verbose logging
+DEBUG = True
+
 # Configuration
 CONFIG_FILE = "server_config.json"
 DEFAULT_PORT = 8500
@@ -158,8 +161,31 @@ class ServerManager:
         # Start Node.js process
         try:
             self.log(f"Starting server on port {self.port}...")
-            self.log(f"Node.js: {NODEJS_EXE}")
-            self.log(f"Server: {server_path}")
+            self.log(f"=== DEBUG INFO ===")
+            self.log(f"BASE_DIR: {BASE_DIR}")
+            self.log(f"BASE_DIR exists: {BASE_DIR.exists()}")
+            self.log(f"Node.js path: {NODEJS_EXE}")
+            self.log(f"Node.js exists: {NODEJS_EXE.exists()}")
+            self.log(f"Server path: {server_path}")
+            self.log(f"Server exists: {server_path.exists()}")
+            
+            # Check for node_modules in different locations
+            node_modules_root = BASE_DIR / "node_modules"
+            node_modules_server = SERVER_DIR / "node_modules"
+            self.log(f"node_modules in BASE_DIR ({node_modules_root}): {node_modules_root.exists()}")
+            self.log(f"node_modules in SERVER_DIR ({node_modules_server}): {node_modules_server.exists()}")
+            
+            # List what's in BASE_DIR
+            if BASE_DIR.exists():
+                self.log(f"Contents of BASE_DIR:")
+                try:
+                    for item in sorted(BASE_DIR.iterdir()):
+                        if item.is_dir():
+                            self.log(f"  [DIR]  {item.name}")
+                        else:
+                            self.log(f"  [FILE] {item.name}")
+                except Exception as e:
+                    self.log(f"  Error listing directory: {e}")
             
             # Use portable Node.js
             node_path = str(NODEJS_EXE)
@@ -170,7 +196,16 @@ class ServerManager:
             working_dir = str(BASE_DIR)
             
             self.log(f"Working directory: {working_dir}")
-            self.log(f"Node modules should be in: {Path(working_dir) / 'node_modules'}")
+            self.log(f"Current working directory: {os.getcwd()}")
+            self.log(f"Node modules expected at: {Path(working_dir) / 'node_modules'}")
+            self.log(f"Node modules exists: {(Path(working_dir) / 'node_modules').exists()}")
+            
+            # Check if express exists
+            express_path = Path(working_dir) / "node_modules" / "express"
+            self.log(f"Express module path: {express_path}")
+            self.log(f"Express module exists: {express_path.exists()}")
+            
+            self.log(f"==================")
             
             self.process = subprocess.Popen(
                 [node_path, server_script],
