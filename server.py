@@ -19,11 +19,24 @@ from tkinter.scrolledtext import ScrolledText
 # Configuration
 CONFIG_FILE = "server_config.json"
 DEFAULT_PORT = 8500
-NODEJS_DIR = Path("nodejs")
+
+# Detect if running from dist folder (executable)
+BASE_DIR = Path.cwd()
+if (BASE_DIR / "dist" / "server" / "index.js").exists() and (BASE_DIR / "dist" / "HandoverServer.exe").exists():
+    # Running from executable in dist folder
+    BASE_DIR = BASE_DIR / "dist"
+    NODEJS_DIR = BASE_DIR / "nodejs"
+    SERVER_DIR = BASE_DIR / "server"
+    CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
+    DATA_DIR = BASE_DIR / "data"
+else:
+    # Running from project root
+    NODEJS_DIR = BASE_DIR / "nodejs"
+    SERVER_DIR = BASE_DIR / "server"
+    CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
+    DATA_DIR = BASE_DIR / "data"
+
 NODEJS_EXE = NODEJS_DIR / "node.exe"
-SERVER_DIR = Path("server")
-CLIENT_BUILD_DIR = Path("client") / "build"
-DATA_DIR = Path("data")
 
 class ServerManager:
     def __init__(self):
@@ -152,9 +165,16 @@ class ServerManager:
             node_path = str(NODEJS_EXE)
             server_script = str(server_path)
             
+            # Set working directory to BASE_DIR so Node.js can find node_modules
+            # Node.js looks for node_modules relative to the current working directory
+            working_dir = str(BASE_DIR)
+            
+            self.log(f"Working directory: {working_dir}")
+            self.log(f"Node modules should be in: {Path(working_dir) / 'node_modules'}")
+            
             self.process = subprocess.Popen(
                 [node_path, server_script],
-                cwd=str(Path.cwd()),
+                cwd=working_dir,
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
