@@ -105,6 +105,49 @@ if exist "server" (
     echo        This folder is essential for operation.
 )
 
+REM Copy package.json for dependencies
+if exist "package.json" (
+    echo Copying 'package.json'...
+    copy "package.json" "dist\package.json" >nul
+    if %ERRORLEVEL% EQU 0 (
+        echo   [OK] package.json copied.
+    ) else (
+        echo   [WARNING] Error copying package.json
+    )
+) else (
+    echo [ERROR] package.json not found!
+    echo        This file is essential for installing dependencies.
+)
+
+REM Install Node.js dependencies
+echo.
+echo Installing Node.js dependencies...
+echo This may take a few minutes...
+echo.
+
+cd dist
+
+REM Check if we have portable Node.js
+if exist "..\nodejs\npm.cmd" (
+    echo Using portable Node.js...
+    call ..\nodejs\npm.cmd install --production
+) else if exist "nodejs\npm.cmd" (
+    echo Using portable Node.js from dist...
+    call nodejs\npm.cmd install --production
+) else (
+    echo Using system Node.js...
+    call npm install --production
+)
+
+if %ERRORLEVEL% EQU 0 (
+    echo   [OK] Dependencies installed successfully.
+) else (
+    echo   [WARNING] Error installing dependencies.
+    echo            The server may not work without node_modules.
+)
+
+cd ..
+
 REM Copy client/build folder
 if exist "client\build" (
     echo Copying 'client\build' folder...
