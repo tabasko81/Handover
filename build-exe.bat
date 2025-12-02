@@ -121,43 +121,108 @@ if exist "package.json" (
 
 REM Install Node.js dependencies
 echo.
+echo ========================================
 echo Installing Node.js dependencies...
-echo This may take a few minutes...
+echo ========================================
 echo.
 
 cd dist
 
+REM First, try to copy node_modules from root if it exists (much faster)
+if exist "..\node_modules" (
+    echo Copying existing node_modules from root folder...
+    echo This is faster than downloading packages again.
+    echo.
+    xcopy /E /I /Y /Q "..\node_modules" "node_modules" >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        echo   [OK] node_modules copied from root folder.
+        echo.
+        echo Verifying installation...
+        if exist "node_modules\express" (
+            echo   [OK] Express module found.
+            echo   [OK] Dependencies ready!
+            cd ..
+            goto :deps_ok
+        ) else (
+            echo   [WARNING] Express not found, will reinstall...
+            rmdir /S /Q "node_modules" >nul 2>&1
+        )
+    ) else (
+        echo   [INFO] Could not copy node_modules, will install fresh...
+    )
+    echo.
+)
+
+REM Check if node_modules already exists in dist
+if exist "node_modules\express" (
+    echo node_modules already exists with express module.
+    echo   [OK] Dependencies ready!
+    cd ..
+    goto :deps_ok
+)
+
+REM Install dependencies using npm
+echo Installing dependencies from package.json...
+echo This may take a few minutes depending on internet speed...
+echo.
+
 REM Check if we have portable Node.js
 if exist "..\nodejs\npm.cmd" (
     echo Using portable Node.js from parent folder...
-    call ..\nodejs\npm.cmd install --production --no-optional
+    call ..\nodejs\npm.cmd install --production --no-optional --loglevel=error
 ) else if exist "nodejs\npm.cmd" (
     echo Using portable Node.js from dist...
-    call nodejs\npm.cmd install --production --no-optional
+    call nodejs\npm.cmd install --production --no-optional --loglevel=error
 ) else (
     echo Using system Node.js...
-    call npm install --production --no-optional
+    call npm install --production --no-optional --loglevel=error
 )
 
-if %ERRORLEVEL% EQU 0 (
-    echo   [OK] Dependencies installed successfully.
+if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo Verifying installation...
-    if exist "node_modules\express" (
-        echo   [OK] Express module found.
-    ) else (
-        echo   [WARNING] Express module not found in node_modules!
-    )
-) else (
-    echo   [ERROR] Failed to install dependencies!
-    echo          The server will not work without node_modules.
+    echo ========================================
+    echo [ERROR] Failed to install dependencies!
+    echo ========================================
+    echo.
+    echo The server will NOT work without node_modules.
     echo.
     echo Please check:
-    echo   1. Node.js is available (portable or system)
+    echo   1. Node.js is available (portable in nodejs/ or system install)
     echo   2. Internet connection for downloading packages
     echo   3. package.json exists in dist folder
+    echo   4. Antivirus is not blocking npm
+    echo.
+    echo You can try installing manually:
+    echo   cd dist
+    echo   npm install --production
+    echo.
+    cd ..
+    pause
+    exit /b 1
 )
 
+REM Verify installation was successful
+echo.
+echo Verifying installation...
+if not exist "node_modules" (
+    echo   [ERROR] node_modules folder was not created!
+    cd ..
+    pause
+    exit /b 1
+)
+
+if not exist "node_modules\express" (
+    echo   [ERROR] Express module not found after installation!
+    echo          Installation may have failed silently.
+    cd ..
+    pause
+    exit /b 1
+)
+
+echo   [OK] Express module found.
+echo   [OK] Dependencies installed successfully!
+
+:deps_ok
 cd ..
 
 REM Copy client/build folder
