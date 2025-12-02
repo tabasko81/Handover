@@ -24,18 +24,29 @@ CONFIG_FILE = "server_config.json"
 DEFAULT_PORT = 8500
 
 # Detect if running from dist folder (executable)
-# Check if we're inside a dist folder or if dist folder exists relative to current location
+# When the .exe is executed, Path.cwd() returns the directory where the .exe is located
 BASE_DIR = Path.cwd()
 current_path = BASE_DIR
 
-# Check multiple scenarios
-if (current_path / "server" / "index.js").exists() and (current_path / "HandoverServer.exe").exists():
-    # Running from inside dist folder (executable was run from dist/)
-    BASE_DIR = current_path
-    NODEJS_DIR = BASE_DIR / "nodejs"
-    SERVER_DIR = BASE_DIR / "server"
-    CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
-    DATA_DIR = BASE_DIR / "data"
+# Check if we're running from inside dist folder (executable scenario)
+# Look for server/index.js and HandoverServer.exe in current directory
+if (current_path / "server" / "index.js").exists():
+    # We're in a folder that has server/index.js
+    # Check if HandoverServer.exe exists (executable) or if we're in dist
+    if (current_path / "HandoverServer.exe").exists() or current_path.name == "dist":
+        # Running from inside dist folder (executable was run from dist/)
+        BASE_DIR = current_path
+        NODEJS_DIR = BASE_DIR / "nodejs"
+        SERVER_DIR = BASE_DIR / "server"
+        CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
+        DATA_DIR = BASE_DIR / "data"
+    else:
+        # Running from project root
+        BASE_DIR = current_path
+        NODEJS_DIR = BASE_DIR / "nodejs"
+        SERVER_DIR = BASE_DIR / "server"
+        CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
+        DATA_DIR = BASE_DIR / "data"
 elif (current_path / "dist" / "server" / "index.js").exists():
     # Running from project root, but dist exists
     BASE_DIR = current_path / "dist"
