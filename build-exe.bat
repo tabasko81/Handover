@@ -129,21 +129,33 @@ cd dist
 
 REM Check if we have portable Node.js
 if exist "..\nodejs\npm.cmd" (
-    echo Using portable Node.js...
-    call ..\nodejs\npm.cmd install --production
+    echo Using portable Node.js from parent folder...
+    call ..\nodejs\npm.cmd install --production --no-optional
 ) else if exist "nodejs\npm.cmd" (
     echo Using portable Node.js from dist...
-    call nodejs\npm.cmd install --production
+    call nodejs\npm.cmd install --production --no-optional
 ) else (
     echo Using system Node.js...
-    call npm install --production
+    call npm install --production --no-optional
 )
 
 if %ERRORLEVEL% EQU 0 (
     echo   [OK] Dependencies installed successfully.
+    echo.
+    echo Verifying installation...
+    if exist "node_modules\express" (
+        echo   [OK] Express module found.
+    ) else (
+        echo   [WARNING] Express module not found in node_modules!
+    )
 ) else (
-    echo   [WARNING] Error installing dependencies.
-    echo            The server may not work without node_modules.
+    echo   [ERROR] Failed to install dependencies!
+    echo          The server will not work without node_modules.
+    echo.
+    echo Please check:
+    echo   1. Node.js is available (portable or system)
+    echo   2. Internet connection for downloading packages
+    echo   3. package.json exists in dist folder
 )
 
 cd ..
