@@ -79,12 +79,16 @@ if (process.env.NODE_ENV === 'production') {
   
   // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
-    // Skip API routes
+    // Skip API routes (they're handled above)
     if (req.path.startsWith('/api')) {
-      return next();
+      return res.status(404).json({ error: 'API endpoint not found' });
     }
     const indexPath = path.join(__dirname, '../client/build/index.html');
     console.log(`Serving index.html for route: ${req.path}`);
+    if (!fs.existsSync(indexPath)) {
+      console.error(`ERROR: index.html not found at ${indexPath}`);
+      return res.status(500).send('Frontend not found. Please rebuild the frontend.');
+    }
     res.sendFile(indexPath);
   });
 } else {
