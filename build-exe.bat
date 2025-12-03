@@ -229,16 +229,27 @@ REM Copy client/build folder
 if exist "client\build" (
     echo Copying 'client\build' folder...
     if not exist "dist\client" mkdir "dist\client"
-    xcopy /E /I /Y "client\build" "dist\client\build" >nul
+    if not exist "dist\client\build" mkdir "dist\client\build"
+    xcopy /E /I /Y "client\build\*" "dist\client\build\" >nul
     if %ERRORLEVEL% EQU 0 (
         echo   [OK] Folder 'client\build' copied.
     ) else (
         echo   [WARNING] Error copying 'client\build' folder
+        echo            Trying alternative method...
+        xcopy /E /I /Y "client\build" "dist\client\" >nul
+        if %ERRORLEVEL% EQU 0 (
+            echo   [OK] Folder 'client\build' copied (alternative method).
+        ) else (
+            echo   [ERROR] Failed to copy 'client\build' folder!
+            echo          Please copy manually: client\build -> dist\client\build
+        )
     )
 ) else (
     echo [ERROR] Folder 'client\build' not found!
     echo        The frontend needs to be compiled.
     echo        Run 'rebuild-frontend.bat' first.
+    pause
+    exit /b 1
 )
 
 REM Copy config example file if it exists
