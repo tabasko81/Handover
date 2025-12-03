@@ -11,7 +11,6 @@ import json
 import subprocess
 import signal
 import socket
-import threading
 import time
 from pathlib import Path
 
@@ -63,9 +62,8 @@ def check_port_available(port):
         return False
 
 def load_default_port():
-    """Load default port from configuration file"""
+    """Load default port from default config file"""
     port = DEFAULT_PORT
-    # First check default config file
     if os.path.exists(DEFAULT_CONFIG_FILE):
         try:
             with open(DEFAULT_CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -73,18 +71,10 @@ def load_default_port():
                 port = config.get('default_port', DEFAULT_PORT)
         except Exception:
             pass
-    # Then check saved config (last used port)
-    elif os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                port = config.get('port', DEFAULT_PORT)
-        except Exception:
-            pass
     return port
 
 def load_config():
-    """Load saved configuration (last used port)"""
+    """Load saved configuration"""
     port = load_default_port()
     if os.path.exists(CONFIG_FILE):
         try:
@@ -94,15 +84,6 @@ def load_config():
         except Exception:
             pass
     return port
-
-def save_default_port(port):
-    """Save default port to configuration file"""
-    try:
-        config = {'default_port': port}
-        with open(DEFAULT_CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(config, f, indent=2)
-    except Exception:
-        pass
 
 def save_config(port):
     """Save configuration"""
@@ -157,8 +138,8 @@ def main():
     print()
     
     # Get port
-    default_port = load_default_port()
-    last_used_port = load_config()
+    default_port = load_config()
+    port = default_port
     
     if len(sys.argv) > 1:
         # Port provided as command-line argument
@@ -170,41 +151,48 @@ def main():
             print(f"ERROR: Invalid port '{sys.argv[1]}'. Must be between 1 and 65535.")
             sys.exit(1)
     else:
-        # Prompt for port with timeout
-        print(f"Enter port number (default: {default_port}, last used: {last_used_port})")
-        print(f"You have {PORT_INPUT_TIMEOUT} seconds to enter a port, or default will be used...")
-        print(f"Port [{default_port}]: ", end='', flush=True)
+        # Prompt user with 10-second timeout
+        print(f"Enter port number [{default_port}] (10 seconds timeout): ", end='', flush=True)
         
-        user_input = ""
-        input_received = threading.Event()
+        # Use threading for timeout (cross-platform)
+        import threading
+        
+        user_input = ''
+        input_complete = threading.Event()
+        input_received = False
         
         def get_input():
-            nonlocal user_input
+            nonlocal user_input, input_received
             try:
-                user_input = sys.stdin.readline().strip()
+                result = sys.stdin.readline()
+                if result:
+                    user_input = result.strip()
+                    input_received = True
             except:
                 pass
             finally:
-                input_received.set()
+                input_complete.set()
         
+        # Start input thread
         input_thread = threading.Thread(target=get_input, daemon=True)
         input_thread.start()
         
-        # Wait for input or timeout
-        input_received.wait(timeout=PORT_INPUT_TIMEOUT)
+        # Wait for input or timeout (10 seconds)
+        input_complete.wait(timeout=10.0)
         
-        if user_input:
+        if not input_received or not user_input:
+            # Timeout reached or empty input
+            print(f"\nTimeout reached. Using default port {default_port}.")
+            port = default_port
+        else:
+            # User provided input
             try:
                 port = int(user_input)
                 if port < 1 or port > 65535:
                     raise ValueError("Invalid port")
-                print(f"Using port: {port}")
             except ValueError:
-                print(f"ERROR: Invalid port '{user_input}'. Using default {default_port}.")
+                print(f"ERROR: Invalid port. Using default {default_port}.")
                 port = default_port
-        else:
-            port = default_port
-            print(f"\nNo input received. Using default port: {port}")
     
     # Check if port is available
     if not check_port_available(port):

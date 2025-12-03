@@ -12,7 +12,7 @@ python server-cli.py
 
 The script will:
 1. Check for Node.js and required folders
-2. Prompt for port number (or use default 8500)
+2. Prompt for port number with 10-second timeout (or use default from `server_default_config.json`)
 3. Start the server
 4. Display server logs in the terminal
 
@@ -36,10 +36,12 @@ Same as the GUI version:
 
 - ✅ Terminal-only interface (no GUI dependencies)
 - ✅ Port configuration via command-line argument or prompt
+- ✅ 10-second timeout for port input (uses default if no input)
 - ✅ Real-time server logs in terminal
 - ✅ Graceful shutdown with Ctrl+C
 - ✅ Automatic port availability check
 - ✅ Saves last used port to `server_config.json`
+- ✅ Default port configurable in `server_default_config.json`
 - ✅ Works from project root or `dist/` folder
 
 ## Usage Examples
@@ -77,7 +79,7 @@ Shift Handover Log - Command Line Server
 ✓ Node.js found: nodejs\node.exe
 ✓ All necessary folders found
 
-Enter port number [8500]: 
+Enter port number [8500] (10 seconds timeout): 
 
 ==================================================
 Starting server on port 8500...
@@ -103,7 +105,33 @@ Press **Ctrl+C** to stop the server gracefully. The script will:
 
 ## Configuration
 
-The launcher saves the last used port in `server_config.json`. This file is shared with the GUI version (`server.py`), so both launchers will remember your port preference.
+### Port Configuration
+
+The launcher uses two configuration files:
+
+1. **`server_default_config.json`** - Default port (used when timeout expires or no input)
+   ```json
+   {
+     "default_port": 8500
+   }
+   ```
+
+2. **`server_config.json`** - Last used port (auto-created, shared with GUI version)
+
+**Port Selection Priority:**
+1. Command-line argument (e.g., `python server-cli.py 9000`)
+2. User input (within 10 seconds)
+3. Last used port from `server_config.json`
+4. Default port from `server_default_config.json`
+5. Hard-coded default (8500)
+
+### Timeout Behavior
+
+When running without arguments, the launcher will:
+- Prompt for port number
+- Wait up to 10 seconds for input
+- If no input is provided, use the default port from `server_default_config.json`
+- This allows for automated/scripted usage without manual intervention
 
 ## Error Handling
 

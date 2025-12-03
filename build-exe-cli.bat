@@ -121,6 +121,24 @@ if exist "package.json" (
     exit /b 1
 )
 
+REM Copy default config file
+if exist "server_default_config.json" (
+    echo Copying 'server_default_config.json'...
+    copy "server_default_config.json" "dist\server_default_config.json" >nul
+    if %ERRORLEVEL% EQU 0 (
+        echo   [OK] server_default_config.json copied.
+    ) else (
+        echo   [WARNING] Error copying server_default_config.json
+    )
+) else (
+    echo [WARNING] server_default_config.json not found!
+    echo          Creating default config file...
+    echo {> "dist\server_default_config.json"
+    echo   "default_port": 8500>> "dist\server_default_config.json"
+    echo }>> "dist\server_default_config.json"
+    echo   [OK] Default config file created.
+)
+
 REM Install Node.js dependencies
 echo.
 echo ========================================
@@ -261,6 +279,34 @@ if exist "data\config.json.example" (
         echo   [OK] Config example file copied.
     )
 )
+
+REM Copy helper scripts
+echo.
+echo Copying helper scripts...
+if exist "dist\open-firewall-port.bat" (
+    copy "dist\open-firewall-port.bat" "dist\open-firewall-port.bat.bak" >nul 2>&1
+)
+if exist "dist\find-my-ip.bat" (
+    copy "dist\find-my-ip.bat" "dist\find-my-ip.bat.bak" >nul 2>&1
+)
+if exist "dist\setup-auto-start.bat" (
+    copy "dist\setup-auto-start.bat" "dist\setup-auto-start.bat.bak" >nul 2>&1
+)
+if exist "dist\remove-auto-start.bat" (
+    copy "dist\remove-auto-start.bat" "dist\remove-auto-start.bat.bak" >nul 2>&1
+)
+
+REM Note: Helper scripts should be created manually in dist/ folder
+REM They are not copied from root because they are distribution-specific
+echo   [INFO] Helper scripts should be in dist/ folder:
+echo          - open-firewall-port.bat
+echo          - find-my-ip.bat
+echo          - setup-auto-start.bat
+echo          - remove-auto-start.bat
+echo          - README.md
+echo.
+echo   If these files don't exist, copy them from the dist/ folder
+echo   or create them using the templates in the project.
 
 echo.
 echo ========================================

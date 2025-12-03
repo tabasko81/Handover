@@ -336,4 +336,4 @@ docker-compose logs > docker-logs.txt
 
 ---
 
-**Version:** Alpha v0.25.11-alpha.6
+**Version:** Alpha v0.25.12-Alpha.7

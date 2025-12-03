@@ -6,7 +6,7 @@ function Footer() {
       <div className="container mx-auto px-4">
         <div className="text-center text-sm text-gray-600">
           <p>
-            <span className="font-semibold">Shift Handover Log</span> v0.25.11-alpha.6
+            <span className="font-semibold">Shift Handover Log</span> v0.25.12-Alpha.7
           </p>
           <p className="mt-1">
             Author: <span className="font-medium">Miguel da Silva</span>
