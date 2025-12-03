@@ -11,10 +11,13 @@ import json
 import subprocess
 import signal
 import socket
+import threading
+import time
 from pathlib import Path
 
 # Configuration
 CONFIG_FILE = "server_config.json"
+DEFAULT_CONFIG_FILE = "server_default_config.json"
 DEFAULT_PORT = 8500
 
 # Detect if running from dist folder (executable)
@@ -59,10 +62,19 @@ def check_port_available(port):
     except OSError:
         return False
 
-def load_config():
-    """Load saved configuration"""
+def load_default_port():
+    """Load default port from configuration file"""
     port = DEFAULT_PORT
-    if os.path.exists(CONFIG_FILE):
+    # First check default config file
+    if os.path.exists(DEFAULT_CONFIG_FILE):
+        try:
+            with open(DEFAULT_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                port = config.get('default_port', DEFAULT_PORT)
+        except Exception:
+            pass
+    # Then check saved config (last used port)
+    elif os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config = json.load(f)
@@ -70,6 +82,27 @@ def load_config():
         except Exception:
             pass
     return port
+
+def load_config():
+    """Load saved configuration (last used port)"""
+    port = load_default_port()
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                port = config.get('port', port)
+        except Exception:
+            pass
+    return port
+
+def save_default_port(port):
+    """Save default port to configuration file"""
+    try:
+        config = {'default_port': port}
+        with open(DEFAULT_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2)
+    except Exception:
+        pass
 
 def save_config(port):
     """Save configuration"""
@@ -124,8 +157,11 @@ def main():
     print()
     
     # Get port
-    port = load_config()
+    default_port = load_default_port()
+    last_used_port = load_config()
+    
     if len(sys.argv) > 1:
+        # Port provided as command-line argument
         try:
             port = int(sys.argv[1])
             if port < 1 or port > 65535:
@@ -134,15 +170,41 @@ def main():
             print(f"ERROR: Invalid port '{sys.argv[1]}'. Must be between 1 and 65535.")
             sys.exit(1)
     else:
-        user_input = input(f"Enter port number [{port}]: ").strip()
+        # Prompt for port with timeout
+        print(f"Enter port number (default: {default_port}, last used: {last_used_port})")
+        print(f"You have {PORT_INPUT_TIMEOUT} seconds to enter a port, or default will be used...")
+        print(f"Port [{default_port}]: ", end='', flush=True)
+        
+        user_input = ""
+        input_received = threading.Event()
+        
+        def get_input():
+            nonlocal user_input
+            try:
+                user_input = sys.stdin.readline().strip()
+            except:
+                pass
+            finally:
+                input_received.set()
+        
+        input_thread = threading.Thread(target=get_input, daemon=True)
+        input_thread.start()
+        
+        # Wait for input or timeout
+        input_received.wait(timeout=PORT_INPUT_TIMEOUT)
+        
         if user_input:
             try:
                 port = int(user_input)
                 if port < 1 or port > 65535:
                     raise ValueError("Invalid port")
+                print(f"Using port: {port}")
             except ValueError:
-                print(f"ERROR: Invalid port. Using default {DEFAULT_PORT}.")
-                port = DEFAULT_PORT
+                print(f"ERROR: Invalid port '{user_input}'. Using default {default_port}.")
+                port = default_port
+        else:
+            port = default_port
+            print(f"\nNo input received. Using default port: {port}")
     
     # Check if port is available
     if not check_port_available(port):
