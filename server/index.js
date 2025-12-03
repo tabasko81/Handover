@@ -58,13 +58,33 @@ app.use('/api/users', userRoutes);
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, '../client/build');
+  const fs = require('fs');
+  
   console.log(`Serving static files from: ${staticPath}`);
+  console.log(`Static path exists: ${fs.existsSync(staticPath)}`);
+  console.log(`Index.html exists: ${fs.existsSync(path.join(staticPath, 'index.html'))}`);
+  console.log(`Static/js exists: ${fs.existsSync(path.join(staticPath, 'static/js'))}`);
+  console.log(`Static/css exists: ${fs.existsSync(path.join(staticPath, 'static/css'))}`);
+  
   app.use(express.static(staticPath));
+  
+  // Log static file requests for debugging
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/static/')) {
+      const filePath = path.join(staticPath, req.path);
+      console.log(`Static file request: ${req.path} -> ${filePath} (exists: ${fs.existsSync(filePath)})`);
+    }
+    next();
+  });
   
   // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
     const indexPath = path.join(__dirname, '../client/build/index.html');
-    console.log(`Serving index.html from: ${indexPath}`);
+    console.log(`Serving index.html for route: ${req.path}`);
     res.sendFile(indexPath);
   });
 } else {
