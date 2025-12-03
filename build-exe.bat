@@ -314,7 +314,6 @@ if exist "dist\nodejs\npm.cmd" (
     echo   [WARNING] npm.cmd not found - dependencies may not be installed
     echo            Make sure to run 'npm install' in dist folder manually
 )
->>>>>>> fix-xss-security-vulnerabilities
 
 echo.
 echo ========================================
