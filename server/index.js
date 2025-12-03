@@ -57,11 +57,15 @@ app.use('/api/users', userRoutes);
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  const staticPath = path.join(__dirname, '../client/build');
+  console.log(`Serving static files from: ${staticPath}`);
+  app.use(express.static(staticPath));
   
   // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+    const indexPath = path.join(__dirname, '../client/build/index.html');
+    console.log(`Serving index.html from: ${indexPath}`);
+    res.sendFile(indexPath);
   });
 } else {
   // Root route (only in development)
