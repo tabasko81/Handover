@@ -66,25 +66,35 @@ if (process.env.NODE_ENV === 'production') {
   console.log(`Static/js exists: ${fs.existsSync(path.join(staticPath, 'static/js'))}`);
   console.log(`Static/css exists: ${fs.existsSync(path.join(staticPath, 'static/css'))}`);
   
-  app.use(express.static(staticPath));
-  
-  // Log static file requests for debugging
+  // Log static file requests BEFORE serving them
   app.use((req, res, next) => {
     if (req.path.startsWith('/static/')) {
       const filePath = path.join(staticPath, req.path);
-      console.log(`Static file request: ${req.path} -> ${filePath} (exists: ${fs.existsSync(filePath)})`);
+      console.log(`[STATIC] Request: ${req.path} -> ${filePath} (exists: ${fs.existsSync(filePath)})`);
     }
     next();
   });
   
+  // Serve static files - this must come before the catch-all route
+  app.use(express.static(staticPath, {
+    maxAge: '1y',
+    etag: true,
+    lastModified: true
+  }));
+  
   // Catch-all handler: send back React's index.html file for any non-API routes
-  app.get('*', (req, res) => {
+  // This must be LAST, after static file serving
+  app.get('*', (req, res, next) => {
     // Skip API routes (they're handled above)
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ error: 'API endpoint not found' });
     }
+    // Skip static file requests (they should be handled by express.static above)
+    if (req.path.startsWith('/static/')) {
+      return next(); // Let express.static handle it or return 404
+    }
     const indexPath = path.join(__dirname, '../client/build/index.html');
-    console.log(`Serving index.html for route: ${req.path}`);
+    console.log(`[ROUTE] Serving index.html for: ${req.path}`);
     if (!fs.existsSync(indexPath)) {
       console.error(`ERROR: index.html not found at ${indexPath}`);
       return res.status(500).send('Frontend not found. Please rebuild the frontend.');
