@@ -1,3 +1,78 @@
+// isomorphic-dompurify exports the sanitize function directly
+const DOMPurify = require('isomorphic-dompurify');
+
+// Function to sanitize style attribute manually
+function sanitizeStyleAttribute(styleValue) {
+  if (!styleValue) return '';
+  
+  let style = styleValue;
+  
+  // Remove dangerous CSS expressions
+  style = style.replace(/javascript:/gi, '');
+  style = style.replace(/expression\s*\(/gi, '');
+  style = style.replace(/url\s*\(\s*['"]?\s*javascript:/gi, '');
+  
+  // Only allow safe CSS properties
+  const safeProperties = [
+    'color', 'background-color', 'background', 'font-weight', 'font-size',
+    'text-decoration', 'text-align', 'margin', 'padding', 'border',
+    'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom'
+  ];
+  
+  // Filter out dangerous properties
+  const properties = style.split(';').filter(prop => {
+    const trimmed = prop.trim();
+    if (!trimmed) return false;
+    const propName = trimmed.split(':')[0].trim().toLowerCase();
+    return safeProperties.some(safe => propName.includes(safe));
+  });
+  
+  return properties.join('; ');
+}
+
+// Function to sanitize href attribute
+function sanitizeHrefAttribute(hrefValue) {
+  if (!hrefValue) return '';
+  
+  const href = hrefValue.trim();
+  // Only allow http/https, relative paths, and anchors
+  if (/^https?:\/\//i.test(href) || href.startsWith('#') || href.startsWith('/')) {
+    return href;
+  }
+  // Block dangerous protocols
+  return '';
+}
+
+// Pre-process HTML to sanitize style and href attributes before DOMPurify
+function preSanitizeHTML(html) {
+  // Sanitize style attributes
+  html = html.replace(/style\s*=\s*["']([^"']*)["']/gi, (match, styleValue) => {
+    const sanitized = sanitizeStyleAttribute(styleValue);
+    return sanitized ? `style="${sanitized}"` : '';
+  });
+  
+  // Sanitize href attributes
+  html = html.replace(/href\s*=\s*["']([^"']*)["']/gi, (match, hrefValue) => {
+    const sanitized = sanitizeHrefAttribute(hrefValue);
+    return sanitized ? `href="${sanitized}"` : '';
+  });
+  
+  return html;
+}
+
+// Configure allowed tags and attributes
+const sanitizeConfig = {
+  ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'ol', 'li', 'p', 'br', 'strong', 'em', 'div', 'span', 'a', 'code', 'pre'],
+  ALLOWED_ATTR: ['style', 'class', 'href', 'target', 'rel'],
+  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+  ALLOW_DATA_ATTR: false,
+  KEEP_CONTENT: true,
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  RETURN_TRUSTED_TYPE: false
+};
+
 function validateLogEntry(data, isUpdate = false) {
   const errors = {};
 
@@ -94,42 +169,63 @@ function sanitizeInput(data) {
   }
 
   if (data.note) {
-    // Allow basic HTML formatting but sanitize dangerous tags
-    let note = data.note.trim();
-    
-    // Remove script tags and dangerous attributes
-    note = note.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    note = note.replace(/on\w+\s*=/gi, ''); // Remove event handlers
-    note = note.replace(/javascript:/gi, ''); // Remove javascript: protocol
-    
-    // Allow basic formatting tags (b, i, u, ul, ol, li, p, br, strong, em, div, span)
-    // Remove any other tags but keep their content
-    note = note.replace(/<(?!\/?(b|i|u|ul|ol|li|p|br|strong|em|div|span)\b)[^>]*>/gi, '');
-    
-    // Limit to 1000 characters (counting text content, not HTML tags)
-    const textLength = note.replace(/<[^>]*>/g, '').length;
-    if (textLength > 1000) {
-      // Truncate intelligently
-      let truncated = '';
-      let count = 0;
-      let inTag = false;
+    try {
+      // Sanitize HTML using DOMPurify
+      let note = data.note.trim();
       
-      for (let i = 0; i < note.length && count < 1000; i++) {
-        if (note[i] === '<') {
-          inTag = true;
-          truncated += note[i];
-        } else if (note[i] === '>') {
-          inTag = false;
-          truncated += note[i];
-        } else {
-          truncated += note[i];
-          if (!inTag) count++;
+      // First, check text length before sanitization (for validation)
+      const textLength = note.replace(/<[^>]*>/g, '').length;
+      if (textLength > 1000) {
+        // Truncate intelligently before sanitization
+        let truncated = '';
+        let count = 0;
+        let inTag = false;
+        
+        for (let i = 0; i < note.length && count < 1000; i++) {
+          if (note[i] === '<') {
+            inTag = true;
+            truncated += note[i];
+          } else if (note[i] === '>') {
+            inTag = false;
+            truncated += note[i];
+          } else {
+            truncated += note[i];
+            if (!inTag) count++;
+          }
         }
+        note = truncated;
       }
-      note = truncated;
+      
+      // Pre-sanitize style and href attributes
+      note = preSanitizeHTML(note);
+      
+      // Sanitize with DOMPurify
+      // isomorphic-dompurify exports the sanitize function directly
+      // Wrap in try-catch in case DOMPurify throws an error
+      try {
+        note = DOMPurify.sanitize(note, sanitizeConfig);
+      } catch (purifyError) {
+        console.error('DOMPurify sanitization error:', purifyError);
+        // If DOMPurify fails, fall back to basic HTML escaping
+        note = note
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+      
+      sanitized.note = note;
+    } catch (error) {
+      console.error('Error sanitizing note:', error);
+      // Fall back to basic HTML escaping if anything fails
+      sanitized.note = data.note
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
-    
-    sanitized.note = note;
   }
 
   if (data.worker_name) {

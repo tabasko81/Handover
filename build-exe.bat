@@ -260,6 +260,15 @@ if exist "data\config.json.example" (
     )
 )
 
+REM Copy package.json to dist for npm install
+if exist "package.json" (
+    echo Copying 'package.json' for dependency installation...
+    copy "package.json" "dist\package.json" >nul
+    if %ERRORLEVEL% EQU 0 (
+        echo   [OK] package.json copied.
+    )
+)
+
 REM Copy helper scripts
 echo.
 echo Copying helper scripts...
@@ -287,6 +296,25 @@ echo          - README.md
 echo.
 echo   If these files don't exist, copy them from the dist/ folder
 echo   or create them using the templates in the project.
+
+REM Install Node.js dependencies in dist folder
+echo.
+echo Installing Node.js dependencies in dist folder...
+echo This may take a few minutes...
+if exist "dist\nodejs\npm.cmd" (
+    cd dist
+    call ..\nodejs\npm.cmd install
+    cd ..
+    if %ERRORLEVEL% EQU 0 (
+        echo   [OK] Dependencies installed.
+    ) else (
+        echo   [WARNING] Error installing dependencies
+    )
+) else (
+    echo   [WARNING] npm.cmd not found - dependencies may not be installed
+    echo            Make sure to run 'npm install' in dist folder manually
+)
+>>>>>>> fix-xss-security-vulnerabilities
 
 echo.
 echo ========================================

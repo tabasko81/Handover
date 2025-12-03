@@ -1,74 +1,92 @@
+import DOMPurify from 'dompurify';
+
+// Configure DOMPurify with safe defaults (configured once)
+const sanitizeConfig = {
+  ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'ol', 'li', 'p', 'br', 'strong', 'em', 'div', 'span', 'a', 'code', 'pre'],
+  ALLOWED_ATTR: ['style', 'class', 'href', 'target', 'rel'],
+  ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+  ALLOW_DATA_ATTR: false,
+  KEEP_CONTENT: true,
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false
+};
+
+// Setup hook only once (DOMPurify manages hooks internally, but we'll check if already added)
+let hookAdded = false;
+if (!hookAdded) {
+  DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+    // Sanitize style attribute
+    if (data.attrName === 'style' && data.attrValue) {
+      let style = data.attrValue;
+      
+      // Remove dangerous CSS expressions
+      style = style.replace(/javascript:/gi, '');
+      style = style.replace(/expression\s*\(/gi, '');
+      style = style.replace(/url\s*\(\s*['"]?\s*javascript:/gi, '');
+      
+      // Only allow safe CSS properties
+      const safeProperties = [
+        'color', 'background-color', 'background', 'font-weight', 'font-size',
+        'text-decoration', 'text-align', 'margin', 'padding', 'border',
+        'width', 'height', 'display', 'position', 'top', 'left', 'right', 'bottom'
+      ];
+      
+      const properties = style.split(';').filter(prop => {
+        const propName = prop.split(':')[0].trim().toLowerCase();
+        return safeProperties.some(safe => propName.includes(safe));
+      });
+      
+      data.attrValue = properties.join('; ');
+    }
+    
+    // Sanitize href attribute - only allow http/https
+    if (data.attrName === 'href' && data.attrValue) {
+      const href = data.attrValue.trim();
+      if (!/^https?:\/\//i.test(href) && !href.startsWith('#') && !href.startsWith('/')) {
+        data.keepAttr = false;
+      }
+    }
+  });
+  hookAdded = true;
+}
+
 /**
  * Parser for rendering Markdown or HTML to HTML
  * Supports: bold, italic, headers, lists, links, code, mentions
  * Handles both HTML (from rich editor) and Markdown (backward compatibility)
+ * All HTML is sanitized with DOMPurify before rendering
  */
 export function parseMarkdown(text) {
   if (!text) return '';
 
-  // Check if content is already HTML (starts with < and contains HTML tags)
-  // Also check for escaped HTML entities - if found, unescape them first
+  // Process text - if it contains escaped HTML, it should already be sanitized by server
+  // But we'll still sanitize on client side as defense in depth
   let processedText = text;
-  if (text.includes('&lt;') || text.includes('&gt;')) {
-    // Text contains escaped HTML - unescape it to check if it's HTML
-    processedText = text
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'");
-  }
   
-  const isHTML = /^[\s]*<[^>]+>/.test(processedText) || processedText.includes('<div') || processedText.includes('<p') || processedText.includes('<h1') || processedText.includes('<h2') || processedText.includes('<h3') || processedText.includes('<ul') || processedText.includes('<ol') || processedText.includes('<strong') || processedText.includes('<em') || processedText.includes('<u');
+  // Check if content is HTML - look for any HTML tags anywhere in the text
+  // Use a comprehensive regex to detect any HTML tag
+  const hasHTMLTag = /<[a-z]+[^>]*(?:\s+[^>]*)?>/i.test(processedText);
+  const isHTML = hasHTMLTag || 
+    processedText.includes('<div') || processedText.includes('</div>') ||
+    processedText.includes('<p') || processedText.includes('</p>') ||
+    processedText.includes('<h1') || processedText.includes('<h2') || processedText.includes('<h3') || 
+    processedText.includes('<ul') || processedText.includes('<ol') || 
+    processedText.includes('<strong') || processedText.includes('<em') || processedText.includes('<u') ||
+    processedText.includes('<span') || processedText.includes('</span>') ||
+    processedText.includes('<b') || processedText.includes('<i') ||
+    processedText.includes('<a ') || processedText.includes('<br') || processedText.includes('<code') ||
+    processedText.includes('<pre') || processedText.includes('<li') || processedText.includes('<table') ||
+    processedText.includes('<tr') || processedText.includes('<td') || processedText.includes('<th');
   
   if (isHTML) {
     // Content is HTML from rich text editor
-    // Process @mentions in text content, but exclude emails
+    // Process @mentions first, then sanitize
     let html = processedText;
     
-    // Normalize line breaks and paragraphs for WYSIWYG display
-    // The editor now uses <p> tags by default, but we still handle <div> tags for compatibility
-    
-    // First, handle empty divs and empty paragraphs (line breaks)
-    html = html.replace(/<div([^>]*)><\/div>/g, '<br>');
-    html = html.replace(/<div([^>]*)><br><\/div>/g, '<br>');
-    html = html.replace(/<div([^>]*)>[\s]*<\/div>/g, '<br>');
-    html = html.replace(/<p([^>]*)><\/p>/g, '<br>');
-    html = html.replace(/<p([^>]*)><br><\/p>/g, '<br>');
-    html = html.replace(/<p([^>]*)>[\s]*<\/p>/g, '<br>');
-    
-    // Process divs that contain content - ensure proper spacing
-    html = html.replace(/<div([^>]*)>/g, (match, attrs) => {
-      // Check if style attribute already exists
-      if (attrs && attrs.includes('style=')) {
-        // Add margin-bottom if not present
-        if (!attrs.includes('margin-bottom')) {
-          return match.replace(/style="([^"]*)"/, 'style="$1; margin-bottom: 0.75rem; display: block;"');
-        }
-        if (!attrs.includes('display:')) {
-          return match.replace(/style="([^"]*)"/, 'style="$1; display: block;"');
-        }
-        return match;
-      }
-      // Add margin-bottom and display block style
-      return `<div${attrs} style="margin-bottom: 0.75rem; display: block;">`;
-    });
-    
-    // Ensure <p> tags have proper spacing (most common case now)
-    html = html.replace(/<p([^>]*)>/g, (match, attrs) => {
-      if (attrs && attrs.includes('style=')) {
-        if (!attrs.includes('margin-bottom')) {
-          return match.replace(/style="([^"]*)"/, 'style="$1; margin-bottom: 0.75rem; display: block;"');
-        }
-        if (!attrs.includes('display:')) {
-          return match.replace(/style="([^"]*)"/, 'style="$1; display: block;"');
-        }
-        return match;
-      }
-      return `<p${attrs} style="margin-bottom: 0.75rem; display: block;">`;
-    });
-    
-    // Process @mentions in text content
-    html = html.replace(/>([^<]+)</g, (match, textContent, offset, string) => {
+    // Process @mentions in text content (but be careful not to break HTML)
+    // Only process @mentions that are in text nodes, not in attributes
+    html = html.replace(/>([^<@]+@\w+[^<]*)</g, (match, textContent) => {
       // Process @mentions in text content only
       const processedText = textContent.replace(/(@\w+)/g, (mentionMatch, mention, mentionOffset, mentionString) => {
         // Check if there's a non-space character before @ (email case)
@@ -99,7 +117,8 @@ export function parseMarkdown(text) {
       return before + '<span class="bg-yellow-200 font-semibold px-1 rounded">' + mention + '</span>';
     });
     
-    return html;
+    // Sanitize HTML with DOMPurify before returning
+    return DOMPurify.sanitize(html, sanitizeConfig);
   }
 
   // Original markdown processing
@@ -129,8 +148,16 @@ export function parseMarkdown(text) {
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
   html = html.replace(/_(.+?)_/g, '<em>$1</em>');
 
-  // Links [text](url)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>');
+  // Links [text](url) - validate URL before creating link
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+    // Validate URL - only allow http:// and https://
+    const trimmedUrl = url.trim();
+    if (/^https?:\/\//i.test(trimmedUrl)) {
+      return `<a href="${trimmedUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${linkText}</a>`;
+    }
+    // Invalid URL - return as plain text
+    return linkText;
+  });
 
   // Numbered lists
   html = html.replace(/^(\d+)\. (.+)$/gim, '<li class="ml-4">$2</li>');
@@ -170,22 +197,8 @@ export function parseMarkdown(text) {
   // Clean up: remove <br> tags inside list items
   html = html.replace(/(<li[^>]*>)(.*?)<br>(.*?)(<\/li>)/g, '$1$2$3$4');
   
-  // Now escape any remaining raw HTML that wasn't converted from markdown
-  // We'll protect our created HTML tags and escape everything else
-  // Split by our created HTML tags, escape the text parts, then rejoin
-  const parts = html.split(/(<[^>]+>)/g);
-  html = parts.map((part, index) => {
-    // If it's an HTML tag (starts with <), keep it as-is
-    if (part.startsWith('<') && part.endsWith('>')) {
-      return part;
-    }
-    // Otherwise, escape HTML in text content
-    return part
-      .replace(/&(?!amp;|lt;|gt;|quot;|#\d+;)/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }).join('');
-
-  return html;
+  // Sanitize all HTML with DOMPurify before returning
+  // This ensures any HTML created from markdown is safe
+  return DOMPurify.sanitize(html, sanitizeConfig);
 }
 
