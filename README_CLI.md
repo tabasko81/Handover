@@ -176,9 +176,56 @@ taskkill /PID <PID> /F
 - Verify server code is correct
 - Check for errors in the terminal
 
+## Creating Executable
+
+To create a standalone executable from the CLI launcher:
+
+### Quick Method
+
+```bash
+build-exe-cli.bat
+```
+
+This will:
+- Install PyInstaller if needed
+- Create `HandoverServerCLI.exe` in `dist/`
+- Copy all required files (nodejs, server, client/build, etc.)
+- Install Node.js dependencies
+- Create a complete distribution package
+
+### Manual Method
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --console --name "HandoverServerCLI" server-cli.py
+```
+
+### Distribution
+
+The executable needs to be in the same folder as:
+- `nodejs/` - Portable Node.js
+- `server/` - Server code
+- `client/build/` - Compiled frontend
+- `node_modules/` - Node.js dependencies
+- `data/` - Data folder (created automatically)
+
+The `build-exe-cli.bat` script automatically copies all these files to `dist/`.
+
+### Running the Executable
+
+```bash
+# From dist folder
+cd dist
+HandoverServerCLI.exe
+
+# Or with port
+HandoverServerCLI.exe 9000
+```
+
 ## See Also
 
 - `README_SERVER.md` - Full server documentation
 - `server.py` - GUI version of the server
-- `build-exe.bat` - Create executable distribution
+- `build-exe.bat` - Create GUI executable distribution
+- `build-exe-cli.bat` - Create CLI executable distribution
 
