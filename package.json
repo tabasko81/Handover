@@ -1,6 +1,6 @@
 {
   "name": "shift-handover-log",
-  "version": "alpha.7",
+  "version": "0.25.12-Beta.1",
   "description": "Web application for hotel shift handover logging",
   "main": "server/index.js",
   "scripts": {

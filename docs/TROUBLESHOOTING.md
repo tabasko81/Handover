@@ -17,15 +17,15 @@ npm run server
 
 You should see:
 ```
-Server running on port 5000
-API available at http://localhost:5000/api
+Server running on port 8500
+API available at http://localhost:8500/api
 ```
 
 #### 2. Test the backend directly
 
 Open your browser or use curl:
 ```
-http://localhost:5000/api/health
+http://localhost:8500/api/health
 ```
 
 Expected response:
@@ -37,16 +37,16 @@ Expected response:
 }
 ```
 
-#### 3. Check if port 5000 is available
+#### 3. Check if port 8500 is available
 
 **Windows:**
 ```bash
-netstat -ano | findstr :5000
+netstat -ano | findstr :8500
 ```
 
 **If port is in use:**
 
-- Change PORT in `.env` file:
+- Change PORT in `server_config.json` file:
 ```
 PORT=5001
 ```
@@ -80,18 +80,25 @@ app.use(cors({
 
 In development, React uses a proxy. Check `client/package.json`:
 ```json
-"proxy": "http://localhost:5000"
+"proxy": "http://localhost:8500"
 ```
 
 **Important:** After changing proxy, restart the React dev server.
 
 #### 7. Environment variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (optional):
 ```
-PORT=5000
+PORT=8500
 NODE_ENV=development
 JWT_SECRET=your-secret-key-here
+```
+
+Or configure in `server_config.json`:
+```json
+{
+  "port": 8500
+}
 ```
 
 #### 8. Check console for errors
@@ -115,72 +122,9 @@ If you see errors, check:
 #### 10. Network/firewall issues
 
 - Check Windows Firewall isn't blocking Node.js
-- Try accessing `http://127.0.0.1:5000/api/health` instead of `localhost`
+- Try accessing `http://127.0.0.1:8500/api/health` instead of `localhost`
 
 ---
-
-## 🐳 Docker Issues
-
-### Docker not starting
-
-**Symptoms:**
-- "Docker daemon is not running"
-- "Cannot connect to Docker daemon"
-
-**Solutions:**
-
-1. Ensure Docker Desktop is running
-2. Wait for Docker to fully start (whale icon stable)
-3. Restart Docker Desktop if needed
-4. Check Docker Desktop logs
-
-### Port conflicts
-
-**Symptoms:**
-- "Port already in use"
-- Containers fail to start
-
-**Solutions:**
-
-1. Check which process is using the port:
-```bash
-netstat -ano | findstr ":3000"
-netstat -ano | findstr ":5000"
-```
-
-2. Stop conflicting services
-3. Change ports in `docker-compose.yml` if needed
-
-### Build failures
-
-**Symptoms:**
-- "Build failed"
-- "Failed to resolve image"
-
-**Solutions:**
-
-1. Check Docker DNS settings (see [HOWTO_NETWORK_ACCESS.md](HOWTO_NETWORK_ACCESS.md))
-2. Clear Docker cache:
-```bash
-docker system prune -a
-```
-
-3. Rebuild without cache:
-```bash
-docker-compose build --no-cache
-```
-
-### Container health check failures
-
-**Symptoms:**
-- Containers restart repeatedly
-- Health check timeouts
-
-**Solutions:**
-
-1. Wait longer (health checks can take up to 40 seconds)
-2. Check backend logs: `docker-compose logs backend`
-3. Verify backend is responding: `curl http://localhost:5000/api/health`
 
 ---
 
@@ -298,10 +242,10 @@ docker-compose build --no-cache
 
 **Solutions:**
 
-1. Verify `data/` directory is mounted correctly (Docker)
-2. Check file permissions
-3. Verify database file exists: `data/shift_logs.db`
-4. Check backend logs for save errors
+1. Check file permissions on `data/` directory
+2. Verify database file exists: `data/shift_logs.db`
+3. Check backend logs for save errors
+4. Ensure server has write permissions to `data/` folder
 
 ---
 
@@ -315,18 +259,18 @@ docker-compose build --no-cache
    ```
 
 2. **Test in browser:**
-   Open: `http://localhost:5000/api/health`
+   Open: `http://localhost:8500/api/health`
 
 3. **Test with curl (if available):**
    ```bash
-   curl http://localhost:5000/api/health
+   curl http://localhost:8500/api/health
    ```
 
 4. **Check logs:**
    Look for any error messages in the terminal
 
 5. **Verify routes:**
-   Try: `http://localhost:5000/api/logs`
+   Try: `http://localhost:8500/api/logs`
 
 6. **Check frontend:**
    Open browser console (F12) and check for errors
@@ -390,7 +334,6 @@ If issues persist:
 2. **Verify versions:**
    - Node.js version: `node -v` (should be 14+)
    - npm version: `npm -v`
-   - Docker version: `docker --version`
 
 3. **Try clean reinstall:**
    ```bash
@@ -413,7 +356,7 @@ If issues persist:
 
 5. **Review documentation:**
    - [User Manual](USER_MANUAL.md)
-   - [Docker Guide](DOCKER.md)
+   - [Standalone Installation Guide](../INSTALL_GUIDE_DIST.md)
    - [Network Access Guide](HOWTO_NETWORK_ACCESS.md)
 
 ---
@@ -422,10 +365,10 @@ If issues persist:
 
 - **GitHub Issues:** Check for similar issues on the project repository
 - **Browser Console:** Always check F12 for detailed error messages
-- **Docker Logs:** `docker-compose logs` for container-specific issues
 - **System Logs:** Check Windows Event Viewer for system-level errors
+- **Server Logs:** Check terminal output or GUI log window
 
 ---
 
-**Version:** Alpha v0.25.12-Alpha.7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025

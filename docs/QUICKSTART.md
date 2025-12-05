@@ -6,17 +6,15 @@ Get up and running with Shift Handover Log in minutes.
 
 ## 🚀 Quick Installation
 
-### Using Docker (Recommended)
+### ⚡ Standalone Installation (Recommended)
 
 **Windows:**
-```batch
-docker-start.bat
-```
+1. Download the `dist` folder
+2. Double-click `HandoverServer.exe`
+3. Click "Start Server"
+4. Open http://localhost:8500
 
-**Manual Docker:**
-```bash
-docker-compose up -d --build
-```
+👉 **See detailed guide:** [INSTALL_GUIDE_DIST.md](../INSTALL_GUIDE_DIST.md)
 
 ### Local Installation
 
@@ -52,14 +50,14 @@ npm run dev
 
 ## 🌐 Access
 
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:5000
+- **Application:** http://localhost:8500
+- **Backend API:** http://localhost:8500/api
 
 ---
 
 ## 🎯 First Steps
 
-1. Open your browser at `http://localhost:3000`
+1. Open your browser at `http://localhost:8500`
 2. Login with default credentials:
    - **Username:** `admin` or `FO`
    - **Password:** `pass123`
@@ -103,14 +101,11 @@ Handover/
 
 ### Port already in use
 
-If port 5000 is occupied, change it in the `.env` file:
-```
-PORT=5001
-```
-
-Update `client/package.json` proxy:
+If port 8500 is occupied, change it in the `server_config.json` file:
 ```json
-"proxy": "http://localhost:5001"
+{
+  "port": 8501
+}
 ```
 
 ### Error installing dependencies
@@ -119,37 +114,31 @@ Update `client/package.json` proxy:
 - Try `npm cache clean --force` and then `npm install`
 - On Windows, run as Administrator if needed
 
-### Frontend doesn't load
+### Application doesn't load
 
-- Check if backend server is running (port 5000)
+- Check if server is running (port 8500)
 - Check terminal logs for errors
-- Verify Docker is running (if using Docker)
+- Verify Node.js is installed (for local installation)
 - Try refreshing the browser (F5)
-
-### Docker not starting
-
-- Ensure Docker Desktop is running
-- Wait for Docker to fully start (whale icon stable)
-- Check Docker Desktop logs
-- Restart Docker Desktop if needed
+- Check Windows Firewall settings
 
 ---
 
 ## 📚 Next Steps
 
 - Read the **[User Manual](USER_MANUAL.md)** for complete feature documentation
-- Check **[Docker Guide](DOCKER.md)** for Docker-specific instructions
+- Check **[Standalone Installation Guide](../INSTALL_GUIDE_DIST.md)** for distribution setup
 - Review **[Troubleshooting Guide](TROUBLESHOOTING.md)** if you encounter issues
 
 ---
 
 ## 💡 Tips
 
-- **First time?** Use Docker - it's the easiest way to get started
+- **First time?** Use Standalone executable - it's the easiest way to get started
 - **Need help?** Check the browser console (F12) for error messages
 - **Backup data?** Copy the `data/` folder regularly
 - **Multiple users?** Configure user management in Admin settings
 
 ---
 
-**Version:** Alpha v0.25.12-Alpha.7
+**Version:** Beta v0.25.12-Beta.1

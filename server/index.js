@@ -107,7 +107,7 @@ if (process.env.NODE_ENV === 'production') {
   app.get('/', (req, res) => {
     res.json({ 
       message: 'Shift Handover Log API',
-      version: 'alpha.7',
+      version: 'v0.25.12-Beta.1',
       endpoints: {
         health: '/api/health',
         logs: '/api/logs',

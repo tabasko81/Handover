@@ -3,7 +3,7 @@
 > **Modern shift handover solution for shift-based teams**  
 > Document, manage, and communicate critical shift information with searchable, color-coded logs and real-time info slides. Perfect for hotel operations, security teams, reception desks, and any organization working in shifts.
 
-![Status](https://img.shields.io/badge/status-alpha-orange) ![Version](https://img.shields.io/badge/version-v0.25.12--Alpha.7-blue) ![License](https://img.shields.io/badge/license-ISC-green)
+![Status](https://img.shields.io/badge/status-beta-orange) ![Version](https://img.shields.io/badge/version-v0.25.12--Beta.1-blue) ![License](https://img.shields.io/badge/license-ISC-green)
 
 ---
 
@@ -26,7 +26,7 @@
 
 ## ⚠️ Project Status
 
-**Alpha v0.25.12-Alpha.7** - This project is in early development and is **NOT ready for production use**.
+**Beta v0.25.12-Beta.1** - This project is in beta testing phase.
 
 - ⚠️ Use at your own risk
 - ⚠️ Features may be incomplete or unstable
@@ -83,36 +83,18 @@
 
 ## 🚀 Quick Start
 
-### 📦 Automatic Proxmox Installation (Recommended)
+### ⚡ Standalone Installation (Python Launcher) - **RECOMMENDED FOR TESTING**
 
-Easily install the application on your Proxmox server with a single command. This script sets up an LXC container, installs Docker, and deploys the application automatically.
+The easiest way to get started! No installation required - just run the executable.
 
-**How to install:**
-1. Open your Proxmox Shell (Host)
-2. Run the following command:
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/tabasko81/Handover/main/install-proxmox.sh | bash
-   ```
-3. Follow the on-screen instructions.
+1. **Download the `dist` folder** (pre-compiled distribution)
+2. **Double-click `HandoverServer.exe`**
+3. **Click "Start Server"**
+4. **Open http://localhost:8500** in your browser
 
-👉 **See detailed guide:** [PROXMOX-SETUP.md](PROXMOX-SETUP.md)
-
-**New to Proxmox? Check these tutorials:**
-- 📺 [How to Install Proxmox VE 8](https://www.youtube.com/watch?v=5j0l5kE8Wjg)
-- 📺 [Proxmox Beginners Guide](https://www.youtube.com/watch?v=AZtJ9s0vDXw)
+👉 **See detailed guide:** [INSTALL_GUIDE_DIST.md](INSTALL_GUIDE_DIST.md)
 
 ---
-
-### Using Docker (Manual)
-
-**For Windows Users (Non-Technical):**  
-👉 See **[docs/INSTALL_GUIDE_WINDOWS.md](docs/INSTALL_GUIDE_WINDOWS.md)** for a complete step-by-step guide with screenshots and troubleshooting.
-
-**For Technical Users:**
-
-1. Ensure Docker Desktop is running
-2. Execute `docker-start.bat` (Windows) or `docker-compose up -d --build`
-3. Open http://localhost:3000 in your browser
 
 ### Local Installation (Windows)
 
@@ -120,7 +102,7 @@ Easily install the application on your Proxmox server with a single command. Thi
 2. Run `install.bat` to install dependencies
 3. Run `setup-db.bat` to initialize the database
 4. Run `start.bat` to launch the application
-5. Access http://localhost:3000 in your browser
+5. Access http://localhost:8500 in your browser
 
 ---
 
@@ -171,17 +153,17 @@ All changes take effect immediately after saving.
 
 | Issue | Solution |
 |-------|----------|
-| **Application won't start** | Verify Docker is running (Docker) or Node.js is installed (Local) |
-| **Backend errors** | Check that port 5000 is available and backend server is running |
+| **Application won't start** | Verify Node.js is installed (Local) or use Standalone executable |
+| **Backend errors** | Check that port 8500 is available and backend server is running |
 | **Database errors** | Verify `data/shift_logs.db` exists and is accessible |
-| **Frontend not loading** | Ensure port 3000 is free and frontend server is running |
+| **Frontend not loading** | Ensure port 8500 is free and server is running |
 | **Search not working** | Check browser console for JavaScript errors |
 
 ### Getting Help
 
 1. Check the browser console (F12) for error messages
-2. Verify all services are running (backend on port 5000, frontend on port 3000)
-3. Restart both frontend and backend servers
+2. Verify server is running (port 8500)
+3. Restart the server
 4. Review [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for detailed solutions
 
 ---
@@ -190,8 +172,7 @@ All changes take effect immediately after saving.
 
 - **[User Manual](docs/USER_MANUAL.md)** - Complete feature documentation
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Fast installation guide
-- **[Docker Guide](docs/DOCKER.md)** - Docker-specific instructions
-- **[Windows Installation](docs/INSTALL_GUIDE_WINDOWS.md)** - Step-by-step Windows guide
+- **[Standalone Installation](INSTALL_GUIDE_DIST.md)** - Complete guide for dist folder
 - **[Network Access](docs/HOWTO_NETWORK_ACCESS.md)** - Configure network access
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
