@@ -312,27 +312,80 @@ echo   [OK] Frontend compiled successfully!
 cd /d %~dp0
 
 REM Copy client/build folder
+echo.
+echo Current directory: %CD%
+echo Checking for client\build...
 if exist "client\build" (
+    echo   [OK] client\build found!
     echo.
     echo Copying 'client\build' folder to dist...
-    if not exist "dist\client" mkdir "dist\client"
-    if not exist "dist\client\build" mkdir "dist\client\build"
-    xcopy /E /I /Y "client\build\*" "dist\client\build\" >nul
+    
+    REM Remove old build if exists
+    if exist "dist\client\build" (
+        echo Removing old build folder...
+        rmdir /S /Q "dist\client\build" >nul 2>&1
+    )
+    
+    REM Create destination directory
+    if not exist "dist\client" (
+        mkdir "dist\client"
+        echo Created dist\client directory.
+    )
+    
+    REM Copy using xcopy with verbose output
+    echo Copying files...
+    xcopy /E /I /Y /H "client\build\*" "dist\client\build\"
     if %ERRORLEVEL% EQU 0 (
-        echo   [OK] Folder 'client\build' copied.
-    ) else (
-        echo   [WARNING] Error copying 'client\build' folder
-        echo            Trying alternative method...
-        xcopy /E /I /Y "client\build" "dist\client\" >nul
-        if %ERRORLEVEL% EQU 0 (
-            echo   [OK] Folder 'client\build' copied (alternative method).
+        REM Verify index.html was copied
+        if exist "dist\client\build\index.html" (
+            echo   [OK] Folder 'client\build' copied successfully!
         ) else (
-            echo   [ERROR] Failed to copy 'client\build' folder!
-            echo          Please copy manually: client\build -> dist\client\build
+            echo   [WARNING] Files copied but index.html not found.
+            echo            Trying alternative method...
+            rmdir /S /Q "dist\client\build" >nul 2>&1
+            xcopy /E /I /Y /H "client\build" "dist\client\"
+            if exist "dist\client\build\index.html" (
+                echo   [OK] Folder 'client\build' copied (alternative method).
+            ) else (
+                echo   [ERROR] Failed to copy 'client\build' folder!
+                echo          Source: %CD%\client\build
+                echo          Destination: %CD%\dist\client\build
+                pause
+                exit /b 1
+            )
+        )
+    ) else (
+        echo   [WARNING] xcopy failed (Error code: %ERRORLEVEL%)
+        echo            Trying alternative method...
+        if exist "dist\client\build" rmdir /S /Q "dist\client\build" >nul 2>&1
+        xcopy /E /I /Y /H "client\build" "dist\client\"
+        if %ERRORLEVEL% EQU 0 (
+            if exist "dist\client\build\index.html" (
+                echo   [OK] Folder 'client\build' copied (alternative method).
+            ) else (
+                echo   [ERROR] Failed to copy 'client\build' folder!
+                echo          Source: %CD%\client\build
+                echo          Destination: %CD%\dist\client\build
+                pause
+                exit /b 1
+            )
+        ) else (
+            echo   [ERROR] Failed to copy 'client\build' folder! (Error code: %ERRORLEVEL%)
+            echo          Source: %CD%\client\build
+            echo          Destination: %CD%\dist\client\build
+            echo.
+            echo Please check:
+            echo   1. Source folder exists: client\build
+            echo   2. Destination folder can be created: dist\client\build
+            echo   3. No file locks on source or destination
+            pause
+            exit /b 1
         )
     )
 ) else (
     echo [ERROR] Folder 'client\build' not found after compilation!
+    echo        Current directory: %CD%
+    echo        Expected: %CD%\client\build
     pause
     exit /b 1
 )
