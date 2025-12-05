@@ -223,7 +223,8 @@ echo   [OK] Express module found.
 echo   [OK] Dependencies installed successfully!
 
 :deps_ok
-cd ..
+REM Ensure we're back in the project root directory
+cd /d %~dp0
 
 REM Build frontend with relative URLs for dist
 echo.
@@ -288,7 +289,7 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo   [OK] Frontend compiled successfully!
-cd ..
+cd /d %~dp0
 
 REM Copy client/build folder
 if exist "client\build" (
