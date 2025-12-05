@@ -320,20 +320,30 @@ if exist "client\build" (
     echo.
     echo Copying 'client\build' folder to dist...
     
+    REM Ensure dist directory exists
+    if not exist "dist" (
+        mkdir "dist"
+        echo Created dist directory.
+    )
+    
     REM Remove old build if exists
     if exist "dist\client\build" (
         echo Removing old build folder...
         rmdir /S /Q "dist\client\build" >nul 2>&1
     )
     
-    REM Create destination directory
+    REM Create destination directory structure
     if not exist "dist\client" (
         mkdir "dist\client"
         echo Created dist\client directory.
     )
+    if not exist "dist\client\build" (
+        mkdir "dist\client\build"
+        echo Created dist\client\build directory.
+    )
     
     REM Copy using xcopy with verbose output
-    echo Copying files...
+    echo Copying files from client\build to dist\client\build...
     xcopy /E /I /Y /H "client\build\*" "dist\client\build\"
     if %ERRORLEVEL% EQU 0 (
         REM Verify index.html was copied
