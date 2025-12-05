@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8500/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -88,6 +88,24 @@ export const deleteLog = async (id) => {
     await api.delete(`/logs/${id}`);
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to delete log');
+  }
+};
+
+export const setReminder = async (id, reminderDate) => {
+  try {
+    const response = await api.patch(`/logs/${id}/reminder`, { reminder_date: reminderDate });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to set reminder');
+  }
+};
+
+export const clearReminder = async (id) => {
+  try {
+    const response = await api.patch(`/logs/${id}/reminder/clear`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to clear reminder');
   }
 };
 

@@ -35,6 +35,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [flashId, setFlashId] = useState(null);
   const [pageName, setPageName] = useState('Shift Handover Log');
+  const [headerColor, setHeaderColor] = useState('#2563eb');
 
   useEffect(() => {
     checkLoginStatus();
@@ -45,13 +46,38 @@ function App() {
       loadGlobalConfig();
     };
     window.addEventListener('pageNameUpdated', handleConfigUpdate);
-    return () => window.removeEventListener('pageNameUpdated', handleConfigUpdate);
+    window.addEventListener('headerColorUpdated', handleConfigUpdate);
+    return () => {
+      window.removeEventListener('pageNameUpdated', handleConfigUpdate);
+      window.removeEventListener('headerColorUpdated', handleConfigUpdate);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update CSS variable when header color changes
+  useEffect(() => {
+    const savedColor = localStorage.getItem('header_color') || '#2563eb';
+    setHeaderColor(savedColor);
+    document.documentElement.style.setProperty('--header-color', savedColor);
+  }, []);
+
+  // Listen for header color changes
+  useEffect(() => {
+    const handleColorUpdate = () => {
+      const savedColor = localStorage.getItem('header_color') || '#2563eb';
+      setHeaderColor(savedColor);
+      document.documentElement.style.setProperty('--header-color', savedColor);
+    };
+    window.addEventListener('headerColorUpdated', handleColorUpdate);
+    return () => window.removeEventListener('headerColorUpdated', handleColorUpdate);
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadLogs();
+      // Poll every 2 minutes to check for expired reminders
+      const reminderPollingInterval = setInterval(loadLogs, 2 * 60 * 1000);
+      return () => clearInterval(reminderPollingInterval);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, currentPage, isAuthenticated]);
@@ -88,6 +114,8 @@ function App() {
         }
         if (config.header_color) {
           localStorage.setItem('header_color', config.header_color);
+          setHeaderColor(config.header_color);
+          document.documentElement.style.setProperty('--header-color', config.header_color);
           window.dispatchEvent(new CustomEvent('headerColorUpdated'));
         }
       }
@@ -200,12 +228,14 @@ function App() {
   const handlePrint = (logsToPrint) => {
     const printWindow = window.open('', '_blank');
     
-    // Format date as yyyy.mm.dd
+    // Format date and time as yyyy.mm.dd_hhmm
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    const dateFormatted = `${year}.${month}.${day}`;
+    const hours = String(today.getHours()).padStart(2, '0');
+    const minutes = String(today.getMinutes()).padStart(2, '0');
+    const dateFormatted = `${year}.${month}.${day}_${hours}${minutes}`;
     
     // Get page name from state or localStorage
     const currentPageName = pageName || localStorage.getItem('page_name') || 'Shift Handover Log';
@@ -330,7 +360,8 @@ function App() {
         <div className="mb-6">
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow"
+            className="text-white font-bold py-2 px-4 rounded shadow hover:opacity-90"
+            style={{ backgroundColor: 'var(--header-color)' }}
           >
             Create New Log
           </button>

@@ -245,9 +245,75 @@ echo   [OK] Dependencies installed successfully!
 :deps_ok
 cd ..
 
+REM Build frontend with relative URLs for dist
+echo.
+echo ========================================
+echo Building Frontend for Distribution
+echo ========================================
+echo.
+
+cd client
+
+REM Check if Node.js is available
+where node >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [WARNING] Node.js not found in PATH!
+    echo           Trying to use portable Node.js...
+    if exist "..\nodejs\node.exe" (
+        set PATH=..\nodejs;%PATH%
+    ) else if exist "nodejs\node.exe" (
+        set PATH=nodejs;%PATH%
+    ) else (
+        echo [ERROR] Node.js not found!
+        echo         Cannot build frontend.
+        echo         Please install Node.js or run 'rebuild-frontend.bat' first.
+        cd ..
+        pause
+        exit /b 1
+    )
+)
+
+REM Set REACT_APP_API_URL as relative URL to work on any port
+set REACT_APP_API_URL=/api
+
+echo Configuration:
+echo   REACT_APP_API_URL=%REACT_APP_API_URL%
+echo.
+
+REM Install dependencies if necessary
+if not exist "node_modules" (
+    echo Installing dependencies...
+    call npm install
+    if %ERRORLEVEL% NEQ 0 (
+        echo.
+        echo [ERROR] Failed to install dependencies!
+        cd ..
+        pause
+        exit /b 1
+    )
+    echo.
+)
+
+REM Compile the frontend
+echo Compiling frontend (this may take a few minutes)...
+echo.
+call npm run build
+
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [ERROR] Failed to compile frontend!
+    cd ..
+    pause
+    exit /b 1
+)
+
+echo   [OK] Frontend compiled successfully!
+cd ..
+
 REM Copy client/build folder
 if exist "client\build" (
-    echo Copying 'client\build' folder...
+    echo.
+    echo Copying 'client\build' folder to dist...
     if not exist "dist\client" mkdir "dist\client"
     if not exist "dist\client\build" mkdir "dist\client\build"
     xcopy /E /I /Y "client\build\*" "dist\client\build\" >nul
@@ -265,9 +331,7 @@ if exist "client\build" (
         )
     )
 ) else (
-    echo [ERROR] Folder 'client\build' not found!
-    echo        The frontend needs to be compiled.
-    echo        Run 'rebuild-frontend.bat' first.
+    echo [ERROR] Folder 'client\build' not found after compilation!
     pause
     exit /b 1
 )

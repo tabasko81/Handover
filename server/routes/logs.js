@@ -18,11 +18,28 @@ router.get('/', (req, res) => {
   const offset = (parseInt(page) - 1) * parseInt(limit);
   const isArchived = archived === 'true' ? 1 : 0;
   
-  let query = `
-    SELECT * FROM shift_logs 
-    WHERE is_deleted = 0 AND is_archived = ?
-  `;
-  const params = [isArchived];
+  // If showing archived, include logs with future reminders
+  // If showing active, exclude logs with future reminders
+  let query;
+  const params = [];
+  
+  if (isArchived === 1) {
+    // Show archived logs OR logs with future reminders
+    query = `
+      SELECT * FROM shift_logs 
+      WHERE is_deleted = 0 AND (
+        is_archived = 1 OR 
+        (reminder_date IS NOT NULL AND reminder_date > datetime('now'))
+      )
+    `;
+  } else {
+    // Show only active logs (not archived and no future reminders)
+    query = `
+      SELECT * FROM shift_logs 
+      WHERE is_deleted = 0 AND is_archived = 0 
+      AND (reminder_date IS NULL OR reminder_date <= datetime('now'))
+    `;
+  }
 
   // Apply filters
   if (worker_name) {
@@ -54,11 +71,26 @@ router.get('/', (req, res) => {
   params.push(parseInt(limit), offset);
 
   // Count total entries
-  let countQuery = `
-    SELECT COUNT(*) as total FROM shift_logs 
-    WHERE is_deleted = 0 AND is_archived = ?
-  `;
-  const countParams = [isArchived];
+  let countQuery;
+  const countParams = [];
+  
+  if (isArchived === 1) {
+    // Count archived logs OR logs with future reminders
+    countQuery = `
+      SELECT COUNT(*) as total FROM shift_logs 
+      WHERE is_deleted = 0 AND (
+        is_archived = 1 OR 
+        (reminder_date IS NOT NULL AND reminder_date > datetime('now'))
+      )
+    `;
+  } else {
+    // Count only active logs (not archived and no future reminders)
+    countQuery = `
+      SELECT COUNT(*) as total FROM shift_logs 
+      WHERE is_deleted = 0 AND is_archived = 0 
+      AND (reminder_date IS NULL OR reminder_date <= datetime('now'))
+    `;
+  }
 
   if (worker_name) {
     countQuery += ` AND worker_name = ?`;
@@ -116,7 +148,8 @@ router.get('/', (req, res) => {
         data: rows.map(row => ({
           ...row,
           is_archived: Boolean(row.is_archived),
-          is_deleted: Boolean(row.is_deleted)
+          is_deleted: Boolean(row.is_deleted),
+          reminder_date: row.reminder_date || null
         })),
         pagination: {
           current_page: parseInt(page),
@@ -157,7 +190,8 @@ router.get('/:id', (req, res) => {
       data: {
         ...row,
         is_archived: Boolean(row.is_archived),
-        is_deleted: Boolean(row.is_deleted)
+        is_deleted: Boolean(row.is_deleted),
+        reminder_date: row.reminder_date || null
       }
     });
   });
@@ -176,13 +210,16 @@ router.post('/', (req, res) => {
     });
   }
 
-  const { log_date, short_description, note, worker_name, color } = sanitizeInput(req.body);
+  const { log_date, short_description, note, worker_name, color, reminder_date } = sanitizeInput(req.body);
   const database = db.getDb();
+  
+  // If reminder_date is set, automatically archive the log
+  const shouldArchive = reminder_date && new Date(reminder_date) > new Date();
 
     database.run(
-    `INSERT INTO shift_logs (log_date, short_description, note, worker_name, color) 
-     VALUES (?, ?, ?, ?, ?)`,
-    [log_date, short_description, note, worker_name, color || null],
+    `INSERT INTO shift_logs (log_date, short_description, note, worker_name, color, reminder_date, is_archived) 
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [log_date, short_description, note, worker_name, color || null, reminder_date || null, shouldArchive ? 1 : 0],
     function(err) {
       if (err) {
         console.error('Database insert error:', err);
@@ -207,7 +244,8 @@ router.post('/', (req, res) => {
         const logEntry = {
           ...row,
           is_archived: Boolean(row.is_archived),
-          is_deleted: Boolean(row.is_deleted)
+          is_deleted: Boolean(row.is_deleted),
+          reminder_date: row.reminder_date || null
         };
 
         res.status(201).json({
@@ -233,8 +271,14 @@ router.put('/:id', (req, res) => {
     });
   }
 
-  const { log_date, short_description, note, worker_name, color } = sanitizeInput(req.body);
+  const { log_date, short_description, note, worker_name, color, reminder_date } = sanitizeInput(req.body);
   const database = db.getDb();
+  
+  // If reminder_date is set, automatically archive the log
+  // If reminder_date is explicitly null/empty, clear it
+  const hasReminder = reminder_date !== undefined && reminder_date !== null && reminder_date !== '';
+  const shouldArchive = hasReminder && new Date(reminder_date) > new Date();
+  const finalReminderDate = hasReminder ? reminder_date : null;
 
   // First check if entry exists
   database.get('SELECT * FROM shift_logs WHERE id = ? AND is_deleted = 0', [id], (err, row) => {
@@ -256,11 +300,14 @@ router.put('/:id', (req, res) => {
       });
     }
 
+    // Determine archive status: if reminder is set, archive; otherwise keep current state unless explicitly changed
+    const archiveStatus = shouldArchive ? 1 : (row.is_archived ? 1 : 0);
+    
     database.run(
       `UPDATE shift_logs 
-       SET log_date = ?, short_description = ?, note = ?, worker_name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
+       SET log_date = ?, short_description = ?, note = ?, worker_name = ?, color = ?, reminder_date = ?, is_archived = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [log_date, short_description, note, worker_name, color || null, id],
+      [log_date, short_description, note, worker_name, color || null, finalReminderDate, archiveStatus, id],
       function(err) {
         if (err) {
           return res.status(500).json({
@@ -286,7 +333,8 @@ router.put('/:id', (req, res) => {
             data: {
               ...updatedRow,
               is_archived: Boolean(updatedRow.is_archived),
-              is_deleted: Boolean(updatedRow.is_deleted)
+              is_deleted: Boolean(updatedRow.is_deleted),
+              reminder_date: updatedRow.reminder_date || null
             }
           });
         });
@@ -338,7 +386,138 @@ router.patch('/:id/archive', (req, res) => {
           data: {
             ...row,
             is_archived: Boolean(row.is_archived),
-            is_deleted: Boolean(row.is_deleted)
+            is_deleted: Boolean(row.is_deleted),
+            reminder_date: row.reminder_date || null
+          }
+        });
+      });
+    }
+  );
+});
+
+// Set reminder date for a log
+router.patch('/:id/reminder', (req, res) => {
+  const { id } = req.params;
+  const { reminder_date } = req.body;
+  const database = db.getDb();
+
+  // Validate reminder_date is in the future if provided
+  if (reminder_date && new Date(reminder_date) <= new Date()) {
+    return res.status(400).json({
+      status: 'error',
+      code: 'VALIDATION_ERROR',
+      message: 'Reminder date must be in the future',
+      details: {}
+    });
+  }
+
+  // First check if entry exists
+  database.get('SELECT * FROM shift_logs WHERE id = ? AND is_deleted = 0', [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({
+        status: 'error',
+        code: 'DATABASE_ERROR',
+        message: 'Failed to check log entry',
+        details: {}
+      });
+    }
+
+    if (!row) {
+      return res.status(404).json({
+        status: 'error',
+        code: 'NOT_FOUND',
+        message: 'Log entry not found',
+        details: {}
+      });
+    }
+
+    // If reminder_date is set, automatically archive the log
+    const shouldArchive = reminder_date && new Date(reminder_date) > new Date();
+
+    database.run(
+      `UPDATE shift_logs 
+       SET reminder_date = ?, is_archived = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [reminder_date || null, shouldArchive ? 1 : row.is_archived, id],
+      function(err) {
+        if (err) {
+          return res.status(500).json({
+            status: 'error',
+            code: 'DATABASE_ERROR',
+            message: 'Failed to set reminder',
+            details: {}
+          });
+        }
+
+        database.get('SELECT * FROM shift_logs WHERE id = ?', [id], (err, updatedRow) => {
+          if (err || !updatedRow) {
+            return res.status(500).json({
+              status: 'error',
+              code: 'DATABASE_ERROR',
+              message: 'Failed to retrieve updated log entry',
+              details: {}
+            });
+          }
+
+          res.json({
+            status: 'success',
+            data: {
+              ...updatedRow,
+              is_archived: Boolean(updatedRow.is_archived),
+              is_deleted: Boolean(updatedRow.is_deleted),
+              reminder_date: updatedRow.reminder_date || null
+            }
+          });
+        });
+      }
+    );
+  });
+});
+
+// Clear reminder date for a log
+router.patch('/:id/reminder/clear', (req, res) => {
+  const { id } = req.params;
+  const database = db.getDb();
+
+  database.run(
+    'UPDATE shift_logs SET reminder_date = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({
+          status: 'error',
+          code: 'DATABASE_ERROR',
+          message: 'Failed to clear reminder',
+          details: {}
+        });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({
+          status: 'error',
+          code: 'NOT_FOUND',
+          message: 'Log entry not found',
+          details: {}
+        });
+      }
+
+      database.get('SELECT * FROM shift_logs WHERE id = ?', [id], (err, row) => {
+        if (err || !row) {
+          return res.status(500).json({
+            status: 'error',
+            code: 'DATABASE_ERROR',
+            message: 'Failed to retrieve updated log entry',
+            details: {}
+          });
+        }
+
+        res.json({
+          status: 'success',
+          data: {
+            ...row,
+            is_archived: Boolean(row.is_archived),
+            is_deleted: Boolean(row.is_deleted),
+            reminder_date: null
           }
         });
       });

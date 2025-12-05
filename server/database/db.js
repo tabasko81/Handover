@@ -73,6 +73,21 @@ function initialize() {
             if (err) console.error('Error creating archive index:', err);
           });
           
+          // Add reminder_date column if it doesn't exist (for existing databases)
+          database.run(`
+            ALTER TABLE shift_logs ADD COLUMN reminder_date DATETIME DEFAULT NULL
+          `, (alterErr) => {
+            // Ignore error if column already exists
+            if (alterErr && !alterErr.message.includes('duplicate column')) {
+              console.log('Note: reminder_date column may already exist');
+            }
+          });
+          
+          // Create index for reminder_date
+          database.run('CREATE INDEX IF NOT EXISTS idx_reminder_date ON shift_logs(reminder_date)', (err) => {
+            if (err) console.error('Error creating reminder_date index:', err);
+          });
+          
           // Create users table
           database.run(`
             CREATE TABLE IF NOT EXISTS users (
