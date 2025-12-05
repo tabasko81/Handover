@@ -16,8 +16,10 @@ function LogForm({ log, onSubmit, onClose }) {
     short_description: '',
     note: '',
     worker_name: '',
-    color: ''
+    color: '',
+    reminder_date: ''
   });
+  const [setReminder, setSetReminder] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,12 +34,25 @@ function LogForm({ log, onSubmit, onClose }) {
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+      // Format reminder_date if it exists
+      let reminderDateFormatted = '';
+      if (log.reminder_date) {
+        const reminderDate = new Date(log.reminder_date);
+        const reminderYear = reminderDate.getFullYear();
+        const reminderMonth = String(reminderDate.getMonth() + 1).padStart(2, '0');
+        const reminderDay = String(reminderDate.getDate()).padStart(2, '0');
+        const reminderHours = String(reminderDate.getHours()).padStart(2, '0');
+        const reminderMinutes = String(reminderDate.getMinutes()).padStart(2, '0');
+        reminderDateFormatted = `${reminderYear}-${reminderMonth}-${reminderDay}T${reminderHours}:${reminderMinutes}`;
+        setSetReminder(true);
+      }
       setFormData({
         log_date: formattedDate,
         short_description: log.short_description || '',
         note: log.note || '',
         worker_name: log.worker_name || '',
-        color: log.color || ''
+        color: log.color || '',
+        reminder_date: reminderDateFormatted
       });
     } else {
       // New log - set current date/time
@@ -48,8 +63,10 @@ function LogForm({ log, onSubmit, onClose }) {
         short_description: '',
         note: '',
         worker_name: '',
-        color: ''
+        color: '',
+        reminder_date: ''
       });
+      setSetReminder(false);
     }
   }, [log]);
 
@@ -78,8 +95,17 @@ function LogForm({ log, onSubmit, onClose }) {
       newErrors.worker_name = 'Worker name is required';
     } else if (formData.worker_name.trim().length < 1 || formData.worker_name.trim().length > 3) {
       newErrors.worker_name = 'Must be 1 to 3 characters';
-    } else if (!/^[A-Z]{1,3}$/.test(formData.worker_name.trim())) {
+    } else     if (!/^[A-Z]{1,3}$/.test(formData.worker_name.trim())) {
       newErrors.worker_name = 'Must contain only letters (A-Z)';
+    }
+
+    // Validate reminder_date if set
+    if (setReminder && formData.reminder_date) {
+      const reminderDate = new Date(formData.reminder_date);
+      const now = new Date();
+      if (reminderDate <= now) {
+        newErrors.reminder_date = 'Reminder date must be in the future';
+      }
     }
 
     setErrors(newErrors);
@@ -97,10 +123,14 @@ function LogForm({ log, onSubmit, onClose }) {
     try {
       // Convert datetime-local format to ISO string
       const dateTime = new Date(formData.log_date).toISOString();
+      const reminderDateTime = setReminder && formData.reminder_date 
+        ? new Date(formData.reminder_date).toISOString() 
+        : null;
       await onSubmit({
         ...formData,
         log_date: dateTime,
-        worker_name: formData.worker_name.toUpperCase().trim()
+        worker_name: formData.worker_name.toUpperCase().trim(),
+        reminder_date: reminderDateTime
       });
       // Always close form after submit (both create and update)
       onClose();
@@ -240,6 +270,49 @@ function LogForm({ log, onSubmit, onClose }) {
               </div>
             </div>
 
+            <div className="mb-6">
+              <div className="flex items-center space-x-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="setReminder"
+                  checked={setReminder}
+                  onChange={(e) => {
+                    setSetReminder(e.target.checked);
+                    if (!e.target.checked) {
+                      handleChange('reminder_date', '');
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="setReminder" className="text-sm font-medium text-gray-700">
+                  Set Future Reminder
+                </label>
+              </div>
+              {setReminder && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Reminder Date & Time *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.reminder_date}
+                    onChange={(e) => handleChange('reminder_date', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      errors.reminder_date
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                  />
+                  {errors.reminder_date && (
+                    <p className="mt-1 text-sm text-red-600">{errors.reminder_date}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    This log will be archived until the reminder date, then automatically activated.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -251,7 +324,8 @@ function LogForm({ log, onSubmit, onClose }) {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: 'var(--header-color)' }}
                 disabled={submitting}
               >
                 {submitting ? 'Saving...' : log ? 'Update' : 'Save'}

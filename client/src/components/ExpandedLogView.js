@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { parseMarkdown } from '../utils/markdownParser';
+import { clearReminder } from '../services/api';
 
 function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, onDelete }) {
   const [currentLog, setCurrentLog] = useState(log);
@@ -204,6 +205,38 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
             </span>
           </div>
 
+          {/* Future Reminder */}
+          {currentLog.reminder_date && new Date(currentLog.reminder_date) > new Date() && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-2xl">⏰</span>
+                <label className="block text-sm font-semibold text-orange-800 uppercase tracking-wide">
+                  Future Reminder
+                </label>
+              </div>
+              <p className="text-base text-orange-900 mb-3">
+                This log will automatically become active on{' '}
+                <strong>{formatDateTime(currentLog.reminder_date)}</strong>
+              </p>
+              <button
+                onClick={async () => {
+                  if (window.confirm('Remove the future reminder? The log will remain archived.')) {
+                    try {
+                      await clearReminder(currentLog.id);
+                      onClose();
+                      window.location.reload(); // Reload to reflect changes
+                    } catch (error) {
+                      alert('Failed to clear reminder: ' + error.message);
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm"
+              >
+                Remove Reminder
+              </button>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex space-x-3 pt-6 border-t border-gray-200">
             <button
@@ -211,7 +244,8 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
                 onEdit(currentLog);
                 onClose();
               }}
-              className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-lg"
+              className="px-6 py-3 text-white rounded-md hover:opacity-90 font-medium text-lg"
+              style={{ backgroundColor: 'var(--header-color)' }}
             >
               Edit
             </button>

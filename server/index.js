@@ -10,9 +10,10 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const database = require('./database/db');
 const seedUsers = require('./database/seedUsers');
+const { startReminderProcessor } = require('./utils/reminderProcessor');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8500;
 
 // Trust proxy to get correct IP address (important for Docker/nginx setups)
 app.set('trust proxy', true);
@@ -122,6 +123,7 @@ database.initialize().then(() => {
   // Seed default users if they don't exist
   return seedUsers();
 }).then(() => {
+  startReminderProcessor(); // Start the reminder processor
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);

@@ -245,6 +245,18 @@ function sanitizeInput(data) {
     }
   }
 
+  if (data.reminder_date !== undefined) {
+    // Sanitize reminder_date - keep as is if valid, otherwise null
+    if (data.reminder_date && data.reminder_date.trim() !== '') {
+      const date = new Date(data.reminder_date);
+      if (!isNaN(date.getTime())) {
+        sanitized.reminder_date = date.toISOString();
+      }
+    } else {
+      sanitized.reminder_date = null;
+    }
+  }
+
   return sanitized;
 }
 

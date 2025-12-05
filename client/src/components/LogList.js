@@ -156,7 +156,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
             {logs.map((log) => {
               const colorClass = getColorClass(log.color || '');
               const isFlashing = flashId === log.id;
-              const rowClass = log.is_archived 
+              const hasFutureReminder = log.reminder_date && new Date(log.reminder_date) > new Date();
+              const rowClass = log.is_archived || hasFutureReminder
                 ? `bg-gray-100 ${colorClass}` 
                 : `hover:bg-gray-50 ${colorClass}`;
               
@@ -173,6 +174,14 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                 <td className="px-2 py-1.5 whitespace-nowrap text-sm font-medium text-gray-900">
                   <div className="flex items-center space-x-1">
                     <span>{log.short_description}</span>
+                    {log.reminder_date && new Date(log.reminder_date) > new Date() && (
+                      <span
+                        className="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-orange-100 text-orange-800 border border-orange-300 ml-2"
+                        title={`Future Reminder: Will activate on ${new Date(log.reminder_date).toLocaleString('en-GB')}`}
+                      >
+                        ⏰ {new Date(log.reminder_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
+                      </span>
+                    )}
                     <button
                       onClick={() => setExpandedLog(log)}
                       className="text-blue-600 hover:text-blue-800 ml-1 flex-shrink-0"
@@ -209,7 +218,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                   <div className="flex space-x-1">
                     <button
                       onClick={() => onEdit(log)}
-                      className="text-blue-600 hover:text-blue-900 text-xs"
+                      className="text-xs px-2 py-1 rounded text-white"
+                      style={{ backgroundColor: 'var(--header-color)' }}
                       title="Edit"
                     >
                       Edit

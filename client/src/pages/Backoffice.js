@@ -295,7 +295,8 @@ function Backoffice() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: 'var(--header-color)' }}
                 >
                   {saving ? 'Saving...' : 'Save Configuration'}
                 </button>
