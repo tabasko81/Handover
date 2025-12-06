@@ -17,7 +17,11 @@ logs/*.txt
 server_config.json
 build/
 # dist/ - Now tracked in git for distribution
+# But allow everything inside dist/ to be committed
+!dist/
 *.spec
 # Node.js portable (should be added manually)
 nodejs/
+# But allow nodejs inside dist/
+!dist/nodejs/
 

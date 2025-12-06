@@ -1,0 +1,7 @@
+{
+  "port": 8500,
+  "auto_start_enabled": false,
+  "auto_start_mode": "gui",
+  "auto_start_delay": 0,
+  "firewall_port": null
+}
