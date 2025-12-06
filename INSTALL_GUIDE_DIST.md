@@ -555,6 +555,6 @@ Edit `server_config.json` (created automatically):
 
 ---
 
-**Version:** Alpha 7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025
 

@@ -32,7 +32,7 @@ Complete guide to using the Shift Handover Log web application.
 ### First Time Access
 
 1. Open your web browser (Chrome, Edge, Firefox, Safari, etc.)
-2. Navigate to: **http://localhost:3000** (if running locally) or your configured URL
+2. Navigate to: **http://localhost:8500** (if running locally) or your configured URL
 3. You'll see a login screen:
    - **Username:** Enter your username (default: `admin` or `FO`)
    - **Password:** Enter your password (default: `pass123`)

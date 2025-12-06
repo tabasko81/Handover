@@ -134,7 +134,7 @@ Frontend: Stores token for future requests
 
 1. **User fills form** (Frontend - React)
 2. **User clicks "Save"** (Frontend)
-3. **Frontend sends POST request** to `http://localhost:5000/api/logs`
+3. **Frontend sends POST request** to `http://localhost:8500/api/logs`
 4. **Backend receives request** (Express server)
 5. **Backend validates data** (validation middleware)
 6. **Backend saves to database** (SQLite)
@@ -246,10 +246,10 @@ server/
 
 You can test the backend directly:
 
-1. **Root:** `http://localhost:5000/`
-2. **Health check:** `http://localhost:5000/api/health`
-3. **Get logs:** `http://localhost:5000/api/logs`
-4. **Search:** `http://localhost:5000/api/logs?search=room`
+1. **Root:** `http://localhost:8500/`
+2. **Health check:** `http://localhost:8500/api/health`
+3. **Get logs:** `http://localhost:8500/api/logs`
+4. **Search:** `http://localhost:8500/api/logs?search=room`
 
 ---
 
