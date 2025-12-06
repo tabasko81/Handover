@@ -231,6 +231,7 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
                   }
                 }}
                 className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm"
+                title="Remove the future reminder - the log will remain archived and won't automatically activate"
               >
                 Remove Reminder
               </button>
@@ -246,6 +247,7 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
               }}
               className="px-6 py-3 text-white rounded-md hover:opacity-90 font-medium text-lg"
               style={{ backgroundColor: 'var(--header-color)' }}
+              title="Edit this log entry - modify date, description, note, worker, color, or reminder"
             >
               Edit
             </button>
@@ -259,6 +261,7 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-yellow-600 text-white hover:bg-yellow-700'
               }`}
+              title={currentLog.is_archived ? "Restore this log - make it visible in the main list again" : "Archive this log - hide it from the main list (can be viewed by enabling 'Show Archived')"}
             >
               {currentLog.is_archived ? 'Restore' : 'Archive'}
             </button>
@@ -270,12 +273,14 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
                 }
               }}
               className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium text-lg"
+              title="Delete this log entry permanently - this action cannot be undone"
             >
               Delete
             </button>
             <button
               onClick={onClose}
               className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium text-lg ml-auto"
+              title="Close this detailed view (Press Esc)"
             >
               Close
             </button>

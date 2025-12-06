@@ -403,6 +403,7 @@ function Backoffice() {
                 disabled={saving}
                 className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--header-color)' }}
+                title="Save all configuration changes - page name, header color, logo settings, and other preferences"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
               </button>
@@ -434,6 +435,7 @@ function Backoffice() {
                 disabled={saving}
                 className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--header-color)' }}
+                title="Save all configuration changes - page name, header color, logo settings, and other preferences"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
               </button>
@@ -505,6 +507,7 @@ function Backoffice() {
                 disabled={saving}
                 className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--header-color)' }}
+                title="Save all configuration changes - page name, header color, logo settings, and other preferences"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
               </button>

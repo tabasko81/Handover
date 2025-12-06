@@ -94,16 +94,21 @@ function Filters({ filters, onFilterChange, onToggleArchived }) {
           onClick={handleApply}
           className="px-4 py-2 text-white rounded hover:opacity-90"
           style={{ backgroundColor: 'var(--header-color)' }}
+          title="Apply the current filter settings to search and filter the log entries"
         >
           Apply Filters
         </button>
         <button
           onClick={handleReset}
           className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          title="Reset all filters to default values and show all active logs"
         >
           Reset
         </button>
-        <label className="flex items-center px-4 py-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200">
+        <label 
+          className="flex items-center px-4 py-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200"
+          title="Show archived logs - archived logs are hidden from the main list but can be viewed here"
+        >
           <input
             type="checkbox"
             checked={localFilters.archived}

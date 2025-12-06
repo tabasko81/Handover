@@ -220,7 +220,7 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                       onClick={() => onEdit(log)}
                       className="text-xs px-2 py-1 rounded text-white"
                       style={{ backgroundColor: 'var(--header-color)' }}
-                      title="Edit"
+                      title="Edit this log entry - modify date, description, note, worker, color, or reminder"
                     >
                       Edit
                     </button>
@@ -230,14 +230,14 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                         ? "text-green-600 hover:text-green-900"
                         : "text-yellow-600 hover:text-yellow-900"
                       }
-                      title={log.is_archived ? "Restore" : "Archive"}
+                      title={log.is_archived ? "Restore this log - make it visible in the main list again" : "Archive this log - hide it from the main list (can be viewed by enabling 'Show Archived')"}
                     >
                       {log.is_archived ? 'Restore' : 'Archive'}
                     </button>
                     <button
                       onClick={() => onDelete(log)}
                       className="text-red-600 hover:text-red-900"
-                      title="Delete"
+                      title="Delete this log entry permanently - this action cannot be undone"
                     >
                       Delete
                     </button>

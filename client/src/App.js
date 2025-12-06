@@ -366,6 +366,7 @@ function App() {
             onClick={() => setShowForm(true)}
             className="text-white font-bold py-2 px-4 rounded shadow hover:opacity-90"
             style={{ backgroundColor: 'var(--header-color)' }}
+            title="Create a new log entry with date, description, note, worker name, and optional color coding"
           >
             Create New Log
           </button>
