@@ -283,9 +283,14 @@ function LogForm({ log, onSubmit, onClose }) {
                     }
                   }}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  title="The log will be archived until the reminder date, then automatically activated"
                 />
-                <label htmlFor="setReminder" className="text-sm font-medium text-gray-700">
-                  Set Future Reminder
+                <label 
+                  htmlFor="setReminder" 
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                  title="The log will be archived until the reminder date, then automatically activated"
+                >
+                  Set Future Reminder and Archive
                 </label>
               </div>
               {setReminder && (
