@@ -16,7 +16,7 @@ logs/*.txt
 # Python standalone server generated files
 server_config.json
 build/
-dist/
+# dist/ - Now tracked in git for distribution
 *.spec
 # Node.js portable (should be added manually)
 nodejs/
