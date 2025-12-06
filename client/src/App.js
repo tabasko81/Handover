@@ -9,7 +9,7 @@ import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import Footer from './components/Footer';
 import { fetchLogs, createLog, updateLog, archiveLog, deleteLog } from './services/api';
 import { fetchPublicConfig } from './services/configApi';
-import { userLogin, verifyUserToken, userLogout } from './services/authApi';
+import { userLogin, verifyUserToken } from './services/authApi';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,7 +35,9 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [flashId, setFlashId] = useState(null);
   const [pageName, setPageName] = useState('Shift Handover Log');
-  const [headerColor, setHeaderColor] = useState('#2563eb');
+  // headerColor is used to update CSS variable, but not directly in JSX
+  // eslint-disable-next-line no-unused-vars
+  const [headerColor, setHeaderColor] = useState('#2563eb'); // eslint-disable-line no-unused-vars
   const [lastLogCheck, setLastLogCheck] = useState(null);
   const [newLogsCount, setNewLogsCount] = useState(0);
   const [showNewLogsNotification, setShowNewLogsNotification] = useState(false);

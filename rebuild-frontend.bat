@@ -44,9 +44,23 @@ if not exist "node_modules" (
     echo.
 )
 
+REM Clean old build folder and cache to force fresh compilation
+echo Cleaning old build folder and cache...
+if exist "build" (
+    rmdir /S /Q "build" >nul 2>&1
+    echo   [OK] Old build folder removed.
+)
+REM Clean React Scripts cache
+if exist "node_modules\.cache" (
+    rmdir /S /Q "node_modules\.cache" >nul 2>&1
+    echo   [OK] React cache cleared.
+)
+
 REM Compile the frontend
 echo Compiling frontend (this may take a few minutes)...
 echo.
+REM Note: We don't use CI=true here to avoid treating warnings as errors
+REM The build-exe.bat scripts use CI=true for production builds
 call npm run build
 
 if %ERRORLEVEL% EQU 0 (

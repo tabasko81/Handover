@@ -295,10 +295,20 @@ if not exist "node_modules" (
     echo.
 )
 
+REM Clean old build folder to force fresh compilation
+echo Cleaning old build folder...
+if exist "build" (
+    rmdir /S /Q "build" >nul 2>&1
+    echo   [OK] Old build folder removed.
+)
+
 REM Compile the frontend
 echo Compiling frontend (this may take a few minutes)...
 echo.
+REM Force clean build with CI=true to prevent caching issues
+set CI=true
 call npm run build
+set CI=
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

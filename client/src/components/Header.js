@@ -28,6 +28,7 @@ function Header() {
     if (savedColor !== headerColor) {
       setHeaderColor(savedColor);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]); // Only depend on location, not headerColor to avoid loops
 
   useEffect(() => {
@@ -139,6 +140,7 @@ function Header() {
         }
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const handleCustomUpdate = () => {
       // Just reload from localStorage, don't fetch from API to avoid infinite loops
@@ -188,7 +190,8 @@ function Header() {
       window.removeEventListener('headerColorUpdated', handleCustomUpdate);
       window.removeEventListener('headerLogoUpdated', handleCustomUpdate);
     };
-  }, [pageName, headerColor, logoType, logoImage, logoEmoji]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formattedDateTime = currentDateTime.toLocaleString('en-GB', {
     year: 'numeric',
