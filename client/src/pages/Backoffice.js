@@ -369,7 +369,18 @@ function Backoffice() {
                           placeholder="🏨"
                           maxLength={10}
                         />
-                        <p className="mt-1 text-sm text-gray-500">
+                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <p className="text-sm font-medium text-blue-900 mb-1">
+                            How to add an emoji:
+                          </p>
+                          <ol className="text-xs text-blue-800 list-decimal list-inside space-y-1">
+                            <li>Visit <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Emojipedia.org</a> to browse emojis</li>
+                            <li>Click on any emoji you like</li>
+                            <li>Click the "Copy" button below the emoji</li>
+                            <li>Paste it into the field above (Ctrl+V or right-click → Paste)</li>
+                          </ol>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">
                           Enter an emoji or text to display next to the page title
                         </p>
                       </div>
