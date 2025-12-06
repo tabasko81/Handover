@@ -134,7 +134,7 @@ After starting the server, access:
 
 ### Error: "Network Error" when configuring admin
 
-- The frontend was compiled with an absolute API URL (e.g., `http://localhost:5000/api`)
+- The frontend was compiled with an absolute API URL (e.g., `http://localhost:8500/api`)
 - But the server is running on a different port (e.g., 8500)
 - **Solution**: Recompile the frontend with relative URL:
   - Run `rebuild-frontend.bat` (Windows)
