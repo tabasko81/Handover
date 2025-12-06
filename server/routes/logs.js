@@ -35,10 +35,10 @@ router.get('/', (req, res) => {
   } else {
     // Show only active logs (not archived and no future reminders)
     query = `
-      SELECT * FROM shift_logs 
+    SELECT * FROM shift_logs 
       WHERE is_deleted = 0 AND is_archived = 0 
       AND (reminder_date IS NULL OR reminder_date <= datetime('now'))
-    `;
+  `;
   }
 
   // Apply filters
@@ -86,10 +86,10 @@ router.get('/', (req, res) => {
   } else {
     // Count only active logs (not archived and no future reminders)
     countQuery = `
-      SELECT COUNT(*) as total FROM shift_logs 
+    SELECT COUNT(*) as total FROM shift_logs 
       WHERE is_deleted = 0 AND is_archived = 0 
       AND (reminder_date IS NULL OR reminder_date <= datetime('now'))
-    `;
+  `;
   }
 
   if (worker_name) {
@@ -302,7 +302,7 @@ router.put('/:id', (req, res) => {
 
     // Determine archive status: if reminder is set, archive; otherwise keep current state unless explicitly changed
     const archiveStatus = shouldArchive ? 1 : (row.is_archived ? 1 : 0);
-    
+
     database.run(
       `UPDATE shift_logs 
        SET log_date = ?, short_description = ?, note = ?, worker_name = ?, color = ?, reminder_date = ?, is_archived = ?, updated_at = CURRENT_TIMESTAMP

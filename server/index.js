@@ -50,6 +50,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve uploaded files (logos)
+const uploadsPath = path.join(__dirname, '../data/uploads');
+app.use('/uploads', express.static(uploadsPath));
+
 // API Routes
 app.use('/api/logs', logRoutes);
 app.use('/api/config', configRoutes);

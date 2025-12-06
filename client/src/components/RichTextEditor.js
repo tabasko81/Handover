@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 
 function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' }) {
   const editorRef = useRef(null);
-  const [isFocused, setIsFocused] = useState(false);
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -42,7 +41,6 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
     
     if (textContent.length > maxLength) {
       // Truncate if needed - simple approach: limit text content
-      const truncatedText = textContent.substring(0, maxLength);
       // Try to preserve some formatting by keeping HTML structure
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = html;
@@ -336,11 +334,9 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
           contentEditable
           onInput={handleInput}
           onFocus={() => {
-            setIsFocused(true);
             // Ensure paragraph separator is set when focused
             document.execCommand('defaultParagraphSeparator', false, 'p');
           }}
-          onBlur={() => setIsFocused(false)}
           className="min-h-[150px] px-3 py-2 text-sm text-gray-900 outline-none wysiwyg-editor"
           style={{
             wordWrap: 'break-word',

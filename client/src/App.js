@@ -113,10 +113,14 @@ function App() {
           localStorage.setItem('page_name', config.page_name);
         }
         if (config.header_color) {
-          localStorage.setItem('header_color', config.header_color);
-          setHeaderColor(config.header_color);
-          document.documentElement.style.setProperty('--header-color', config.header_color);
-          window.dispatchEvent(new CustomEvent('headerColorUpdated'));
+          const currentColor = localStorage.getItem('header_color');
+          // Only update if color actually changed to avoid unnecessary events
+          if (currentColor !== config.header_color) {
+            localStorage.setItem('header_color', config.header_color);
+            setHeaderColor(config.header_color);
+            document.documentElement.style.setProperty('--header-color', config.header_color);
+            window.dispatchEvent(new CustomEvent('headerColorUpdated'));
+          }
         }
       }
     } catch (error) {

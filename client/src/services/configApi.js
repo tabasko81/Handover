@@ -57,3 +57,30 @@ export const updateConfig = async (config) => {
   }
 };
 
+export const uploadLogo = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('logo', file);
+    
+    const token = localStorage.getItem('admin_token');
+    const response = await axios.post(`${API_BASE_URL}/config/upload-logo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to upload logo');
+  }
+};
+
+export const deleteLogo = async () => {
+  try {
+    const response = await api.delete('/config/logo');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete logo');
+  }
+};
+
