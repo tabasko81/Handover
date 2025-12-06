@@ -1,6 +1,6 @@
 {
   "name": "shift-handover-log-client",
-  "version": "1.0.0",
+  "version": "0.25.12-Beta.1",
   "private": true,
   "dependencies": {
     "axios": "^1.6.2",

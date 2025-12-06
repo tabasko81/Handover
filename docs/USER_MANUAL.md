@@ -2,7 +2,7 @@
 
 Complete guide to using the Shift Handover Log web application.
 
-**Version:** Alpha v0.25.12-Alpha.7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025
 
 ---
@@ -763,7 +763,7 @@ If you encounter issues not covered here:
 
 ---
 
-**Version:** Alpha v0.25.12-Alpha.7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025
 
 Happy logging! 📝

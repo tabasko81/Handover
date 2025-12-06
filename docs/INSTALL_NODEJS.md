@@ -135,5 +135,5 @@ start.bat
 
 ---
 
-**Version:** Alpha v0.25.12-Alpha.7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025

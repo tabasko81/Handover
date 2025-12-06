@@ -2,7 +2,7 @@
 
 This guide will help you install and run the Shift Handover Log application on Windows using Docker. No technical knowledge required!
 
-**Version:** Alpha v0.25.12-Alpha.7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025
 
 ---
@@ -243,6 +243,6 @@ Happy logging! 📝
 
 ---
 
-**Version:** Alpha v0.25.12-Alpha.7  
+**Version:** Beta v0.25.12-Beta.1  
 **Last Updated:** 2025
 
