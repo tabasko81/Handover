@@ -12,8 +12,9 @@ import subprocess
 import threading
 import socket
 import webbrowser
+import re
 from pathlib import Path
-from tkinter import Tk, Label, Entry, Button, Text, Scrollbar, Frame, messagebox
+from tkinter import Tk, Label, Entry, Button, Text, Scrollbar, Frame, messagebox, Toplevel, Radiobutton, IntVar
 from tkinter.scrolledtext import ScrolledText
 
 # Debug flag - set to True to enable verbose logging
@@ -21,6 +22,7 @@ DEBUG = True
 
 # Configuration
 CONFIG_FILE = "server_config.json"
+DEFAULT_CONFIG_FILE = "server_default_config.json"
 DEFAULT_PORT = 8500
 
 # Detect if running from dist folder (executable)
@@ -75,6 +77,21 @@ class ServerManager:
         self.start_button = None
         self.stop_button = None
         
+        # Server configuration state
+        self.auto_start_enabled = False
+        self.auto_start_mode = 'gui'  # 'gui' or 'cli'
+        self.auto_start_delay = 0
+        self.firewall_port = None
+        self.local_ip = None
+        
+        # UI elements for server config
+        self.auto_start_status_label = None
+        self.auto_start_button = None
+        self.firewall_status_label = None
+        self.firewall_button = None
+        self.ip_label = None
+        self.refresh_ip_button = None
+        
     def log(self, message):
         """Adds message to the logs area"""
         if self.log_text:
@@ -112,21 +129,46 @@ class ServerManager:
     
     def load_config(self):
         """Loads saved configuration"""
+        # Try to load from server_config.json first
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.port = config.get('port', DEFAULT_PORT)
+                    self.auto_start_enabled = config.get('auto_start_enabled', False)
+                    self.auto_start_mode = config.get('auto_start_mode', 'gui')
+                    self.auto_start_delay = config.get('auto_start_delay', 0)
+                    self.firewall_port = config.get('firewall_port', None)
             except Exception as e:
                 self.log(f"Error loading configuration: {e}")
                 self.port = DEFAULT_PORT
+        # Try to load from server_default_config.json
+        elif os.path.exists(DEFAULT_CONFIG_FILE):
+            try:
+                with open(DEFAULT_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    self.port = config.get('default_port', DEFAULT_PORT)
+            except Exception as e:
+                self.log(f"Error loading default configuration: {e}")
+                self.port = DEFAULT_PORT
         else:
             self.port = DEFAULT_PORT
+        
+        # Check actual status
+        self.auto_start_enabled = self.check_auto_start_status()
+        self.firewall_port = self.get_firewall_port()
+        self.local_ip = self.get_local_ip()
     
     def save_config(self):
         """Saves configuration"""
         try:
-            config = {'port': self.port}
+            config = {
+                'port': self.port,
+                'auto_start_enabled': self.auto_start_enabled,
+                'auto_start_mode': self.auto_start_mode,
+                'auto_start_delay': self.auto_start_delay,
+                'firewall_port': self.firewall_port
+            }
             with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2)
         except Exception as e:
@@ -322,6 +364,242 @@ class ServerManager:
             self.is_running = False
             self.update_ui_state()
     
+    def check_auto_start_status(self):
+        """Checks if auto-start is configured"""
+        try:
+            result = subprocess.run(
+                ['schtasks', '/Query', '/TN', 'HandoverServer'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            return result.returncode == 0
+        except Exception as e:
+            if DEBUG:
+                self.log(f"Error checking auto-start status: {e}")
+            return False
+    
+    def get_firewall_port(self):
+        """Gets the port from firewall rule if it exists"""
+        try:
+            # Check if firewall rule exists
+            result = subprocess.run(
+                ['powershell', '-Command', 
+                 'Get-NetFirewallRule -DisplayName "Handover Server" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DisplayName'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                # Try to get the port from the rule
+                port_result = subprocess.run(
+                    ['powershell', '-Command',
+                     'Get-NetFirewallRule -DisplayName "Handover Server" | Get-NetFirewallPortFilter | Select-Object -ExpandProperty LocalPort'],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if port_result.returncode == 0:
+                    port_str = port_result.stdout.strip()
+                    try:
+                        return int(port_str)
+                    except ValueError:
+                        pass
+            return None
+        except Exception as e:
+            if DEBUG:
+                self.log(f"Error checking firewall: {e}")
+            return None
+    
+    def check_firewall_status(self):
+        """Checks if firewall rule exists"""
+        return self.get_firewall_port() is not None
+    
+    def get_local_ip(self):
+        """Gets the local IP address"""
+        try:
+            # Method 1: Try using socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                # Connect to a remote address (doesn't actually send data)
+                s.connect(('8.8.8.8', 80))
+                ip = s.getsockname()[0]
+                s.close()
+                if ip and ip != '127.0.0.1':
+                    return ip
+            except Exception:
+                try:
+                    s.close()
+                except:
+                    pass
+            
+            # Method 2: Use ipconfig
+            result = subprocess.run(
+                ['ipconfig'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                # Find IPv4 addresses
+                lines = result.stdout.split('\n')
+                ips_found = []
+                for line in lines:
+                    if 'IPv4' in line or 'IPv4 Address' in line:
+                        # Extract IP address
+                        match = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', line)
+                        if match:
+                            ip = match.group(1)
+                            if ip != '127.0.0.1' and not ip.startswith('169.254'):
+                                ips_found.append(ip)
+                
+                # Return first valid IP found
+                if ips_found:
+                    return ips_found[0]
+            
+            return None
+        except Exception as e:
+            if DEBUG:
+                self.log(f"Error getting local IP: {e}")
+            return None
+    
+    def setup_auto_start(self, gui_mode=True, delay=0):
+        """Sets up auto-start using Windows Task Scheduler"""
+        try:
+            # Determine executable path
+            if gui_mode:
+                exe_name = "HandoverServer.exe"
+            else:
+                exe_name = "HandoverServerCLI.exe"
+            
+            exe_path = BASE_DIR / exe_name
+            if not exe_path.exists():
+                return False, f"{exe_name} not found in {BASE_DIR}"
+            
+            # Build task command
+            if gui_mode:
+                task_command = f'"{exe_path}"'
+            else:
+                task_command = f'"{exe_path}" {self.port}'
+            
+            # Build schtasks command
+            cmd = ['schtasks', '/Create', '/TN', 'HandoverServer', '/TR', task_command,
+                   '/SC', 'ONSTART', '/RL', 'HIGHEST', '/F']
+            
+            if delay > 0:
+                delay_str = f'0000:{delay:02d}'
+                cmd.extend(['/DELAY', delay_str])
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                self.auto_start_enabled = True
+                self.auto_start_mode = 'gui' if gui_mode else 'cli'
+                self.auto_start_delay = delay
+                self.save_config()
+                return True, "Auto-start configured successfully"
+            else:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                if 'access is denied' in error_msg.lower() or 'privileges' in error_msg.lower():
+                    return False, "Administrator privileges required. Please run as administrator."
+                return False, f"Failed to create scheduled task: {error_msg}"
+        except subprocess.TimeoutExpired:
+            return False, "Operation timed out"
+        except Exception as e:
+            return False, f"Error setting up auto-start: {str(e)}"
+    
+    def remove_auto_start(self):
+        """Removes auto-start configuration"""
+        try:
+            result = subprocess.run(
+                ['schtasks', '/Delete', '/TN', 'HandoverServer', '/F'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                self.auto_start_enabled = False
+                self.save_config()
+                return True, "Auto-start removed successfully"
+            else:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                if 'access is denied' in error_msg.lower():
+                    return False, "Administrator privileges required. Please run as administrator."
+                return False, f"Failed to remove scheduled task: {error_msg}"
+        except subprocess.TimeoutExpired:
+            return False, "Operation timed out"
+        except Exception as e:
+            return False, f"Error removing auto-start: {str(e)}"
+    
+    def open_firewall_port(self, port):
+        """Opens firewall port using PowerShell"""
+        try:
+            # Check if rule already exists
+            check_cmd = ['powershell', '-Command',
+                        'Get-NetFirewallRule -DisplayName "Handover Server" -ErrorAction SilentlyContinue']
+            check_result = subprocess.run(check_cmd, capture_output=True, text=True, timeout=5)
+            
+            if check_result.returncode == 0 and check_result.stdout.strip():
+                # Remove existing rule first
+                remove_cmd = ['powershell', '-Command',
+                             'Remove-NetFirewallRule -DisplayName "Handover Server" -ErrorAction SilentlyContinue']
+                subprocess.run(remove_cmd, timeout=5)
+            
+            # Create new firewall rule
+            # Note: This requires admin privileges, so we'll use Start-Process with RunAs
+            ps_script = f'''
+            $rule = Get-NetFirewallRule -DisplayName "Handover Server" -ErrorAction SilentlyContinue
+            if ($rule) {{
+                Remove-NetFirewallRule -DisplayName "Handover Server" -ErrorAction SilentlyContinue
+            }}
+            New-NetFirewallRule -DisplayName "Handover Server" -Direction Inbound -LocalPort {port} -Protocol TCP -Action Allow -Description "Allow inbound connections for Shift Handover Log server on port {port}"
+            '''
+            
+            # Try to create rule directly first
+            cmd = ['powershell', '-Command', ps_script]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                self.firewall_port = port
+                self.save_config()
+                return True, f"Firewall port {port} opened successfully"
+            else:
+                error_msg = result.stderr.strip() or result.stdout.strip()
+                if 'access is denied' in error_msg.lower() or 'administrator' in error_msg.lower():
+                    # Try with elevation
+                    return self._open_firewall_with_elevation(port)
+                return False, f"Failed to open firewall port: {error_msg}"
+        except subprocess.TimeoutExpired:
+            return False, "Operation timed out"
+        except Exception as e:
+            return False, f"Error opening firewall port: {str(e)}"
+    
+    def _open_firewall_with_elevation(self, port):
+        """Opens firewall port with elevation (requires user interaction)"""
+        try:
+            ps_script = f'''
+            Start-Process powershell -ArgumentList '-NoProfile -Command New-NetFirewallRule -DisplayName "Handover Server" -Direction Inbound -LocalPort {port} -Protocol TCP -Action Allow -Description "Allow inbound connections for Shift Handover Log server on port {port}"' -Verb RunAs
+            '''
+            result = subprocess.run(
+                ['powershell', '-Command', ps_script],
+                timeout=15
+            )
+            # We can't easily check if it succeeded with RunAs, so we'll check after
+            if self.check_firewall_status():
+                self.firewall_port = port
+                self.save_config()
+                return True, f"Firewall port {port} opened successfully (elevated)"
+            else:
+                return False, "Please run as administrator to open firewall port"
+        except Exception as e:
+            return False, f"Error opening firewall port with elevation: {str(e)}"
+    
     def update_ui_state(self):
         """Updates the interface state"""
         if self.start_button and self.stop_button:
@@ -333,6 +611,206 @@ class ServerManager:
                 self.start_button.config(state='normal')
                 self.stop_button.config(state='disabled')
                 self.port_entry.config(state='normal')
+        
+        # Update server config UI
+        self.update_server_config_ui()
+    
+    def update_server_config_ui(self):
+        """Updates the server configuration UI elements"""
+        if not self.root:
+            return
+        
+        # Update auto-start status
+        if self.auto_start_status_label:
+            if self.auto_start_enabled:
+                self.auto_start_status_label.config(
+                    text="Status: Configured",
+                    fg="green"
+                )
+            else:
+                self.auto_start_status_label.config(
+                    text="Status: Not configured",
+                    fg="gray"
+                )
+        
+        # Update auto-start button
+        if self.auto_start_button:
+            if self.auto_start_enabled:
+                self.auto_start_button.config(text="Remove Auto-Start")
+            else:
+                self.auto_start_button.config(text="Setup Auto-Start")
+        
+        # Update firewall status
+        if self.firewall_status_label:
+            if self.firewall_port:
+                self.firewall_status_label.config(
+                    text=f"Status: Port {self.firewall_port} is open",
+                    fg="green"
+                )
+            else:
+                self.firewall_status_label.config(
+                    text="Status: Port not open",
+                    fg="gray"
+                )
+        
+        # Update firewall button
+        if self.firewall_button:
+            if self.firewall_port:
+                self.firewall_button.config(text="Refresh Firewall Status", state='normal')
+            else:
+                self.firewall_button.config(text="Open Firewall Port", state='normal')
+        
+        # Update IP label
+        if self.ip_label:
+            if self.local_ip:
+                self.ip_label.config(text=f"Local IP: {self.local_ip}")
+            else:
+                self.ip_label.config(text="Local IP: Not available")
+    
+    def refresh_status(self):
+        """Refreshes all status information"""
+        self.auto_start_enabled = self.check_auto_start_status()
+        self.firewall_port = self.get_firewall_port()
+        self.local_ip = self.get_local_ip()
+        self.update_server_config_ui()
+        self.log("Status refreshed")
+    
+    def handle_auto_start(self):
+        """Handles auto-start setup/removal"""
+        if self.auto_start_enabled:
+            # Remove auto-start
+            if messagebox.askyesno("Remove Auto-Start", 
+                                   "Are you sure you want to remove auto-start configuration?"):
+                success, message = self.remove_auto_start()
+                if success:
+                    messagebox.showinfo("Success", message)
+                    self.log(f"Auto-start removed: {message}")
+                else:
+                    messagebox.showerror("Error", message)
+                    self.log(f"Failed to remove auto-start: {message}")
+                self.refresh_status()
+        else:
+            # Setup auto-start - show dialog
+            self.show_auto_start_dialog()
+    
+    def show_auto_start_dialog(self):
+        """Shows dialog to configure auto-start"""
+        dialog = Toplevel(self.root)
+        dialog.title("Configure Auto-Start")
+        dialog.geometry("400x250")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        
+        # Center dialog
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
+        y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
+        dialog.geometry(f"+{x}+{y}")
+        
+        mode_var = IntVar(value=0)  # 0 = GUI, 1 = CLI
+        delay_var = IntVar(value=0)
+        
+        # Mode selection
+        mode_frame = Frame(dialog, padx=20, pady=10)
+        mode_frame.pack(fill='x')
+        
+        Label(mode_frame, text="Server Type:", font=("Arial", 10, "bold")).pack(anchor='w')
+        
+        Radiobutton(mode_frame, text="GUI Version (HandoverServer.exe)", 
+                   variable=mode_var, value=0, font=("Arial", 9)).pack(anchor='w', padx=(20, 0))
+        Label(mode_frame, text="  Shows a graphical window", 
+             font=("Arial", 8), fg="gray").pack(anchor='w', padx=(40, 0))
+        
+        Radiobutton(mode_frame, text="CLI Version (HandoverServerCLI.exe)", 
+                   variable=mode_var, value=1, font=("Arial", 9)).pack(anchor='w', padx=(20, 0), pady=(5, 0))
+        Label(mode_frame, text="  Terminal/command-line only", 
+             font=("Arial", 8), fg="gray").pack(anchor='w', padx=(40, 0))
+        
+        # Delay option
+        delay_frame = Frame(dialog, padx=20, pady=10)
+        delay_frame.pack(fill='x')
+        
+        Label(delay_frame, text="Startup Delay (seconds):", font=("Arial", 10, "bold")).pack(anchor='w')
+        delay_entry = Entry(delay_frame, width=10, font=("Arial", 10))
+        delay_entry.insert(0, "0")
+        delay_entry.pack(anchor='w', padx=(20, 0), pady=(5, 0))
+        Label(delay_frame, text="  Optional: Add delay after system startup (0 = no delay)", 
+             font=("Arial", 8), fg="gray").pack(anchor='w', padx=(20, 0))
+        
+        def save_auto_start():
+            try:
+                delay = int(delay_entry.get()) if delay_entry.get().strip() else 0
+                if delay < 0:
+                    raise ValueError("Delay must be >= 0")
+            except ValueError:
+                messagebox.showerror("Error", "Please enter a valid delay (0 or positive number)")
+                return
+            
+            gui_mode = (mode_var.get() == 0)
+            success, message = self.setup_auto_start(gui_mode, delay)
+            
+            if success:
+                messagebox.showinfo("Success", message)
+                self.log(f"Auto-start configured: {message}")
+                dialog.destroy()
+            else:
+                messagebox.showerror("Error", message)
+                self.log(f"Failed to setup auto-start: {message}")
+            
+            self.refresh_status()
+        
+        # Buttons
+        button_frame = Frame(dialog, padx=20, pady=10)
+        button_frame.pack(fill='x')
+        
+        Button(button_frame, text="Cancel", command=dialog.destroy,
+              padx=15, pady=5).pack(side='right', padx=(5, 0))
+        Button(button_frame, text="Save", command=save_auto_start,
+              bg="#4CAF50", fg="white", padx=15, pady=5).pack(side='right')
+    
+    def handle_firewall(self):
+        """Handles firewall port opening"""
+        if self.firewall_port:
+            # Just refresh status
+            self.refresh_status()
+            messagebox.showinfo("Info", f"Firewall port {self.firewall_port} is already open.")
+        else:
+            # Get port from entry
+            try:
+                port = int(self.port_entry.get())
+                if port < 1 or port > 65535:
+                    raise ValueError("Invalid port")
+            except ValueError:
+                messagebox.showerror("Error", "Please enter a valid port (1-65535)")
+                return
+            
+            if messagebox.askyesno("Open Firewall Port", 
+                                  f"This will open port {port} in Windows Firewall.\n\n"
+                                  "You may be prompted for administrator privileges.\n\n"
+                                  "Continue?"):
+                success, message = self.open_firewall_port(port)
+                if success:
+                    messagebox.showinfo("Success", message)
+                    self.log(f"Firewall configured: {message}")
+                else:
+                    messagebox.showerror("Error", message)
+                    self.log(f"Failed to open firewall: {message}")
+                self.refresh_status()
+    
+    def handle_refresh_ip(self):
+        """Refreshes local IP address"""
+        self.local_ip = self.get_local_ip()
+        self.update_server_config_ui()
+        if self.local_ip:
+            self.log(f"Local IP: {self.local_ip}")
+            messagebox.showinfo("Local IP", 
+                              f"Your computer's IP address:\n\n{self.local_ip}\n\n"
+                              f"Other computers can access the server at:\n"
+                              f"http://{self.local_ip}:{self.port}")
+        else:
+            self.log("Could not determine local IP address")
+            messagebox.showwarning("Warning", "Could not determine local IP address.")
     
     def on_closing(self):
         """Called when the window is closed"""
@@ -399,6 +877,68 @@ class ServerManager:
                                      padx=15, pady=10)
         open_browser_button.pack(side='left')
         
+        # Server Configuration Section
+        config_section_frame = Frame(main_frame, relief='groove', borderwidth=2, padx=10, pady=10)
+        config_section_frame.pack(fill='x', pady=(10, 10))
+        
+        section_title = Label(config_section_frame, text="Server Configuration", 
+                             font=("Arial", 12, "bold"))
+        section_title.pack(anchor='w', pady=(0, 10))
+        
+        # Auto-Start Configuration
+        auto_start_frame = Frame(config_section_frame)
+        auto_start_frame.pack(fill='x', pady=(0, 10))
+        
+        auto_start_label = Label(auto_start_frame, text="Auto-Start:", font=("Arial", 10, "bold"))
+        auto_start_label.pack(side='left', padx=(0, 10))
+        
+        self.auto_start_status_label = Label(auto_start_frame, text="Status: Checking...", 
+                                            font=("Arial", 9), fg="gray")
+        self.auto_start_status_label.pack(side='left', padx=(0, 10))
+        
+        self.auto_start_button = Button(auto_start_frame, text="Setup Auto-Start",
+                                        command=self.handle_auto_start,
+                                        font=("Arial", 9),
+                                        padx=10, pady=5)
+        self.auto_start_button.pack(side='left')
+        
+        # Firewall Configuration
+        firewall_frame = Frame(config_section_frame)
+        firewall_frame.pack(fill='x', pady=(0, 10))
+        
+        firewall_label = Label(firewall_frame, text="Firewall:", font=("Arial", 10, "bold"))
+        firewall_label.pack(side='left', padx=(0, 10))
+        
+        self.firewall_status_label = Label(firewall_frame, text="Status: Checking...", 
+                                          font=("Arial", 9), fg="gray")
+        self.firewall_status_label.pack(side='left', padx=(0, 10))
+        
+        self.firewall_button = Button(firewall_frame, text="Open Firewall Port",
+                                     command=self.handle_firewall,
+                                     font=("Arial", 9),
+                                     padx=10, pady=5)
+        self.firewall_button.pack(side='left')
+        
+        # IP Address
+        ip_frame = Frame(config_section_frame)
+        ip_frame.pack(fill='x', pady=(0, 5))
+        
+        self.ip_label = Label(ip_frame, text="Local IP: Checking...", 
+                            font=("Arial", 9))
+        self.ip_label.pack(side='left', padx=(0, 10))
+        
+        self.refresh_ip_button = Button(ip_frame, text="Refresh IP",
+                                       command=self.handle_refresh_ip,
+                                       font=("Arial", 9),
+                                       padx=10, pady=5)
+        self.refresh_ip_button.pack(side='left')
+        
+        refresh_all_button = Button(ip_frame, text="Refresh All Status",
+                                    command=self.refresh_status,
+                                    font=("Arial", 9),
+                                    padx=10, pady=5, bg="#FF9800", fg="white")
+        refresh_all_button.pack(side='right')
+        
         # Logs area
         log_label = Label(main_frame, text="Logs:", font=("Arial", 10, "bold"))
         log_label.pack(anchor='w', pady=(10, 5))
@@ -425,6 +965,9 @@ class ServerManager:
                 self.log(f"⚠️ {error}")
         else:
             self.log("✓ All necessary folders found")
+        
+        # Refresh server configuration status
+        self.refresh_status()
         
         # Update UI state
         self.update_ui_state()
