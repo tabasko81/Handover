@@ -494,93 +494,174 @@ export const cleanEmptyLinesOnSave = (html) => {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
   
-  // Get all block elements (p, div) and br tags
-  const allElements = [];
-  const walker = document.createTreeWalker(
-    tempDiv,
-    NodeFilter.SHOW_ELEMENT,
-    {
-      acceptNode: (node) => {
-        if (node.tagName === 'P' || node.tagName === 'DIV' || node.tagName === 'BR') {
-          return NodeFilter.FILTER_ACCEPT;
-        }
-        return NodeFilter.FILTER_SKIP;
-      }
-    }
-  );
-  
-  let node;
-  while ((node = walker.nextNode())) {
-    allElements.push(node);
-  }
-  
-  // Process elements to identify empty vs non-empty
-  const processedElements = allElements.map(el => {
+  // Helper function to check if an element is empty
+  const isEmptyElement = (el) => {
+    if (!el) return false;
     const textContent = el.textContent || '';
     const innerHTML = el.innerHTML || '';
-    const isEmpty = !textContent.trim() && 
-                    (!innerHTML || innerHTML.match(/^[\s\u00A0\u200B-\u200D\uFEFF]*$/));
-    
-    return { element: el, isEmpty, isBr: el.tagName === 'BR' };
-  });
+    // Check if it's truly empty (no text, or only whitespace/&nbsp;/zero-width spaces)
+    return !textContent.trim() && 
+           (!innerHTML || innerHTML.match(/^[\s\u00A0\u200B-\u200D\uFEFF]*$/));
+  };
   
-  // Remove empty lines, but keep up to 3 consecutive empty lines between non-empty content
+  // First, remove all empty lines at the start
+  while (tempDiv.firstChild) {
+    const firstChild = tempDiv.firstChild;
+    if (firstChild.nodeType === Node.ELEMENT_NODE) {
+      if (isEmptyElement(firstChild) && (firstChild.tagName === 'P' || firstChild.tagName === 'DIV' || firstChild.tagName === 'BR')) {
+        tempDiv.removeChild(firstChild);
+        continue;
+      }
+    } else if (firstChild.nodeType === Node.TEXT_NODE) {
+      if (!firstChild.textContent.trim()) {
+        tempDiv.removeChild(firstChild);
+        continue;
+      }
+    }
+    break;
+  }
+  
+  // Then, remove all empty lines at the end
+  while (tempDiv.lastChild) {
+    const lastChild = tempDiv.lastChild;
+    if (lastChild.nodeType === Node.ELEMENT_NODE) {
+      if (isEmptyElement(lastChild) && (lastChild.tagName === 'P' || lastChild.tagName === 'DIV' || lastChild.tagName === 'BR')) {
+        tempDiv.removeChild(lastChild);
+        continue;
+      }
+    } else if (lastChild.nodeType === Node.TEXT_NODE) {
+      if (!lastChild.textContent.trim()) {
+        tempDiv.removeChild(lastChild);
+        continue;
+      }
+    }
+    break;
+  }
+  
+  // Now process the middle content - get all direct children
+  const children = Array.from(tempDiv.childNodes);
+  const processedChildren = [];
   let emptyLineCount = 0;
   let lastWasEmpty = false;
   
-  processedElements.forEach(({ element, isEmpty, isBr }) => {
-    if (isEmpty) {
-      if (lastWasEmpty) {
-        emptyLineCount++;
-        // If we have more than 3 consecutive empty lines, remove this one
-        if (emptyLineCount > 3) {
-          element.remove();
+  children.forEach((child) => {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      const isEmpty = isEmptyElement(child) && (child.tagName === 'P' || child.tagName === 'DIV' || child.tagName === 'BR');
+      
+      if (isEmpty) {
+        if (lastWasEmpty) {
+          emptyLineCount++;
+          // If we have more than 3 consecutive empty lines, skip this one
+          if (emptyLineCount > 3) {
+            return; // Skip this element
+          }
+        } else {
+          // First empty line after non-empty - keep it (count as 1)
+          emptyLineCount = 1;
+          lastWasEmpty = true;
         }
+        processedChildren.push(child);
       } else {
-        // First empty line after non-empty - keep it (count as 1)
-        emptyLineCount = 1;
-        lastWasEmpty = true;
+        // Non-empty line - reset counter
+        emptyLineCount = 0;
+        lastWasEmpty = false;
+        processedChildren.push(child);
+      }
+    } else if (child.nodeType === Node.TEXT_NODE) {
+      // Text nodes - keep if not empty
+      if (child.textContent.trim()) {
+        processedChildren.push(child);
+        emptyLineCount = 0;
+        lastWasEmpty = false;
       }
     } else {
-      // Non-empty line - reset counter
-      emptyLineCount = 0;
-      lastWasEmpty = false;
+      // Other node types - keep them
+      processedChildren.push(child);
     }
   });
   
-  // Remove empty lines at the start and end
-  let firstElement = tempDiv.firstElementChild;
-  while (firstElement) {
-    const textContent = firstElement.textContent || '';
-    const innerHTML = firstElement.innerHTML || '';
-    const isEmpty = !textContent.trim() && 
-                    (!innerHTML || innerHTML.match(/^[\s\u00A0\u200B-\u200D\uFEFF]*$/));
-    
-    if (isEmpty && (firstElement.tagName === 'P' || firstElement.tagName === 'DIV' || firstElement.tagName === 'BR')) {
-      const toRemove = firstElement;
-      firstElement = firstElement.nextElementSibling;
-      toRemove.remove();
-    } else {
-      break;
+  // Rebuild the div with processed children
+  tempDiv.innerHTML = '';
+  processedChildren.forEach(child => {
+    tempDiv.appendChild(child);
+  });
+  
+  // Final pass: aggressively remove ALL empty lines at start and end
+  // Keep removing until we find a non-empty element
+  let removed = true;
+  while (removed && tempDiv.firstChild) {
+    removed = false;
+    const firstChild = tempDiv.firstChild;
+    if (firstChild.nodeType === Node.ELEMENT_NODE) {
+      if (isEmptyElement(firstChild) && (firstChild.tagName === 'P' || firstChild.tagName === 'DIV' || firstChild.tagName === 'BR')) {
+        tempDiv.removeChild(firstChild);
+        removed = true;
+      }
+    } else if (firstChild.nodeType === Node.TEXT_NODE) {
+      if (!firstChild.textContent.trim()) {
+        tempDiv.removeChild(firstChild);
+        removed = true;
+      }
     }
   }
   
-  // Remove empty lines at the end
-  let lastElement = tempDiv.lastElementChild;
-  while (lastElement) {
-    const textContent = lastElement.textContent || '';
-    const innerHTML = lastElement.innerHTML || '';
-    const isEmpty = !textContent.trim() && 
-                    (!innerHTML || innerHTML.match(/^[\s\u00A0\u200B-\u200D\uFEFF]*$/));
-    
-    if (isEmpty && (lastElement.tagName === 'P' || lastElement.tagName === 'DIV' || lastElement.tagName === 'BR')) {
-      const toRemove = lastElement;
-      lastElement = lastElement.previousElementSibling;
-      toRemove.remove();
-    } else {
-      break;
+  removed = true;
+  while (removed && tempDiv.lastChild) {
+    removed = false;
+    const lastChild = tempDiv.lastChild;
+    if (lastChild.nodeType === Node.ELEMENT_NODE) {
+      if (isEmptyElement(lastChild) && (lastChild.tagName === 'P' || lastChild.tagName === 'DIV' || lastChild.tagName === 'BR')) {
+        tempDiv.removeChild(lastChild);
+        removed = true;
+      }
+    } else if (lastChild.nodeType === Node.TEXT_NODE) {
+      if (!lastChild.textContent.trim()) {
+        tempDiv.removeChild(lastChild);
+        removed = true;
+      }
     }
   }
+  
+  // Also check and remove empty <br> tags that might be at the end
+  const allBrTags = tempDiv.querySelectorAll('br');
+  allBrTags.forEach(br => {
+    // Check if this <br> is at the end (no non-empty content after it)
+    let node = br.nextSibling;
+    let hasContentAfter = false;
+    while (node) {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        hasContentAfter = true;
+        break;
+      }
+      if (node.nodeType === Node.ELEMENT_NODE && !isEmptyElement(node)) {
+        hasContentAfter = true;
+        break;
+      }
+      node = node.nextSibling;
+    }
+    
+    // If no content after and this is one of the last elements, remove it
+    if (!hasContentAfter) {
+      // Check if it's really at the end
+      let isAtEnd = true;
+      node = br;
+      while (node && node.parentNode === tempDiv) {
+        node = node.nextSibling;
+        if (node && node.nodeType === Node.ELEMENT_NODE && !isEmptyElement(node)) {
+          isAtEnd = false;
+          break;
+        }
+        if (node && node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          isAtEnd = false;
+          break;
+        }
+      }
+      
+      if (isAtEnd) {
+        br.remove();
+      }
+    }
+  });
   
   return tempDiv.innerHTML;
 };
