@@ -148,6 +148,29 @@ export function parseMarkdown(text) {
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
   html = html.replace(/_(.+?)_/g, '<em>$1</em>');
 
+  // Auto-detect URLs and convert to links (but not emails)
+  // This regex matches URLs but excludes email addresses
+  html = html.replace(/(?:^|>|[\s])((?:https?:\/\/|www\.)[^\s<>@]+(?:\.[^\s<>@]+)*)/gi, (match, url, offset, string) => {
+    // Check if this is part of an email (has @ before it)
+    const matchIndex = string.indexOf(match);
+    const beforeMatch = string.substring(Math.max(0, matchIndex - 50), matchIndex);
+    
+    // If there's an @ before this and it looks like an email, don't convert
+    if (beforeMatch.includes('@') && /[\w.-]+@/.test(beforeMatch)) {
+      return match; // Return as-is, it's likely part of an email
+    }
+    
+    // Ensure URL has protocol
+    let fullUrl = url.trim();
+    if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+      fullUrl = 'https://' + fullUrl;
+    }
+    
+    // Create link
+    const prefix = match.startsWith(' ') ? ' ' : (match.startsWith('>') ? '>' : '');
+    return prefix + `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
+  });
+
   // Links [text](url) - validate URL before creating link
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
     // Validate URL - only allow http:// and https://

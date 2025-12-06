@@ -28,6 +28,86 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
     }
   }, [value]);
 
+  // Function to detect URLs and convert them to links (but not emails)
+  const detectAndLinkUrls = (text) => {
+    // URL regex pattern - matches http://, https://, www., or domain patterns
+    // But excludes email addresses (text before @)
+    const urlPattern = /(?:^|[\s>])((?:https?:\/\/|www\.)[^\s<>@]+(?:\.[^\s<>@]+)*)/gi;
+    
+    return text.replace(urlPattern, (match, url, offset, string) => {
+      // Check if this is part of an email (has @ before it)
+      const matchIndex = offset;
+      const beforeMatch = string.substring(Math.max(0, matchIndex - 50), matchIndex);
+      
+      // If there's an @ before this and it looks like an email, don't convert
+      if (beforeMatch.includes('@') && /[\w.-]+@/.test(beforeMatch)) {
+        return match; // Return as-is, it's likely part of an email
+      }
+      
+      // Ensure URL has protocol
+      let fullUrl = url.trim();
+      if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+        fullUrl = 'https://' + fullUrl;
+      }
+      
+      // Create link
+      const prefix = match.startsWith(' ') ? ' ' : (match.startsWith('>') ? '>' : '');
+      return prefix + `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
+    });
+  };
+
+  // Function to remove empty lines (paragraphs with only whitespace)
+  const removeEmptyLines = (html) => {
+    // Remove empty <p> tags or <p> tags with only whitespace/&nbsp;
+    return html
+      .replace(/<p[^>]*>\s*(&nbsp;|\u00A0|\s)*<\/p>/gi, '')
+      .replace(/<p[^>]*>\s*(&nbsp;|\u00A0|\s)*<\/p>/gi, '') // Run twice to catch nested cases
+      .replace(/<div[^>]*>\s*(&nbsp;|\u00A0|\s)*<\/div>/gi, '');
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    
+    // Get pasted text
+    const pastedText = (e.clipboardData || window.clipboardData).getData('text/plain');
+    
+    if (!pastedText) return;
+    
+    // Detect URLs and convert to links
+    let processedText = detectAndLinkUrls(pastedText);
+    
+    // Remove empty lines
+    processedText = removeEmptyLines(processedText);
+    
+    // Insert processed text at cursor position
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      
+      // Create a temporary div to parse the HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = processedText;
+      
+      // Insert nodes
+      const fragment = document.createDocumentFragment();
+      while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+      }
+      
+      range.insertNode(fragment);
+      
+      // Move cursor to end of inserted content
+      range.setStartAfter(fragment.lastChild || range.startContainer);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      // Trigger input event to update state
+      handleInput();
+    }
+  };
+
   const handleInput = () => {
     if (!editorRef.current) return;
     
@@ -35,6 +115,9 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
     document.execCommand('defaultParagraphSeparator', false, 'p');
     
     let html = editorRef.current.innerHTML;
+    
+    // Remove empty lines
+    html = removeEmptyLines(html);
     
     // Count text characters (excluding HTML tags)
     const textContent = editorRef.current.textContent || '';
@@ -333,6 +416,7 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
           ref={editorRef}
           contentEditable
           onInput={handleInput}
+          onPaste={handlePaste}
           onFocus={() => {
             // Ensure paragraph separator is set when focused
             document.execCommand('defaultParagraphSeparator', false, 'p');
