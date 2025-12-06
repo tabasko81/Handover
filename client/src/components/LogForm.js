@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import RichTextEditor from './RichTextEditor';
+import RichTextEditor, { cleanEmptyLinesOnSave } from './RichTextEditor';
 
 const COLOR_OPTIONS = [
   { value: '', label: 'None', className: 'bg-white' },
@@ -126,8 +126,13 @@ function LogForm({ log, onSubmit, onClose }) {
       const reminderDateTime = setReminder && formData.reminder_date 
         ? new Date(formData.reminder_date).toISOString() 
         : null;
+      
+      // Clean empty lines from note before saving (allow up to 3 empty lines between text)
+      const cleanedNote = cleanEmptyLinesOnSave(formData.note || '');
+      
       await onSubmit({
         ...formData,
+        note: cleanedNote,
         log_date: dateTime,
         worker_name: formData.worker_name.toUpperCase().trim(),
         reminder_date: reminderDateTime
