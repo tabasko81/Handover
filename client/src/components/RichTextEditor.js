@@ -58,11 +58,64 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
 
   // Function to remove empty lines (paragraphs with only whitespace)
   const removeEmptyLines = (html) => {
-    // Remove empty <p> tags or <p> tags with only whitespace/&nbsp;
-    return html
-      .replace(/<p[^>]*>\s*(&nbsp;|\u00A0|\s)*<\/p>/gi, '')
-      .replace(/<p[^>]*>\s*(&nbsp;|\u00A0|\s)*<\/p>/gi, '') // Run twice to catch nested cases
-      .replace(/<div[^>]*>\s*(&nbsp;|\u00A0|\s)*<\/div>/gi, '');
+    if (!html) return html;
+    
+    // Create a temporary DOM element to process HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Find and remove empty elements
+    const emptyElements = tempDiv.querySelectorAll('p, div, br');
+    emptyElements.forEach((el) => {
+      // Check if element is empty or contains only whitespace/&nbsp;
+      const textContent = el.textContent || '';
+      const innerHTML = el.innerHTML || '';
+      
+      // Check if it's truly empty (no text, or only whitespace/&nbsp;/zero-width spaces)
+      const isEmpty = !textContent.trim() && 
+                      (!innerHTML || innerHTML.match(/^[\s\u00A0\u200B-\u200D\uFEFF]*$/));
+      
+      if (isEmpty) {
+        // For <br> tags, just remove them
+        if (el.tagName === 'BR') {
+          el.remove();
+        } else {
+          // For <p> and <div>, remove the element but preserve its children if any
+          const parent = el.parentNode;
+          while (el.firstChild) {
+            parent.insertBefore(el.firstChild, el);
+          }
+          parent.removeChild(el);
+        }
+      }
+    });
+    
+    // Also remove consecutive <br> tags
+    const brs = tempDiv.querySelectorAll('br');
+    let previousBr = null;
+    brs.forEach((br) => {
+      if (previousBr && br.previousSibling === previousBr) {
+        br.remove();
+      } else {
+        previousBr = br;
+      }
+    });
+    
+    return tempDiv.innerHTML;
+  };
+  
+  // Function to remove empty lines from plain text (for paste)
+  const removeEmptyLinesFromText = (text) => {
+    if (!text) return text;
+    
+    // Split by newlines and filter out empty lines
+    const lines = text.split(/\r?\n/);
+    const filteredLines = lines.filter(line => {
+      // Remove lines that are empty or contain only whitespace
+      return line.trim().length > 0;
+    });
+    
+    return filteredLines.join('\n');
   };
 
   const handlePaste = (e) => {
@@ -73,11 +126,11 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
     
     if (!pastedText) return;
     
-    // Detect URLs and convert to links
-    let processedText = detectAndLinkUrls(pastedText);
+    // Remove empty lines from text first
+    let processedText = removeEmptyLinesFromText(pastedText);
     
-    // Remove empty lines
-    processedText = removeEmptyLines(processedText);
+    // Detect URLs and convert to links
+    processedText = detectAndLinkUrls(processedText);
     
     // Insert processed text at cursor position
     const selection = window.getSelection();
@@ -88,6 +141,10 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
       // Create a temporary div to parse the HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = processedText;
+      
+      // Remove empty lines from the HTML structure
+      const cleanedHTML = removeEmptyLines(tempDiv.innerHTML);
+      tempDiv.innerHTML = cleanedHTML;
       
       // Insert nodes
       const fragment = document.createDocumentFragment();
@@ -116,8 +173,49 @@ function RichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' })
     
     let html = editorRef.current.innerHTML;
     
-    // Remove empty lines
+    // Remove empty lines from the HTML
     html = removeEmptyLines(html);
+    
+    // Update the editor content if it changed
+    if (html !== editorRef.current.innerHTML) {
+      const selection = window.getSelection();
+      const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+      const cursorPosition = range ? range.startOffset : 0;
+      
+      editorRef.current.innerHTML = html;
+      
+      // Try to restore cursor position
+      if (range) {
+        try {
+          const newRange = document.createRange();
+          const textNodes = [];
+          const walker = document.createTreeWalker(
+            editorRef.current,
+            NodeFilter.SHOW_TEXT,
+            null
+          );
+          let node;
+          while ((node = walker.nextNode())) {
+            textNodes.push(node);
+          }
+          
+          if (textNodes.length > 0) {
+            const targetNode = textNodes[Math.min(cursorPosition, textNodes.length - 1)];
+            newRange.setStart(targetNode, Math.min(cursorPosition, targetNode.textContent.length));
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          }
+        } catch (e) {
+          // If cursor restoration fails, just set cursor to end
+          const newRange = document.createRange();
+          newRange.selectNodeContents(editorRef.current);
+          newRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      }
+    }
     
     // Count text characters (excluding HTML tags)
     const textContent = editorRef.current.textContent || '';
