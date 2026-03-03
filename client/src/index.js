@@ -5,6 +5,14 @@ import './index.css';
 import App from './App';
 import Backoffice from './pages/Backoffice';
 
+// Init Daynight theme (light/dark) - sync body with html
+const savedTheme = localStorage.getItem('daynight-theme');
+if (savedTheme === 'carbon') {
+  document.body.classList.add('carbon');
+} else {
+  document.body.classList.remove('carbon');
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

@@ -8,6 +8,7 @@ import UserLoginForm from './components/UserLoginForm';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import Footer from './components/Footer';
 import { fetchLogs, createLog, updateLog, archiveLog, deleteLog } from './services/api';
+import { formatDateTime } from './utils/dateFormat';
 import { fetchPublicConfig } from './services/configApi';
 import { userLogin, verifyUserToken } from './services/authApi';
 
@@ -298,14 +299,14 @@ function App() {
   const handlePrint = (logsToPrint) => {
     const printWindow = window.open('', '_blank');
     
-    // Format date and time as yyyy.mm.dd_hhmm
+    // Format date and time as dd.mm.yyyy_hhmm (German format)
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
     const hours = String(today.getHours()).padStart(2, '0');
     const minutes = String(today.getMinutes()).padStart(2, '0');
-    const dateFormatted = `${year}.${month}.${day}_${hours}${minutes}`;
+    const dateFormatted = `${day}.${month}.${year}_${hours}${minutes}`;
     
     // Get page name from state or localStorage
     const currentPageName = pageName || localStorage.getItem('page_name') || 'Shift Handover Log';
@@ -334,8 +335,8 @@ function App() {
       <body>
         <h1>${printTitle}</h1>
         <div class="info">
-          Date: ${new Date().toLocaleDateString('en-GB')}<br>
-          Generated: ${new Date().toLocaleString('en-GB')}<br>
+          Date: ${new Date().toLocaleDateString('de-DE')}<br>
+          Generated: ${new Date().toLocaleString('de-DE')}<br>
           Total Entries: ${logsToPrint.length}
         </div>
         <table>
@@ -382,24 +383,13 @@ function App() {
     }
   };
 
-  const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-GB', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Show loading while checking authentication
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="login-page">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" />
+          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Loading...</p>
         </div>
       </div>
     );
@@ -416,30 +406,31 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-container">
       <InfoSlide />
       <Header />
       
-      <main className="container mx-auto px-4 py-6">
+      <main className="main-content">
         {error && (
-          <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="alert alert-error">
             {error}
           </div>
         )}
 
         {showNewLogsNotification && newLogsCount > 0 && (
-          <div className="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded flex items-center justify-between">
+          <div className="alert alert-info flex items-center justify-between">
             <div className="flex items-center">
               <span className="text-lg mr-2">🔔</span>
               <span>
-                {newLogsCount} new log{newLogsCount > 1 ? 's' : ''} available. 
+                {newLogsCount} new log{newLogsCount > 1 ? 's' : ''} available.
                 <button
                   onClick={() => {
                     setShowNewLogsNotification(false);
                     setNewLogsCount(0);
                     loadLogs();
                   }}
-                  className="ml-2 text-blue-800 font-semibold underline hover:no-underline"
+                  className="ml-2 font-semibold underline hover:no-underline"
+                  style={{ color: 'var(--accent)' }}
                 >
                   Refresh to view
                 </button>
@@ -450,7 +441,8 @@ function App() {
                 setShowNewLogsNotification(false);
                 setNewLogsCount(0);
               }}
-              className="text-blue-700 hover:text-blue-900 text-xl leading-none"
+              className="text-xl leading-none"
+              style={{ color: 'var(--text-secondary)' }}
               title="Dismiss notification"
             >
               ×
@@ -458,22 +450,25 @@ function App() {
           </div>
         )}
 
-        <div className="mb-6">
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-white font-bold py-2 px-4 rounded shadow hover:opacity-90"
-            style={{ backgroundColor: 'var(--header-color)' }}
-            title="Create a new log entry with date, description, note, worker name, and optional color coding"
-          >
-            Create New Log
-          </button>
-        </div>
-
-        <Filters
-          filters={filters}
-          onFilterChange={handleFilterChange}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', gap: '0.5rem' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Filters
+            filters={filters}
+            onFilterChange={handleFilterChange}
           onToggleArchived={() => handleFilterChange({ ...filters, archived: !filters.archived })}
         />
+          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-add-log"
+            title="Create new log entry"
+          >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        </div>
 
         {showForm && (
           <LogForm
@@ -502,21 +497,21 @@ function App() {
         />
 
         {pagination.total_pages > 1 && (
-          <div className="mt-6 flex justify-center items-center space-x-2">
+          <div className="mt-6 flex justify-center items-center gap-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-400"
+              className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
-            <span className="px-4 py-2">
+            <span style={{ padding: '0.5rem 1rem', color: 'var(--text-secondary)' }}>
               Page {pagination.current_page} of {pagination.total_pages}
             </span>
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= pagination.total_pages}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-400"
+              className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

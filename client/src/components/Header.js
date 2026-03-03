@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { fetchPublicConfig } from '../services/configApi';
+import ThemeToggle from './ThemeToggle';
 
 function Header() {
   const location = useLocation();
@@ -193,7 +194,7 @@ function Header() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const formattedDateTime = currentDateTime.toLocaleString('en-GB', {
+  const formattedDateTime = currentDateTime.toLocaleString('de-DE', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -251,6 +252,7 @@ function Header() {
             )}
           </div>
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             <div className="text-sm md:text-base font-mono">
               {formattedDateTime}
             </div>

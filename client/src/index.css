@@ -1,18 +1,13 @@
+@import './daynight-style.css';
+
+/* Tailwind utilities - minimal for layout helpers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Header color from admin config - overrides when set */
 :root {
-  --header-color: #2563eb; /* Default blue-600 */
-}
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --header-color: #2563eb;
 }
 
 code {

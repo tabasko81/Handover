@@ -11,18 +11,18 @@ function DeleteConfirmationModal({ isOpen, onConfirm, onCancel, logInfo }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="modal-backdrop"
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full"
+        className="modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6">
-          <div className="flex items-center mb-4">
-            <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+        <div style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ flexShrink: 0, width: '48px', height: '48px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg
-                className="w-6 h-6 text-red-600"
+                style={{ width: '24px', height: '24px', color: 'var(--danger)' }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -35,37 +35,37 @@ function DeleteConfirmationModal({ isOpen, onConfirm, onCancel, logInfo }) {
                 />
               </svg>
             </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-gray-900">Delete Log Entry</h3>
-              <p className="text-sm text-gray-500">This action cannot be undone</p>
+            <div style={{ marginLeft: '1rem' }}>
+              <h3 className="card-title" style={{ margin: 0 }}>Delete Log Entry</h3>
+              <p className="card-subtitle" style={{ margin: 0 }}>This action cannot be undone</p>
             </div>
           </div>
 
           {logInfo && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-700">
-                <strong>Date:</strong> {new Date(logInfo.log_date).toLocaleString()}
+            <div className="card" style={{ marginBottom: '1rem', padding: '0.75rem' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                <strong>Date:</strong> {new Date(logInfo.log_date).toLocaleString('de-DE')}
               </p>
-              <p className="text-sm text-gray-700">
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                 <strong>Description:</strong> {logInfo.short_description}
               </p>
             </div>
           )}
 
-          <p className="text-gray-700 mb-6">
+          <p style={{ color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
             Are you sure you want to delete this log entry? This action cannot be undone.
           </p>
 
-          <div className="flex justify-end space-x-3">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
             <button
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              className="btn btn-secondary"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              className="btn btn-danger"
             >
               Delete
             </button>

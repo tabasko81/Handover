@@ -144,10 +144,10 @@ function Backoffice() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="login-page">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" />
+          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>Loading...</p>
         </div>
       </div>
     );
@@ -174,106 +174,97 @@ function Backoffice() {
     switch (activeTab) {
       case 'look-and-feel':
         return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Page Name
-              </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="form-group">
+              <label className="form-label">Page Name</label>
               <input
                 type="text"
                 value={config.page_name}
                 onChange={(e) => handleChange('page_name', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="form-input"
                 placeholder="Enter page name"
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="card-subtitle" style={{ marginTop: '0.25rem' }}>
                 This name will be displayed in the header
               </p>
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Appearance</h3>
+            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+              <h3 className="card-title" style={{ marginBottom: '1rem' }}>Appearance</h3>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Header Color
-                </label>
-                <div className="flex items-center space-x-3">
+              <div className="form-group">
+                <label className="form-label">Header Color</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <input
                     type="color"
                     value={config.header_color}
                     onChange={(e) => handleChange('header_color', e.target.value)}
-                    className="w-12 h-12 p-1 rounded border border-gray-300 cursor-pointer"
+                    className="form-input"
+                    style={{ width: '48px', height: '48px', padding: '4px', cursor: 'pointer' }}
                     title="Choose header color"
                   />
                   <input
                     type="text"
                     value={config.header_color}
                     onChange={(e) => handleChange('header_color', e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                    className="form-input"
+                    style={{ width: '120px', textTransform: 'uppercase' }}
                     placeholder="#2563eb"
                     maxLength={7}
                   />
                   <button
                     type="button"
                     onClick={() => handleChange('header_color', '#2563eb')}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="btn btn-ghost"
                   >
                     Reset to Default
                   </button>
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="card-subtitle" style={{ marginTop: '0.25rem' }}>
                   Choose a custom color for the top header bar. This color will also be applied to buttons throughout the application.
                 </p>
               </div>
 
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Header Logo / Emoji
-                </label>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="form-group" style={{ marginTop: '1.5rem' }}>
+                <label className="form-label">Header Logo / Emoji</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input
                         type="radio"
                         name="logo_type"
                         value="none"
                         checked={config.header_logo_type === 'none'}
                         onChange={(e) => handleChange('header_logo_type', e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">None</span>
+                      <span className="card-subtitle" style={{ margin: 0 }}>None</span>
                     </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input
                         type="radio"
                         name="logo_type"
                         value="image"
                         checked={config.header_logo_type === 'image'}
                         onChange={(e) => handleChange('header_logo_type', e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">Image</span>
+                      <span className="card-subtitle" style={{ margin: 0 }}>Image</span>
                     </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                       <input
                         type="radio"
                         name="logo_type"
                         value="emoji"
                         checked={config.header_logo_type === 'emoji'}
                         onChange={(e) => handleChange('header_logo_type', e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">Emoji</span>
+                      <span className="card-subtitle" style={{ margin: 0 }}>Emoji</span>
                     </label>
                   </div>
 
                   {config.header_logo_type === 'image' && (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Upload Logo
-                        </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Upload Logo</label>
                         <input
                           type="file"
                           accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml,image/webp"
@@ -297,35 +288,33 @@ function Backoffice() {
                               }
                             }
                           }}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          className="form-input"
                           disabled={uploadingLogo}
                         />
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="card-subtitle" style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
                           Supported formats: JPG, PNG, GIF, SVG, WebP. Max size: 2MB
                         </p>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Or enter image URL
-                        </label>
+                      <div className="form-group">
+                        <label className="form-label">Or enter image URL</label>
                         <input
                           type="text"
                           value={config.header_logo_image}
                           onChange={(e) => handleChange('header_logo_image', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="form-input"
                           placeholder="https://example.com/logo.png"
                         />
                       </div>
                       {config.header_logo_image && (
-                        <div className="mt-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                        <div className="form-group">
+                          <p className="form-label">Preview:</p>
                           <div className="flex items-center space-x-3">
                             <img
                               src={config.header_logo_image.startsWith('http') || config.header_logo_image.startsWith('/') 
                                 ? config.header_logo_image 
                                 : `${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:8500'}${config.header_logo_image}`}
                               alt="Logo preview"
-                              className="h-12 w-auto border border-gray-300 rounded"
+                              style={{ height: '48px', width: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}
                               onError={(e) => {
                                 e.target.style.display = 'none';
                               }}
@@ -345,7 +334,8 @@ function Backoffice() {
                                   }
                                 }
                               }}
-                              className="px-3 py-1 text-sm text-red-600 hover:text-red-800 underline"
+                              className="btn btn-ghost"
+                              style={{ color: 'var(--danger)', padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
                             >
                               Remove Logo
                             </button>
@@ -356,46 +346,46 @@ function Backoffice() {
                   )}
 
                   {config.header_logo_type === 'emoji' && (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Emoji
-                        </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Emoji</label>
                         <input
                           type="text"
                           value={config.header_logo_emoji}
                           onChange={(e) => handleChange('header_logo_emoji', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-2xl"
+                          className="form-input"
+                          style={{ fontSize: '1.5rem' }}
                           placeholder="🏨"
                           maxLength={10}
                         />
-                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                          <p className="text-sm font-medium text-blue-900 mb-1">
+                        <div className="card" style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--accent-light)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                          <p className="card-title" style={{ marginBottom: '0.25rem', color: 'var(--accent)' }}>
                             How to add an emoji:
                           </p>
-                          <ol className="text-xs text-blue-800 list-decimal list-inside space-y-1">
-                            <li>Visit <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Emojipedia.org</a> to browse emojis</li>
+                          <ol className="card-subtitle" style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                            <li>Visit <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Emojipedia.org</a> to browse emojis</li>
                             <li>Click on any emoji you like</li>
                             <li>Click the "Copy" button below the emoji</li>
                             <li>Paste it into the field above (Ctrl+V or right-click → Paste)</li>
                           </ol>
                         </div>
-                        <p className="mt-2 text-sm text-gray-500">
+                        <p className="card-subtitle" style={{ marginTop: '0.5rem' }}>
                           Enter an emoji or text to display next to the page title
                         </p>
                       </div>
                       {config.header_logo_emoji && (
-                        <div className="mt-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
-                          <div className="flex items-center space-x-3">
-                            <span className="text-3xl">{config.header_logo_emoji}</span>
+                        <div className="form-group">
+                          <p className="form-label">Preview:</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span style={{ fontSize: '1.875rem' }}>{config.header_logo_emoji}</span>
                             <button
                               type="button"
                               onClick={() => {
                                 handleChange('header_logo_emoji', '');
                                 handleChange('header_logo_type', 'none');
                               }}
-                              className="px-3 py-1 text-sm text-red-600 hover:text-red-800 underline"
+                              className="btn btn-ghost"
+                              style={{ color: 'var(--danger)', padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
                             >
                               Remove Emoji
                             </button>
@@ -408,12 +398,11 @@ function Backoffice() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
+            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--header-color)' }}
+                className="btn btn-header"
                 title="Save all configuration changes - page name, header color, logo settings, and other preferences"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
@@ -424,28 +413,25 @@ function Backoffice() {
 
       case 'permanent-info':
         return (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Permanent Information
-              </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="form-group">
+              <label className="form-label">Permanent Information</label>
               <RichTextEditor
                 value={config.permanent_info || ''}
                 onChange={(html) => handleChange('permanent_info', html)}
                 maxLength={5000}
                 placeholder="Enter permanent information that will be visible in the info panel... Use @user or @all to mention someone."
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="card-subtitle" style={{ marginTop: '0.25rem' }}>
                 This information will be displayed in the permanent info slide (accessible via the (i) button on the left). Use the formatting buttons to format the text.
               </p>
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
+            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--header-color)' }}
+                className="btn btn-header"
                 title="Save all configuration changes - page name, header color, logo settings, and other preferences"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
@@ -456,34 +442,28 @@ function Backoffice() {
 
       case 'login-settings':
         return (
-          <div className="space-y-6">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Login Settings</h3>
+              <h3 className="card-title" style={{ marginBottom: '1rem' }}>Login Settings</h3>
               
-              <div className="mb-4">
-                <label className="flex items-center space-x-3 cursor-pointer">
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={config.login_expiry_enabled}
                     onChange={(e) => handleChange('login_expiry_enabled', e.target.checked)}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    style={{ marginTop: '0.25rem' }}
                   />
                   <div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Enable Login Expiry
-                    </span>
-                    <p className="text-sm text-gray-500">
-                      When enabled, users must re-login after the set time period
-                    </p>
+                    <span className="form-label" style={{ marginBottom: '0.25rem' }}>Enable Login Expiry</span>
+                    <p className="card-subtitle" style={{ margin: 0 }}>When enabled, users must re-login after the set time period</p>
                   </div>
                 </label>
               </div>
 
               {config.login_expiry_enabled && (
-                <div className="pl-8 border-l-2 border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Login Expiry (Hours)
-                  </label>
+                <div className="form-group" style={{ paddingLeft: '1.5rem', borderLeft: '2px solid var(--border-color)' }}>
+                  <label className="form-label">Login Expiry (Hours)</label>
                   <input
                     type="number"
                     value={config.login_expiry_hours}
@@ -495,29 +475,28 @@ function Backoffice() {
                     }}
                     min="1"
                     max="168"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="form-input"
                   />
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="card-subtitle" style={{ marginTop: '0.25rem' }}>
                     How long the login session lasts. Range: 1 hour to 168 hours (1 week). Default: 24 hours.
                   </p>
                 </div>
               )}
 
               {!config.login_expiry_enabled && (
-                <div className="pl-8 border-l-2 border-gray-200">
-                  <p className="text-sm text-gray-500 italic">
+                <div style={{ paddingLeft: '1.5rem', borderLeft: '2px solid var(--border-color)' }}>
+                  <p className="card-subtitle" style={{ fontStyle: 'italic' }}>
                     Login sessions will not expire. Users will remain logged in until they manually log out.
                   </p>
                 </div>
               )}
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
+            <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--header-color)' }}
+                className="btn btn-header"
                 title="Save all configuration changes - page name, header color, logo settings, and other preferences"
               >
                 {saving ? 'Saving...' : 'Save Configuration'}
@@ -539,59 +518,46 @@ function Backoffice() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="app-container">
       <Header />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg shadow">
-            {/* Header with Logout */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-              <h1 className="text-2xl font-bold">Backoffice Configuration</h1>
+      <div className="main-content">
+        <div className="card" style={{ maxWidth: '900px', margin: '0 auto' }}>
+          {/* Header with Logout */}
+          <div className="card-header" style={{ borderBottom: '1px solid var(--border-color)' }}>
+            <h1 className="greeting" style={{ margin: 0, fontSize: '1.5rem' }}>Backoffice Configuration</h1>
+            <button
+              onClick={handleLogout}
+              className="btn btn-danger"
+            >
+              Logout
+            </button>
+          </div>
+
+          {/* Horizontal Menu Tabs */}
+          <div className="settings-nav" style={{ marginBottom: 0, padding: '0 1.5rem' }}>
+            {tabs.map((tab) => (
               <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`settings-nav-link ${activeTab === tab.id ? 'active' : ''}`}
               >
-                Logout
+                {tab.label}
               </button>
-            </div>
+            ))}
+          </div>
 
-            {/* Horizontal Menu Tabs */}
-            <div className="border-b border-gray-200">
-              <nav className="flex space-x-1 px-6" aria-label="Tabs">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`
-                      px-6 py-4 text-sm font-medium border-b-2 transition-colors
-                      ${
-                        activeTab === tab.id
-                          ? 'border-blue-600 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }
-                    `}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
+          {/* Message Display */}
+          {message && (
+            <div className={message.type === 'success' ? 'alert alert-success' : 'alert alert-error'}
+              style={{ margin: '1rem 1.5rem' }}
+            >
+              {message.text}
             </div>
+          )}
 
-            {/* Message Display */}
-            {message && (
-              <div className={`mx-6 mt-4 p-4 rounded ${
-                message.type === 'success' 
-                  ? 'bg-green-100 border border-green-400 text-green-700' 
-                  : 'bg-red-100 border border-red-400 text-red-700'
-              }`}>
-                {message.text}
-              </div>
-            )}
-
-            {/* Tab Content */}
-            <div className="p-6">
-              {renderTabContent()}
-            </div>
+          {/* Tab Content */}
+          <div style={{ padding: '1.5rem' }}>
+            {renderTabContent()}
           </div>
         </div>
       </div>

@@ -2,17 +2,17 @@ import React from 'react';
 
 function Footer() {
   return (
-    <footer className="mt-8 py-4 border-t border-gray-200 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center text-sm text-gray-600">
+    <footer className="footer">
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 2rem' }}>
+        <div className="text-center" style={{ fontSize: '0.875rem' }}>
           <p>
-            <span className="font-semibold">Shift Handover Log</span> v0.25.12-Beta.1
+            <span style={{ fontWeight: 600 }}>Shift Handover Log</span> v0.26.03-Alpha.1
           </p>
-          <p className="mt-1">
-            Author: <span className="font-medium">Miguel da Silva</span>
+          <p style={{ marginTop: '0.25rem' }}>
+            Author: <span style={{ fontWeight: 500 }}>Miguel da Silva</span>
           </p>
-          <p className="mt-1">
-            License: <span className="font-medium">ISC</span>
+          <p style={{ marginTop: '0.25rem' }}>
+            License: <span style={{ fontWeight: 500 }}>ISC</span>
           </p>
         </div>
       </div>

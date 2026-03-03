@@ -2,6 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script>
+      /* Prevent flash of white in dark mode - runs before CSS/page render */
+      if (localStorage.getItem('daynight-theme') === 'carbon') {
+        document.documentElement.classList.add('carbon');
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta

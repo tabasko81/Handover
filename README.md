@@ -3,7 +3,7 @@
 > **Modern shift handover solution for shift-based teams**  
 > Document, manage, and communicate critical shift information with searchable, color-coded logs and real-time info slides. Perfect for hotel operations, security teams, reception desks, and any organization working in shifts.
 
-![Status](https://img.shields.io/badge/status-beta-orange) ![Version](https://img.shields.io/badge/version-v0.25.12--Beta.1-blue) ![License](https://img.shields.io/badge/license-ISC-green)
+![Status](https://img.shields.io/badge/status-alpha-orange) ![Version](https://img.shields.io/badge/version-v0.26.03--Alpha.1-blue) ![License](https://img.shields.io/badge/license-ISC-green)
 
 ---
 
@@ -26,7 +26,7 @@
 
 ## ⚠️ Project Status
 
-**Beta v0.25.12-Beta.1** - This project is in beta testing phase.
+**Alpha v0.26.03-Alpha.1** - This project is in alpha testing phase.
 
 - ⚠️ Use at your own risk
 - ⚠️ Features may be incomplete or unstable
@@ -98,11 +98,13 @@ The easiest way to get started! No installation required - just run the executab
 
 ### Local Installation (Windows)
 
-1. Install **Node.js 14+** if not already installed
-2. Run `install.bat` to install dependencies
-3. Run `setup-db.bat` to initialize the database
-4. Run `start.bat` to launch the application
-5. Access http://localhost:8500 in your browser
+1. **Node.js 14+** required. If not installed:
+   - Option A: Install from [nodejs.org](https://nodejs.org/)
+   - Option B: Run `.\setup-portable-nodejs.ps1` to download portable Node.js to `dist/nodejs`
+2. Run `.\install.bat` to install dependencies (use `.\` prefix in PowerShell)
+3. Run `.\setup-db.bat` to initialize the database
+4. Run `.\start.bat` to launch the application
+5. Access http://localhost:3000 in your browser (dev mode)
 
 ---
 

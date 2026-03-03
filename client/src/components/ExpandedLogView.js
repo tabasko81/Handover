@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { parseMarkdown } from '../utils/markdownParser';
+import { formatDateTime } from '../utils/dateFormat';
 import { clearReminder } from '../services/api';
 
 function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, onDelete }) {
@@ -65,17 +66,6 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
   const currentIndex = getCurrentIndex();
   const hasNext = currentIndex < logs.length - 1;
   const hasPrevious = currentIndex > 0;
-
-  const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-GB', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const formatNote = (note) => {
     if (!note) return '';

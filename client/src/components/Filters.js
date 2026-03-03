@@ -30,97 +30,53 @@ function Filters({ filters, onFilterChange, onToggleArchived }) {
     onFilterChange(resetFilters);
   };
 
+  const inputStyle = { padding: '0.3rem 0.5rem', fontSize: '0.8125rem', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-surface)' };
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Search
-          </label>
-          <input
-            type="text"
-            value={localFilters.search}
-            onChange={(e) => handleChange('search', e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Search in descriptions, notes... (Press Enter to search)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Worker Name
-          </label>
-          <input
-            type="text"
-            value={localFilters.worker_name}
-            onChange={(e) => handleChange('worker_name', e.target.value.toUpperCase())}
-            onKeyPress={handleKeyPress}
-            placeholder="ABC"
-            maxLength="3"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Start Date
-          </label>
-          <input
-            type="datetime-local"
-            value={localFilters.start_date}
-            onChange={(e) => handleChange('start_date', e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            End Date
-          </label>
-          <input
-            type="datetime-local"
-            value={localFilters.end_date}
-            onChange={(e) => handleChange('end_date', e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={handleApply}
-          className="px-4 py-2 text-white rounded hover:opacity-90"
-          style={{ backgroundColor: 'var(--header-color)' }}
-          title="Apply the current filter settings to search and filter the log entries"
-        >
-          Apply Filters
-        </button>
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-          title="Reset all filters to default values and show all active logs"
-        >
-          Reset
-        </button>
-        <label 
-          className="flex items-center px-4 py-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200"
-          title="Show archived logs - archived logs are hidden from the main list but can be viewed here"
-        >
-          <input
-            type="checkbox"
-            checked={localFilters.archived}
-            onChange={(e) => {
-              handleChange('archived', e.target.checked);
-              onToggleArchived();
-            }}
-            className="mr-2"
-          />
-          Show Archived
-        </label>
-      </div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem' }}>
+      <input
+        type="text"
+        value={localFilters.search}
+        onChange={(e) => handleChange('search', e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder="Search..."
+        style={{ ...inputStyle, minWidth: '120px' }}
+      />
+      <input
+        type="text"
+        value={localFilters.worker_name}
+        onChange={(e) => handleChange('worker_name', e.target.value.toUpperCase())}
+        onKeyPress={handleKeyPress}
+        placeholder="W"
+        maxLength="3"
+        style={{ ...inputStyle, width: '48px', textTransform: 'uppercase' }}
+      />
+      <input
+        type="datetime-local"
+        value={localFilters.start_date}
+        onChange={(e) => handleChange('start_date', e.target.value)}
+        onKeyPress={handleKeyPress}
+        style={{ ...inputStyle, minWidth: '150px' }}
+      />
+      <input
+        type="datetime-local"
+        value={localFilters.end_date}
+        onChange={(e) => handleChange('end_date', e.target.value)}
+        onKeyPress={handleKeyPress}
+        style={{ ...inputStyle, minWidth: '150px' }}
+      />
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-secondary)' }} title="Archived">
+        <input
+          type="checkbox"
+          checked={localFilters.archived}
+          onChange={(e) => {
+            handleChange('archived', e.target.checked);
+            onToggleArchived();
+          }}
+        />
+        Arch
+      </label>
+      <button onClick={handleApply} className="btn btn-header" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }} title="Apply">✓</button>
+      <button onClick={handleReset} className="btn btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }} title="Reset">✕</button>
     </div>
   );
 }
