@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
 const { getConfig } = require('../utils/configLoader');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'shift-handover-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET must be set in production');
+}
+const secret = JWT_SECRET || 'dev-only-fallback';
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -21,11 +25,11 @@ function authenticateToken(req, res, next) {
   // If expiry is disabled, ignore expiration (handles old tokens with expiry)
   const verifyOptions = expiryEnabled ? {} : { ignoreExpiration: true };
 
-  jwt.verify(token, JWT_SECRET, verifyOptions, (err, decoded) => {
+  jwt.verify(token, secret, verifyOptions, (err, decoded) => {
     if (err) {
       // If expiry is disabled and we got an error, try with ignoreExpiration (handles old tokens)
       if (!expiryEnabled) {
-        jwt.verify(token, JWT_SECRET, { ignoreExpiration: true }, (innerErr, innerDecoded) => {
+        jwt.verify(token, secret, { ignoreExpiration: true }, (innerErr, innerDecoded) => {
           if (innerErr) {
             return res.status(403).json({
               status: 'error',
@@ -55,3 +59,4 @@ function authenticateToken(req, res, next) {
 }
 
 module.exports = authenticateToken;
+module.exports.JWT_SECRET = secret;

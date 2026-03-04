@@ -3,7 +3,7 @@ import ExpandedLogView from './ExpandedLogView';
 import { parseMarkdown } from '../utils/markdownParser';
 import { formatDateTime } from '../utils/dateFormat';
 
-function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint, flashId }) {
+function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint, onCreateLog, flashId }) {
   const [expandedNotes, setExpandedNotes] = useState({});
   const [expandedLog, setExpandedLog] = useState(null);
 
@@ -103,7 +103,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
     );
   }
 
-  const handlePrint = () => {
+  const handlePrint = (e) => {
+    e.preventDefault();
     if (onPrint) {
       onPrint(logs);
     }
@@ -111,16 +112,33 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
 
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      <div className="card-header" style={{ marginBottom: 0, padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+      <div className="card-header" style={{ marginBottom: 0, padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
         <h2 className="card-title" style={{ margin: 0 }}>
           Logs {logs.length > 0 && `(${logs.length})`}
         </h2>
-        <button
-          onClick={handlePrint}
-          className="btn btn-header no-print"
-        >
-          Print Visible Logs
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} className="no-print">
+          <a
+            href="#"
+            onClick={handlePrint}
+            style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '0.9375rem' }}
+            onMouseOver={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+            onMouseOut={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+          >
+            Print Visible Logs
+          </a>
+          {onCreateLog && (
+            <button
+              onClick={onCreateLog}
+              className="btn-add-log"
+              title="Create new log entry"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
       <div className="table-container">
         <table className="dn-table" style={{ fontSize: '0.8125rem' }}>

@@ -1,6 +1,6 @@
 {
   "name": "shift-handover-log",
-  "version": "0.25.12-Beta.1",
+  "version": "0.26.03-Alpha.1",
   "description": "Web application for hotel shift handover logging",
   "main": "server/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "hotel",
     "logging"
   ],
-  "author": "",
+  "author": "Miguel da Silva",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",

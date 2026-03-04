@@ -4,7 +4,7 @@ import { fetchConfig, updateConfig, uploadLogo, deleteLogo } from '../services/c
 import { login, changePassword, verifyToken, logout } from '../services/authApi';
 import LoginForm from '../components/LoginForm';
 import Header from '../components/Header';
-import RichTextEditor from '../components/RichTextEditor';
+import TiptapRichTextEditor from '../components/TiptapRichTextEditor';
 import UserManagement from '../components/UserManagement';
 
 function Backoffice() {
@@ -416,7 +416,7 @@ function Backoffice() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="form-group">
               <label className="form-label">Permanent Information</label>
-              <RichTextEditor
+              <TiptapRichTextEditor
                 value={config.permanent_info || ''}
                 onChange={(html) => handleChange('permanent_info', html)}
                 maxLength={5000}

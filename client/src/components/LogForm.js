@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import RichTextEditor, { cleanEmptyLinesOnSave } from './RichTextEditor';
+import TiptapRichTextEditor from './TiptapRichTextEditor';
+import { cleanEmptyLinesOnSave } from '../utils/editorUtils';
 
 const COLOR_OPTIONS = [
   { value: '', label: 'None', colorClass: '' },
@@ -19,8 +20,9 @@ function LogForm({ log, onSubmit, onClose }) {
     color: '',
     reminder_date: ''
   });
-  const [setReminder, setSetReminder] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ function LogForm({ log, onSubmit, onClose }) {
         const reminderHours = String(reminderDate.getHours()).padStart(2, '0');
         const reminderMinutes = String(reminderDate.getMinutes()).padStart(2, '0');
         reminderDateFormatted = `${reminderYear}-${reminderMonth}-${reminderDay}T${reminderHours}:${reminderMinutes}`;
-        setSetReminder(true);
+        setReminderEnabled(true);
       }
       setFormData({
         log_date: formattedDate,
@@ -66,7 +68,7 @@ function LogForm({ log, onSubmit, onClose }) {
         color: '',
         reminder_date: ''
       });
-      setSetReminder(false);
+      setReminderEnabled(false);
     }
   }, [log]);
 
@@ -100,7 +102,7 @@ function LogForm({ log, onSubmit, onClose }) {
     }
 
     // Validate reminder_date if set
-    if (setReminder && formData.reminder_date) {
+    if (reminderEnabled && formData.reminder_date) {
       const reminderDate = new Date(formData.reminder_date);
       const now = new Date();
       if (reminderDate <= now) {
@@ -119,11 +121,12 @@ function LogForm({ log, onSubmit, onClose }) {
       return;
     }
 
+    setSubmitError(null);
     setSubmitting(true);
     try {
       // Convert datetime-local format to ISO string
       const dateTime = new Date(formData.log_date).toISOString();
-      const reminderDateTime = setReminder && formData.reminder_date 
+      const reminderDateTime = reminderEnabled && formData.reminder_date 
         ? new Date(formData.reminder_date).toISOString() 
         : null;
       
@@ -140,7 +143,7 @@ function LogForm({ log, onSubmit, onClose }) {
       // Always close form after submit (both create and update)
       onClose();
     } catch (error) {
-      alert(error.message || 'Failed to save log');
+      setSubmitError(error.message || 'Failed to save log');
     } finally {
       setSubmitting(false);
     }
@@ -172,6 +175,11 @@ function LogForm({ log, onSubmit, onClose }) {
           </div>
 
           <form onSubmit={handleSubmit}>
+            {submitError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--danger)' }}>{submitError}</p>
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">Date & Time *</label>
               <input
@@ -207,7 +215,7 @@ function LogForm({ log, onSubmit, onClose }) {
             <div className="form-group">
               <label className="form-label">Note * (max 1000 characters)</label>
               <div style={errors.note ? { border: '2px solid var(--danger)', borderRadius: '8px' } : {}}>
-                <RichTextEditor
+                <TiptapRichTextEditor
                   value={formData.note || ''}
                   onChange={(html) => handleChange('note', html)}
                   maxLength={1000}
@@ -259,10 +267,10 @@ function LogForm({ log, onSubmit, onClose }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                 <input
                   type="checkbox"
-                  id="setReminder"
-                  checked={setReminder}
+                  id="reminderEnabled"
+                  checked={reminderEnabled}
                   onChange={(e) => {
-                    setSetReminder(e.target.checked);
+                    setReminderEnabled(e.target.checked);
                     if (!e.target.checked) {
                       handleChange('reminder_date', '');
                     }
@@ -270,7 +278,7 @@ function LogForm({ log, onSubmit, onClose }) {
                   title="The log will be archived until the reminder date, then automatically activated"
                 />
                 <label
-                  htmlFor="setReminder"
+                  htmlFor="reminderEnabled"
                   className="form-label"
                   style={{ margin: 0, cursor: 'pointer' }}
                   title="The log will be archived until the reminder date, then automatically activated"
@@ -278,7 +286,7 @@ function LogForm({ log, onSubmit, onClose }) {
                   Set Future Reminder and Archive
                 </label>
               </div>
-              {setReminder && (
+              {reminderEnabled && (
                 <div className="form-group">
                   <label className="form-label">Reminder Date & Time *</label>
                   <input

@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
+const { version } = require('../package.json');
+
 const logRoutes = require('./routes/logs');
 const configRoutes = require('./routes/config');
 const authRoutes = require('./routes/auth');
@@ -65,21 +67,6 @@ if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, '../client/build');
   const fs = require('fs');
   
-  console.log(`Serving static files from: ${staticPath}`);
-  console.log(`Static path exists: ${fs.existsSync(staticPath)}`);
-  console.log(`Index.html exists: ${fs.existsSync(path.join(staticPath, 'index.html'))}`);
-  console.log(`Static/js exists: ${fs.existsSync(path.join(staticPath, 'static/js'))}`);
-  console.log(`Static/css exists: ${fs.existsSync(path.join(staticPath, 'static/css'))}`);
-  
-  // Log static file requests BEFORE serving them
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/static/')) {
-      const filePath = path.join(staticPath, req.path);
-      console.log(`[STATIC] Request: ${req.path} -> ${filePath} (exists: ${fs.existsSync(filePath)})`);
-    }
-    next();
-  });
-  
   // Serve static files - this must come before the catch-all route
   app.use(express.static(staticPath, {
     maxAge: '1y',
@@ -99,7 +86,6 @@ if (process.env.NODE_ENV === 'production') {
       return next(); // Let express.static handle it or return 404
     }
     const indexPath = path.join(__dirname, '../client/build/index.html');
-    console.log(`[ROUTE] Serving index.html for: ${req.path}`);
     if (!fs.existsSync(indexPath)) {
       console.error(`ERROR: index.html not found at ${indexPath}`);
       return res.status(500).send('Frontend not found. Please rebuild the frontend.');
@@ -111,7 +97,7 @@ if (process.env.NODE_ENV === 'production') {
   app.get('/', (req, res) => {
     res.json({ 
       message: 'Shift Handover Log API',
-      version: 'v0.25.12-Beta.1',
+      version: `v${version}`,
       endpoints: {
         health: '/api/health',
         logs: '/api/logs',
@@ -130,7 +116,9 @@ database.initialize().then(() => {
   startReminderProcessor(); // Start the reminder processor
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`API available at http://localhost:${PORT}/api`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`API available at http://localhost:${PORT}/api`);
+    }
   });
 }).catch(err => {
   console.error('Failed to initialize database:', err);

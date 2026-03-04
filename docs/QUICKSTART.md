@@ -18,11 +18,11 @@ Get up and running with Shift Handover Log in minutes.
 
 ### Local Installation
 
-**Windows:**
+**Windows (PowerShell or CMD):**
 ```batch
-install.bat
-setup-db.bat
-start.bat
+.\install.bat
+.\setup-db.bat
+.\start.bat
 ```
 
 **Manual NPM:**
@@ -50,14 +50,15 @@ npm run dev
 
 ## 🌐 Access
 
-- **Application:** http://localhost:8500
+- **Standalone:** http://localhost:8500
+- **Local dev:** http://localhost:3000 (frontend) | http://localhost:8500 (API)
 - **Backend API:** http://localhost:8500/api
 
 ---
 
 ## 🎯 First Steps
 
-1. Open your browser at `http://localhost:8500`
+1. Open your browser at `http://localhost:3000` (local dev) or `http://localhost:8500` (standalone)
 2. Login with default credentials:
    - **Username:** `admin` or `FO`
    - **Password:** `pass123`
@@ -141,4 +142,4 @@ If port 8500 is occupied, change it in the `server_config.json` file:
 
 ---
 
-**Version:** Beta v0.25.12-Beta.1
+**Version:** Alpha v0.26.03-Alpha.1

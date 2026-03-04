@@ -5,6 +5,7 @@ import { clearReminder } from '../services/api';
 
 function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, onDelete }) {
   const [currentLog, setCurrentLog] = useState(log);
+  const [clearReminderError, setClearReminderError] = useState(null);
 
   useEffect(() => {
     setCurrentLog(log);
@@ -211,12 +212,13 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
               <button
                 onClick={async () => {
                   if (window.confirm('Remove the future reminder? The log will remain archived.')) {
+                    setClearReminderError(null);
                     try {
                       await clearReminder(currentLog.id);
                       onClose();
                       window.location.reload(); // Reload to reflect changes
                     } catch (error) {
-                      alert('Failed to clear reminder: ' + error.message);
+                      setClearReminderError('Failed to clear reminder: ' + error.message);
                     }
                   }
                 }}
@@ -225,6 +227,9 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
               >
                 Remove Reminder
               </button>
+              {clearReminderError && (
+                <p className="mt-2 text-sm text-red-600">{clearReminderError}</p>
+              )}
             </div>
           )}
 

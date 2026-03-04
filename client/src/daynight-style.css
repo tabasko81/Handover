@@ -675,3 +675,69 @@ html.carbon .log-color-red { background: rgba(239, 68, 68, 0.2); }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
+
+/* ===== Tiptap Editor (Daynight theme) ===== */
+.tiptap-toolbar-btn {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+.tiptap-toolbar-btn:hover {
+  background: var(--bg-surface);
+}
+.tiptap-toolbar-btn-active {
+  background: var(--accent) !important;
+  color: white !important;
+}
+.tiptap-toolbar-btn-active:hover {
+  background: var(--accent-hover) !important;
+  color: white !important;
+}
+.tiptap-picker-btn {
+  background: transparent;
+}
+.tiptap-picker-btn:hover {
+  background: var(--bg-surface);
+}
+
+.tiptap-editor-wrapper .ProseMirror,
+.tiptap-editor-wrapper .tiptap-editor-content {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.tiptap-editor-wrapper .ProseMirror:focus {
+  outline: none;
+}
+
+.tiptap-editor-wrapper .ProseMirror p {
+  margin-bottom: 0.75rem;
+  margin-top: 0;
+}
+
+.tiptap-editor-wrapper .ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+.tiptap-editor-wrapper .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+/* Placeholder - when editor is empty */
+.tiptap-editor-wrapper .ProseMirror.is-editor-empty::before,
+.tiptap-editor-wrapper .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-secondary);
+  float: left;
+  pointer-events: none;
+  height: 0;
+}
+
+/* @mention highlight - works in light and dark mode */
+.mention-highlight {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0 0.25rem;
+  border-radius: 4px;
+}

@@ -43,7 +43,9 @@ function processReminders() {
               return reject(updateErr);
             }
             
-            console.log(`Processed ${this.changes} reminder(s) - activated logs`);
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(`Processed ${this.changes} reminder(s) - activated logs`);
+            }
             resolve({ processed: this.changes });
           }
         );
@@ -57,7 +59,9 @@ function processReminders() {
  * Checks for expired reminders every 5 minutes
  */
 function startReminderProcessor() {
-  console.log('Reminder processor started - checking every 2 minutes');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Reminder processor started - checking every 2 minutes');
+  }
   
   // Process immediately on start
   processReminders().catch(err => {
@@ -74,7 +78,9 @@ function startReminderProcessor() {
   // Return function to stop the processor
   return () => {
     clearInterval(interval);
-    console.log('Reminder processor stopped');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Reminder processor stopped');
+    }
   };
 }
 

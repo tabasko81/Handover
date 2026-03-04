@@ -83,40 +83,23 @@ export function parseMarkdown(text) {
     // Content is HTML from rich text editor
     // Process @mentions first, then sanitize
     let html = processedText;
-    
-    // Process @mentions in text content (but be careful not to break HTML)
-    // Only process @mentions that are in text nodes, not in attributes
-    html = html.replace(/>([^<@]+@\w+[^<]*)</g, (match, textContent) => {
-      // Process @mentions in text content only
-      const processedText = textContent.replace(/(@\w+)/g, (mentionMatch, mention, mentionOffset, mentionString) => {
-        // Check if there's a non-space character before @ (email case)
+
+    // Process all text between tags - replace @mentions with highlight spans
+    // This handles @ at start of text (e.g. <p>@user</p>) and anywhere in text nodes
+    html = html.replace(/>([^<]*)</g, (match, textContent) => {
+      const processed = textContent.replace(/(@\w+)/g, (mentionMatch, mention, mentionOffset, mentionString) => {
+        // Skip if non-space char before @ (email case: user@domain.com)
         if (mentionOffset > 0) {
           const charBefore = mentionString[mentionOffset - 1];
-          // If there's a non-space character before @, it's likely an email
           if (charBefore && charBefore.match(/\S/)) {
-            return mentionMatch; // Don't highlight
+            return mentionMatch;
           }
         }
-        // Valid mention - highlight it
-        return '<span class="bg-yellow-200 font-semibold px-1 rounded">' + mention + '</span>';
+        return '<span class="mention-highlight">' + mention + '</span>';
       });
-      return '>' + processedText + '<';
+      return '>' + processed + '<';
     });
-    
-    // Also handle @mentions at the start or end of content (not between tags)
-    html = html.replace(/(^|>)(@\w+)(?![^<]*>)/g, (match, before, mention, offset, string) => {
-      // Check if we're inside a tag
-      const beforePos = string.substring(0, offset);
-      const lastOpenTag = beforePos.lastIndexOf('<');
-      const lastCloseTag = beforePos.lastIndexOf('>');
-      
-      if (lastOpenTag > lastCloseTag) {
-        return match; // Inside a tag, don't process
-      }
-      
-      return before + '<span class="bg-yellow-200 font-semibold px-1 rounded">' + mention + '</span>';
-    });
-    
+
     // Sanitize HTML with DOMPurify before returning
     return DOMPurify.sanitize(html, sanitizeConfig);
   }
@@ -199,19 +182,14 @@ export function parseMarkdown(text) {
   });
 
   // @mentions (highlight) - but exclude emails
-  // Only match @mention if it's at start of string, after space, or after certain punctuation
-  // Don't match if there's a non-space character before @ (likely email)
   html = html.replace(/(@\w+)/g, (match, mention, offset, string) => {
-    // Check if there's a non-space character immediately before @ (email case)
     if (offset > 0) {
       const charBefore = string[offset - 1];
-      // If there's a non-space character before @, it's likely an email - don't highlight
       if (charBefore && charBefore.match(/\S/)) {
         return match;
       }
     }
-    
-    return '<span class="bg-yellow-200 font-semibold px-1 rounded">' + mention + '</span>';
+    return '<span class="mention-highlight">' + mention + '</span>';
   });
 
   // Convert newlines to <br> (but preserve lists)

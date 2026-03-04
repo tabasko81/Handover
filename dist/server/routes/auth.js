@@ -4,8 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getDb } = require('../database/db');
 const { getConfig } = require('../utils/configLoader');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'shift-handover-secret-key-change-in-production';
+const { JWT_SECRET } = require('../middleware/auth');
 
 // Brute force protection: track failed login attempts
 const loginAttempts = new Map(); // Key: identifier (IP+username), Value: { count: number, blockedUntil: timestamp }

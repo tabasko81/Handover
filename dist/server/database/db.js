@@ -17,7 +17,7 @@ function getDb() {
     db = new sqlite3.Database(DB_PATH, (err) => {
       if (err) {
         console.error('Error opening database:', err.message);
-      } else {
+      } else if (process.env.NODE_ENV !== 'production') {
         console.log('Connected to SQLite database');
       }
     });
@@ -48,14 +48,16 @@ function initialize() {
           console.error('Error creating table:', err.message);
           reject(err);
         } else {
-          console.log('Database table initialized');
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Database table initialized');
+          }
           
           // Add color column if it doesn't exist (for existing databases)
           database.run(`
             ALTER TABLE shift_logs ADD COLUMN color VARCHAR(20) DEFAULT NULL
           `, (alterErr) => {
             // Ignore error if column already exists
-            if (alterErr && !alterErr.message.includes('duplicate column')) {
+            if (alterErr && !alterErr.message.includes('duplicate column') && process.env.NODE_ENV !== 'production') {
               console.log('Note: color column may already exist');
             }
           });
@@ -78,7 +80,7 @@ function initialize() {
             ALTER TABLE shift_logs ADD COLUMN reminder_date DATETIME DEFAULT NULL
           `, (alterErr) => {
             // Ignore error if column already exists
-            if (alterErr && !alterErr.message.includes('duplicate column')) {
+            if (alterErr && !alterErr.message.includes('duplicate column') && process.env.NODE_ENV !== 'production') {
               console.log('Note: reminder_date column may already exist');
             }
           });
@@ -105,14 +107,16 @@ function initialize() {
               console.error('Error creating users table:', err.message);
               reject(err);
             } else {
-              console.log('Users table initialized');
+              if (process.env.NODE_ENV !== 'production') {
+                console.log('Users table initialized');
+              }
               
               // Add display_order column if it doesn't exist (for existing databases)
               database.run(`
                 ALTER TABLE users ADD COLUMN display_order INTEGER DEFAULT 0
               `, (alterErr) => {
                 // Ignore error if column already exists
-                if (alterErr && !alterErr.message.includes('duplicate column')) {
+                if (alterErr && !alterErr.message.includes('duplicate column') && process.env.NODE_ENV !== 'production') {
                   console.log('Note: display_order column may already exist');
                 }
                 
@@ -153,7 +157,9 @@ function close() {
         if (err) {
           reject(err);
         } else {
-          console.log('Database connection closed');
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Database connection closed');
+          }
           db = null;
           resolve();
         }

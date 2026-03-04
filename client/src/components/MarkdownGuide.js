@@ -26,10 +26,10 @@ function MarkdownGuide() {
         <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-md text-xs">
           <div className="space-y-2">
             <div>
-              <strong>**Bold**</strong> ou <strong>__Bold__</strong>
+              <strong>**Bold**</strong> or <strong>__Bold__</strong>
             </div>
             <div>
-              <em>*Italic*</em> ou <em>_Italic_</em>
+              <em>*Italic*</em> or <em>_Italic_</em>
             </div>
             <div>
               <strong><em>***Bold Italic***</em></strong>
@@ -51,10 +51,10 @@ function MarkdownGuide() {
               [Link text](https://example.com)
             </div>
             <div>
-              `Code` ou ```Code block```
+              `Code` or ```Code block```
             </div>
             <div>
-              @mention (já suportado)
+              @mention (already supported)
             </div>
           </div>
         </div>
