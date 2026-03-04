@@ -95,10 +95,27 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
 
   if (logs.length === 0) {
     return (
-      <div className="card text-center" style={{ padding: '2rem' }}>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>
-          {showArchived ? 'No archived logs found.' : 'No logs found. Create your first log entry!'}
-        </p>
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card-header" style={{ marginBottom: 0, padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 className="card-title" style={{ margin: 0 }}>Logs</h2>
+          {onCreateLog && (
+            <button
+              onClick={onCreateLog}
+              className="btn-add-log"
+              title="Create new log entry"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        <div className="text-center" style={{ padding: '2rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>
+            {showArchived ? 'No archived logs found.' : 'No logs found. Create your first log entry!'}
+          </p>
+        </div>
       </div>
     );
   }
