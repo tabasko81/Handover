@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -74,6 +74,9 @@ function TiptapRichTextEditor({ value, onChange, maxLength = 1000, placeholder =
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textColorRef = useRef(null);
+  const highlightColorRef = useRef(null);
+  const emojiPickerRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -125,6 +128,19 @@ function TiptapRichTextEditor({ value, onChange, maxLength = 1000, placeholder =
       editor.commands.setContent(value || '', false);
     }
   }, [value, editor]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const isOutside = (ref) => !ref.current?.contains(e.target);
+      if (isOutside(textColorRef) && isOutside(highlightColorRef) && isOutside(emojiPickerRef)) {
+        setShowTextColorPicker(false);
+        setShowHighlightColorPicker(false);
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const insertEmoji = useCallback((emoji) => {
     if (editor) {
@@ -178,7 +194,7 @@ function TiptapRichTextEditor({ value, onChange, maxLength = 1000, placeholder =
           <span style={{ textDecoration: 'line-through' }}>S</span>
         </button>
         <div className="w-px mx-1" style={{ backgroundColor: 'var(--border-color)' }} />
-        <div className="relative">
+        <div className="relative" ref={highlightColorRef}>
           <button
             type="button"
             onClick={() => {
@@ -254,7 +270,7 @@ function TiptapRichTextEditor({ value, onChange, maxLength = 1000, placeholder =
             </div>
           )}
         </div>
-        <div className="relative">
+        <div className="relative" ref={textColorRef}>
           <button
             type="button"
             onClick={() => {
@@ -331,7 +347,7 @@ function TiptapRichTextEditor({ value, onChange, maxLength = 1000, placeholder =
           )}
         </div>
         <div className="w-px mx-1" style={{ backgroundColor: 'var(--border-color)' }} />
-        <div className="relative">
+        <div className="relative" ref={emojiPickerRef}>
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}

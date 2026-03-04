@@ -3,5 +3,6 @@
   "auto_start_enabled": false,
   "auto_start_mode": "gui",
   "auto_start_delay": 0,
-  "firewall_port": null
+  "firewall_port": null,
+  "jwt_secret": "0314313bf05a980505f0c6f73edc0d1d63ce2ac530fc56e227208d030b69c100"
 }

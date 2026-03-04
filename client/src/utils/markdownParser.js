@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 
 // Configure DOMPurify with safe defaults (configured once)
 const sanitizeConfig = {
-  ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'ol', 'li', 'p', 'br', 'strong', 'em', 'div', 'span', 'a', 'code', 'pre'],
+  ALLOWED_TAGS: ['b', 'i', 'u', 'ul', 'ol', 'li', 'p', 'br', 'strong', 'em', 'div', 'span', 'a', 'code', 'pre', 'mark'],
   ALLOWED_ATTR: ['style', 'class', 'href', 'target', 'rel'],
   ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
   FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],

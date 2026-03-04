@@ -108,6 +108,7 @@ function Header() {
 
     // Cleanup interval on unmount
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
     // Listen for config changes

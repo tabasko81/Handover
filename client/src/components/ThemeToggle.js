@@ -1,10 +1,6 @@
 import React, { useEffect } from 'react';
 
 function ThemeToggle() {
-  useEffect(() => {
-    initTheme();
-  }, []);
-
   const initTheme = () => {
     const savedTheme = localStorage.getItem('daynight-theme');
     if (savedTheme === 'carbon') {
@@ -16,6 +12,11 @@ function ThemeToggle() {
     }
     updateThemeButtons(savedTheme === 'carbon' ? 'carbon' : 'snow');
   };
+
+  useEffect(() => {
+    initTheme();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setTheme = (theme) => {
     if (theme === 'carbon') {

@@ -14,14 +14,22 @@ cd client
 REM Check if Node.js is available
 where node >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: Node.js not found!
-    echo.
-    echo Please make sure that:
-    echo 1. Node.js is installed OR
-    echo 2. Portable Node.js is in the nodejs/ folder
-    echo.
-    pause
-    exit /b 1
+    echo Node.js not in PATH. Trying portable Node.js...
+    if exist "..\dist\nodejs\node.exe" (
+        set "PATH=..\dist\nodejs;%PATH%"
+        echo Using portable Node.js from dist\nodejs
+    ) else if exist "..\nodejs\node.exe" (
+        set "PATH=..\nodejs;%PATH%"
+    ) else (
+        echo ERROR: Node.js not found!
+        echo.
+        echo Please run: .\setup-portable-nodejs.ps1
+        echo Or install Node.js from nodejs.org
+        echo.
+        cd ..
+        pause
+        exit /b 1
+    )
 )
 
 REM Set REACT_APP_API_URL as relative URL to work on any port

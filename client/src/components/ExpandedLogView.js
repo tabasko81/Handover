@@ -75,11 +75,11 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
 
   const getColorClass = (color) => {
     const colorMap = {
-      'green': 'bg-green-100',
-      'yellow': 'bg-yellow-100',
-      'light-blue': 'bg-blue-100',
-      'light-green': 'bg-green-50',
-      'red': 'bg-red-100',
+      'green': 'log-color-green',
+      'yellow': 'log-color-yellow',
+      'light-blue': 'log-color-light-blue',
+      'light-green': 'log-color-light-green',
+      'red': 'log-color-red',
       '': ''
     };
     return colorMap[color] || '';
@@ -100,7 +100,8 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
       {hasPrevious && (
         <button
           onClick={handlePrevious}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 bg-white hover:bg-gray-100 text-gray-700 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+          style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
           title="Previous (Left Arrow)"
         >
           <svg
@@ -119,7 +120,8 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
       {hasNext && (
         <button
           onClick={handleNext}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 bg-white hover:bg-gray-100 text-gray-700 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+          style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
           title="Next (Right Arrow)"
         >
           <svg
@@ -136,76 +138,64 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
 
       {/* Main Content */}
       <div
-        className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${getColorClass(currentLog.color || '') || 'bg-white'}`}
+        className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${getColorClass(currentLog.color || '')}`}
+        style={!getColorClass(currentLog.color || '') ? { backgroundColor: 'var(--bg-primary)' } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-8">
           {/* Header */}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-800">Log Details</h2>
-              {logs.length > 1 && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {currentIndex + 1} of {logs.length}
-                </p>
-              )}
-            </div>
+          <div className="flex justify-end mb-6">
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+              className="text-3xl leading-none hover:opacity-80 transition-opacity"
+              style={{ color: 'var(--text-secondary)' }}
               title="Close (Esc)"
             >
               ×
             </button>
           </div>
 
-          {/* Date */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Date & Time
-            </label>
-            <p className="text-xl text-gray-900">{formatDateTime(currentLog.log_date)}</p>
-          </div>
+          {/* Title and Date */}
+          <h2 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Log Details</h2>
+          <p className="text-xl mb-6" style={{ color: 'var(--text-secondary)' }}>{formatDateTime(currentLog.log_date)}</p>
 
           {/* Short Description */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+            <label className="block text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
               Short Description
             </label>
-            <p className="text-xl font-semibold text-gray-900">{currentLog.short_description}</p>
+            <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{currentLog.short_description}</p>
           </div>
 
           {/* Note */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+            <label className="block text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
               Note
             </label>
             <div
-              className="text-lg text-gray-900 whitespace-pre-wrap break-words"
+              className="text-lg whitespace-pre-wrap break-words"
+              style={{ color: 'var(--text-primary)' }}
               dangerouslySetInnerHTML={{ __html: formatNote(currentLog.note) }}
             />
           </div>
 
-          {/* Worker */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-              Worker
-            </label>
-            <span className="px-3 py-1.5 inline-flex text-base font-semibold rounded-full bg-blue-100 text-blue-800">
-              {currentLog.worker_name}
+          {/* Note by Worker - right aligned, worker highlighted like main view */}
+          <div className="mb-6 text-right">
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Note by <span className="badge badge-blue">{currentLog.worker_name}</span>
             </span>
           </div>
 
           {/* Future Reminder */}
           {currentLog.reminder_date && new Date(currentLog.reminder_date) > new Date() && (
-            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--accent-light)', border: '1px solid var(--border-color)' }}>
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-2xl">⏰</span>
-                <label className="block text-sm font-semibold text-orange-800 uppercase tracking-wide">
+                <label className="block text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
                   Future Reminder
                 </label>
               </div>
-              <p className="text-base text-orange-900 mb-3">
+              <p className="text-base mb-3" style={{ color: 'var(--text-primary)' }}>
                 This log will automatically become active on{' '}
                 <strong>{formatDateTime(currentLog.reminder_date)}</strong>
               </p>
@@ -222,44 +212,44 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
                     }
                   }
                 }}
-                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm"
+                className="px-4 py-2 rounded-md text-sm font-medium"
+                style={{ backgroundColor: 'var(--warning)', color: 'white' }}
                 title="Remove the future reminder - the log will remain archived and won't automatically activate"
               >
                 Remove Reminder
               </button>
               {clearReminderError && (
-                <p className="mt-2 text-sm text-red-600">{clearReminderError}</p>
+                <p className="mt-2 text-sm" style={{ color: 'var(--danger)' }}>{clearReminderError}</p>
               )}
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex space-x-3 pt-6 border-t border-gray-200">
+          {/* Actions - text links, right aligned */}
+          <div className="flex justify-end gap-2 pt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
             <button
               onClick={() => {
                 onEdit(currentLog);
                 onClose();
               }}
-              className="px-6 py-3 text-white rounded-md hover:opacity-90 font-medium text-lg"
-              style={{ backgroundColor: 'var(--header-color)' }}
-              title="Edit this log entry - modify date, description, note, worker, color, or reminder"
+              className="bg-transparent border-none p-0 font-medium hover:underline cursor-pointer"
+              style={{ color: 'var(--accent)' }}
+              title="Edit this log entry"
             >
               Edit
             </button>
+            <span style={{ color: 'var(--text-secondary)' }}>|</span>
             <button
               onClick={() => {
                 onArchive(currentLog.id, !currentLog.is_archived);
                 onClose();
               }}
-              className={`px-6 py-3 rounded-md font-medium text-lg ${
-                currentLog.is_archived
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-yellow-600 text-white hover:bg-yellow-700'
-              }`}
-              title={currentLog.is_archived ? "Restore this log - make it visible in the main list again" : "Archive this log - hide it from the main list (can be viewed by enabling 'Show Archived')"}
+              className="bg-transparent border-none p-0 font-medium hover:underline cursor-pointer"
+              style={{ color: 'var(--accent)' }}
+              title={currentLog.is_archived ? "Restore this log" : "Archive this log"}
             >
               {currentLog.is_archived ? 'Restore' : 'Archive'}
             </button>
+            <span style={{ color: 'var(--text-secondary)' }}>|</span>
             <button
               onClick={() => {
                 if (window.confirm('Are you sure you want to delete this log?')) {
@@ -267,15 +257,18 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
                   onClose();
                 }
               }}
-              className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium text-lg"
-              title="Delete this log entry permanently - this action cannot be undone"
+              className="bg-transparent border-none p-0 font-medium hover:underline cursor-pointer"
+              style={{ color: 'var(--danger)' }}
+              title="Delete this log entry permanently"
             >
               Delete
             </button>
+            <span style={{ color: 'var(--text-secondary)' }}>|</span>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium text-lg ml-auto"
-              title="Close this detailed view (Press Esc)"
+              className="bg-transparent border-none p-0 font-medium hover:underline cursor-pointer"
+              style={{ color: 'var(--accent)' }}
+              title="Close (Press Esc)"
             >
               Close
             </button>
@@ -283,15 +276,15 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
 
           {/* Progress Dots */}
           {logs.length > 1 && (
-            <div className="flex justify-center items-center space-x-2 pt-6 border-t border-gray-200 mt-6">
+            <div className="flex justify-center items-center space-x-2 pt-6 mt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
               {logs.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentIndex
-                      ? 'bg-blue-600 w-8'
-                      : 'bg-gray-300'
-                  }`}
+                  className="w-3 h-3 rounded-full transition-all duration-300"
+                  style={{
+                    width: index === currentIndex ? '2rem' : undefined,
+                    backgroundColor: index === currentIndex ? 'var(--accent)' : 'var(--border-color)'
+                  }}
                 />
               ))}
             </div>

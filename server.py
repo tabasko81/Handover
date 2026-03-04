@@ -8,6 +8,7 @@ Allows running the application without installations on Windows
 import os
 import sys
 import json
+import secrets
 import subprocess
 import threading
 import socket
@@ -26,8 +27,12 @@ DEFAULT_CONFIG_FILE = "server_default_config.json"
 DEFAULT_PORT = 8500
 
 # Detect if running from dist folder (executable)
-# When the .exe is executed, Path.cwd() returns the directory where the .exe is located
-BASE_DIR = Path.cwd()
+# When running as PyInstaller exe: use executable's directory (cwd can be wrong with shortcuts)
+# When running as Python script: use cwd
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).parent
+else:
+    BASE_DIR = Path.cwd()
 current_path = BASE_DIR
 
 # Check if we're running from inside dist folder (executable scenario)
@@ -64,6 +69,7 @@ else:
     CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
     DATA_DIR = BASE_DIR / "data"
 
+CONFIG_PATH = BASE_DIR / CONFIG_FILE
 NODEJS_EXE = NODEJS_DIR / "node.exe"
 
 class ServerManager:
@@ -83,6 +89,7 @@ class ServerManager:
         self.auto_start_delay = 0
         self.firewall_port = None
         self.local_ip = None
+        self.jwt_secret = None
         
         # UI elements for server config
         self.auto_start_status_label = None
@@ -130,29 +137,38 @@ class ServerManager:
     def load_config(self):
         """Loads saved configuration"""
         # Try to load from server_config.json first
-        if os.path.exists(CONFIG_FILE):
+        if CONFIG_PATH.exists():
             try:
-                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.port = config.get('port', DEFAULT_PORT)
                     self.auto_start_enabled = config.get('auto_start_enabled', False)
                     self.auto_start_mode = config.get('auto_start_mode', 'gui')
                     self.auto_start_delay = config.get('auto_start_delay', 0)
                     self.firewall_port = config.get('firewall_port', None)
+                    self.jwt_secret = config.get('jwt_secret')
+                # Ensure JWT_SECRET exists for Node.js production mode
+                if not self.jwt_secret:
+                    self.jwt_secret = secrets.token_hex(32)
+                    self.save_config()
             except Exception as e:
                 self.log(f"Error loading configuration: {e}")
                 self.port = DEFAULT_PORT
+                self.jwt_secret = secrets.token_hex(32)
         # Try to load from server_default_config.json
-        elif os.path.exists(DEFAULT_CONFIG_FILE):
+        elif (BASE_DIR / DEFAULT_CONFIG_FILE).exists():
             try:
-                with open(DEFAULT_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                with open(BASE_DIR / DEFAULT_CONFIG_FILE, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.port = config.get('default_port', DEFAULT_PORT)
+                self.jwt_secret = secrets.token_hex(32)
             except Exception as e:
                 self.log(f"Error loading default configuration: {e}")
                 self.port = DEFAULT_PORT
+                self.jwt_secret = secrets.token_hex(32)
         else:
             self.port = DEFAULT_PORT
+            self.jwt_secret = secrets.token_hex(32)
         
         # Check actual status
         self.auto_start_enabled = self.check_auto_start_status()
@@ -167,9 +183,10 @@ class ServerManager:
                 'auto_start_enabled': self.auto_start_enabled,
                 'auto_start_mode': self.auto_start_mode,
                 'auto_start_delay': self.auto_start_delay,
-                'firewall_port': self.firewall_port
+                'firewall_port': self.firewall_port,
+                'jwt_secret': self.jwt_secret
             }
-            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2)
         except Exception as e:
             self.log(f"Error saving configuration: {e}")
@@ -214,6 +231,7 @@ class ServerManager:
         env['NODE_ENV'] = 'production'
         env['PORT'] = str(self.port)
         env['FRONTEND_URL'] = f'http://localhost:{self.port}'
+        env['JWT_SECRET'] = self.jwt_secret or secrets.token_hex(32)
         # Note: REACT_APP_API_URL is defined at build time, but since we serve everything on the same port,
         # relative requests /api will work correctly
         

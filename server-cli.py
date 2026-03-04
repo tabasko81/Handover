@@ -8,6 +8,7 @@ Simple terminal-only version without GUI
 import os
 import sys
 import json
+import secrets
 import subprocess
 import signal
 import socket
@@ -20,7 +21,11 @@ DEFAULT_CONFIG_FILE = "server_default_config.json"
 DEFAULT_PORT = 8500
 
 # Detect if running from dist folder (executable)
-BASE_DIR = Path.cwd()
+# When running as PyInstaller exe: use executable's directory (cwd can be wrong)
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).parent
+else:
+    BASE_DIR = Path.cwd()
 current_path = BASE_DIR
 
 # Check if we're running from inside dist folder (executable scenario)
@@ -74,22 +79,39 @@ def load_default_port():
     return port
 
 def load_config():
-    """Load saved configuration"""
+    """Load saved configuration, returns (port, jwt_secret)"""
     port = load_default_port()
-    if os.path.exists(CONFIG_FILE):
+    jwt_secret = None
+    config_path = BASE_DIR / CONFIG_FILE
+    if config_path.exists():
         try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
                 port = config.get('port', port)
+                jwt_secret = config.get('jwt_secret')
         except Exception:
             pass
-    return port
+    if not jwt_secret:
+        jwt_secret = secrets.token_hex(32)
+    return port, jwt_secret
 
-def save_config(port):
+def save_config(port, jwt_secret=None):
     """Save configuration"""
     try:
+        config_path = BASE_DIR / CONFIG_FILE
         config = {'port': port}
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        if config_path.exists():
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    config['port'] = port
+                    if jwt_secret:
+                        config['jwt_secret'] = jwt_secret
+            except Exception:
+                config['jwt_secret'] = jwt_secret or secrets.token_hex(32)
+        else:
+            config['jwt_secret'] = jwt_secret or secrets.token_hex(32)
+        with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2)
     except Exception:
         pass
@@ -200,13 +222,14 @@ def main():
         print("Please choose another port or stop the application using it.")
         sys.exit(1)
     
-    save_config(port)
+    save_config(port, jwt_secret)
     
     # Configure environment
     env = os.environ.copy()
     env['NODE_ENV'] = 'production'
     env['PORT'] = str(port)
     env['FRONTEND_URL'] = f'http://localhost:{port}'
+    env['JWT_SECRET'] = jwt_secret
     
     # Server path
     server_path = SERVER_DIR / "index.js"

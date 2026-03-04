@@ -134,15 +134,15 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
           Logs {logs.length > 0 && `(${logs.length})`}
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} className="no-print">
-          <a
-            href="#"
+          <button
+            type="button"
             onClick={handlePrint}
-            style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '0.9375rem' }}
+            style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '0.9375rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
             onMouseOver={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
             onMouseOut={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
           >
             Print Visible Logs
-          </a>
+          </button>
           {onCreateLog && (
             <button
               onClick={onCreateLog}

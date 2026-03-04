@@ -3,7 +3,7 @@
 > **Modern shift handover solution for shift-based teams**  
 > Document, manage, and communicate critical shift information with searchable, color-coded logs and real-time info slides. Perfect for hotel operations, security teams, reception desks, and any organization working in shifts.
 
-![Status](https://img.shields.io/badge/status-alpha-orange) ![Version](https://img.shields.io/badge/version-v0.26.03--Alpha.1-blue) ![License](https://img.shields.io/badge/license-ISC-green)
+![Status](https://img.shields.io/badge/status-alpha-orange) ![Version](https://img.shields.io/badge/version-v0.26.03--Alpha.1-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
@@ -182,7 +182,7 @@ All changes take effect immediately after saving.
 
 ## 📄 License
 
-**ISC License**
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

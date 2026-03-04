@@ -77,8 +77,10 @@ if not exist "dist\data" (
     echo Folder 'data' created.
 )
 
-REM Copy nodejs folder
-if exist "nodejs" (
+REM Copy nodejs folder (from nodejs/ root OR dist/nodejs from setup-portable-nodejs)
+if exist "dist\nodejs\node.exe" (
+    echo [OK] Portable Node.js already in dist\nodejs.
+) else if exist "nodejs\node.exe" (
     echo Copying 'nodejs' folder...
     xcopy /E /I /Y "nodejs" "dist\nodejs" >nul
     if %ERRORLEVEL% EQU 0 (
@@ -87,8 +89,9 @@ if exist "nodejs" (
         echo   [WARNING] Error copying 'nodejs' folder
     )
 ) else (
-    echo [WARNING] Folder 'nodejs' not found!
-    echo          The executable needs portable Node.js in this folder.
+    echo [WARNING] Portable Node.js not found!
+    echo          Run: .\setup-portable-nodejs.ps1
+    echo          This downloads Node.js to dist\nodejs for the standalone build.
 )
 
 REM Copy server folder
@@ -166,13 +169,16 @@ echo Installing dependencies from package.json...
 echo This may take a few minutes depending on internet speed...
 echo.
 
-REM Check if we have portable Node.js
-if exist "..\nodejs\npm.cmd" (
-    echo Using portable Node.js from parent folder...
-    call ..\nodejs\npm.cmd install --production --no-optional --loglevel=error
-) else if exist "nodejs\npm.cmd" (
-    echo Using portable Node.js from dist...
+REM Check if we have portable Node.js (we're in dist folder)
+if exist "nodejs\npm.cmd" (
+    echo Using portable Node.js from dist\nodejs...
     call nodejs\npm.cmd install --production --no-optional --loglevel=error
+) else if exist "..\dist\nodejs\npm.cmd" (
+    echo Using portable Node.js from dist\nodejs...
+    call ..\dist\nodejs\npm.cmd install --production --no-optional --loglevel=error
+) else if exist "..\nodejs\npm.cmd" (
+    echo Using portable Node.js from nodejs folder...
+    call ..\nodejs\npm.cmd install --production --no-optional --loglevel=error
 ) else (
     echo Using system Node.js...
     call npm install --production --no-optional --loglevel=error
@@ -235,19 +241,22 @@ echo.
 
 cd client
 
-REM Check if Node.js is available
+REM Check if Node.js is available (we're in client folder)
 where node >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [WARNING] Node.js not found in PATH!
     echo           Trying to use portable Node.js...
-    if exist "..\nodejs\node.exe" (
-        set PATH=..\nodejs;%PATH%
+    if exist "..\dist\nodejs\node.exe" (
+        set "PATH=..\dist\nodejs;%PATH%"
+        echo Using portable Node.js from dist\nodejs
+    ) else if exist "..\nodejs\node.exe" (
+        set "PATH=..\nodejs;%PATH%"
     ) else if exist "nodejs\node.exe" (
-        set PATH=nodejs;%PATH%
+        set "PATH=nodejs;%PATH%"
     ) else (
         echo [ERROR] Node.js not found!
-        echo         Cannot build frontend.
-        echo         Please install Node.js or run 'rebuild-frontend.bat' first.
+        echo         Run: .\setup-portable-nodejs.ps1
+        echo         Or install Node.js from nodejs.org
         cd ..
         pause
         exit /b 1
@@ -413,7 +422,7 @@ echo Installing Node.js dependencies in dist folder...
 echo This may take a few minutes...
 if exist "dist\nodejs\npm.cmd" (
     cd dist
-    call ..\nodejs\npm.cmd install
+    call nodejs\npm.cmd install
     cd ..
     if %ERRORLEVEL% EQU 0 (
         echo   [OK] Dependencies installed.
