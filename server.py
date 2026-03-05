@@ -270,6 +270,16 @@ class ServerManager:
                 except Exception as e:
                     self.log(f"  Error listing directory: {e}")
             
+            # Verify client/build has required files (critical for page to load)
+            if CLIENT_BUILD_DIR.exists():
+                index_html = CLIENT_BUILD_DIR / "index.html"
+                static_dir = CLIENT_BUILD_DIR / "static"
+                self.log(f"client/build: index.html exists={index_html.exists()}, static/ exists={static_dir.exists()}")
+                if not index_html.exists():
+                    self.log(f"  [WARNING] index.html missing - page will not load!")
+            else:
+                self.log(f"  [ERROR] client/build folder not found - frontend will not load!")
+            
             # Use portable Node.js
             node_path = str(NODEJS_EXE)
             server_script = str(server_path)

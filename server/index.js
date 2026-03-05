@@ -4,6 +4,14 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
+// Catch uncaught errors to prevent silent crashes (helps debug dist deployment)
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled rejection at:', promise, 'reason:', reason);
+});
+
 const { version } = require('../package.json');
 
 const logRoutes = require('./routes/logs');
@@ -64,8 +72,26 @@ app.use('/api/users', userRoutes);
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
-  const staticPath = path.join(__dirname, '../client/build');
   const fs = require('fs');
+  
+  // Resolve static path: try __dirname first, fallback to process.cwd() (set by Python launcher)
+  let staticPath = path.resolve(__dirname, '../client/build');
+  if (!fs.existsSync(path.join(staticPath, 'index.html'))) {
+    const cwdPath = path.join(process.cwd(), 'client', 'build');
+    if (fs.existsSync(path.join(cwdPath, 'index.html'))) {
+      staticPath = cwdPath;
+      console.log(`[Static] Using cwd path: ${staticPath}`);
+    }
+  }
+  
+  if (!fs.existsSync(path.join(staticPath, 'index.html'))) {
+    console.error(`[Static] ERROR: index.html not found!`);
+    console.error(`[Static]   __dirname path: ${path.resolve(__dirname, '../client/build')}`);
+    console.error(`[Static]   cwd path: ${path.join(process.cwd(), 'client', 'build')}`);
+    console.error(`[Static]   process.cwd(): ${process.cwd()}`);
+  } else {
+    console.log(`[Static] Serving frontend from: ${staticPath}`);
+  }
   
   // Serve static files - this must come before the catch-all route
   app.use(express.static(staticPath, {
@@ -85,7 +111,7 @@ if (process.env.NODE_ENV === 'production') {
     if (req.path.startsWith('/static/')) {
       return next(); // Let express.static handle it or return 404
     }
-    const indexPath = path.join(__dirname, '../client/build/index.html');
+    const indexPath = path.join(staticPath, 'index.html');
     if (!fs.existsSync(indexPath)) {
       console.error(`ERROR: index.html not found at ${indexPath}`);
       return res.status(500).send('Frontend not found. Please rebuild the frontend.');

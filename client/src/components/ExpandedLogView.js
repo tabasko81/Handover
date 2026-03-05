@@ -136,13 +136,20 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
         </button>
       )}
 
-      {/* Main Content */}
+      {/* Main Content - solid bg-primary base, colored tint as overlay to avoid transparency */}
       <div
-        className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${getColorClass(currentLog.color || '')}`}
-        style={!getColorClass(currentLog.color || '') ? { backgroundColor: 'var(--bg-primary)' } : undefined}
+        className="rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        style={{ backgroundColor: 'var(--bg-primary)', position: 'relative' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-8">
+        {getColorClass(currentLog.color || '') && (
+          <div
+            className={getColorClass(currentLog.color || '')}
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: 'inherit' }}
+            aria-hidden
+          />
+        )}
+        <div className="p-8" style={{ position: 'relative', zIndex: 1 }}>
           {/* Header */}
           <div className="flex justify-end mb-6">
             <button
@@ -160,7 +167,7 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
           <p className="text-xl mb-6" style={{ color: 'var(--text-secondary)' }}>{formatDateTime(currentLog.log_date)}</p>
 
           {/* Short Description */}
-          <div className="mb-6">
+          <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-surface)' }}>
             <label className="block text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
               Short Description
             </label>
@@ -168,7 +175,7 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
           </div>
 
           {/* Note */}
-          <div className="mb-6">
+          <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-surface)' }}>
             <label className="block text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
               Note
             </label>
