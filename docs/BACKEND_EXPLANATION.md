@@ -262,5 +262,5 @@ Both are **essential** and work together to create a complete application!
 
 ---
 
-**Version:** Alpha v0.26.03-Alpha.3  
+**Version:** Alpha v0.26.03-Alpha.4  
 **Last Updated:** 2025
