@@ -16,6 +16,8 @@ logs/*.txt
 # Python standalone server generated files
 server_config.json
 build/
+# Distribution archive (large file)
+dist.zip
 # dist/ - Now tracked in git for distribution
 # But allow everything inside dist/ to be committed
 !dist/
