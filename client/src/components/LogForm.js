@@ -89,8 +89,8 @@ function LogForm({ log, onSubmit, onClose }) {
     const noteText = formData.note ? (new DOMParser().parseFromString(formData.note, 'text/html').body.textContent || '').trim() : '';
     if (!noteText) {
       newErrors.note = 'Note is required';
-    } else if (noteText.length > 1000) {
-      newErrors.note = 'Must be 1000 characters or less';
+    } else if (noteText.length > 2500) {
+      newErrors.note = 'Must be 2500 characters or less';
     }
 
     if (!formData.worker_name.trim()) {
@@ -213,12 +213,12 @@ function LogForm({ log, onSubmit, onClose }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Note * (max 1000 characters)</label>
+              <label className="form-label">Note * (max 2500 characters)</label>
               <div style={errors.note ? { border: '2px solid var(--danger)', borderRadius: '8px' } : {}}>
                 <TiptapRichTextEditor
                   value={formData.note || ''}
                   onChange={(html) => handleChange('note', html)}
-                  maxLength={1000}
+                  maxLength={2500}
                   placeholder="Enter your note... Use @user or @all to mention someone."
                 />
               </div>

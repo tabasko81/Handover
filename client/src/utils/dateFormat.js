@@ -23,3 +23,14 @@ export function formatDate(dateString) {
     day: '2-digit'
   });
 }
+
+/**
+ * Compact date for table view: DD.MM.'YY (e.g. 06.12.'25)
+ */
+export function formatDateCompact(dateString) {
+  const date = new Date(dateString);
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = String(date.getFullYear()).slice(-2);
+  return `${d}.${m}.'${y}`;
+}

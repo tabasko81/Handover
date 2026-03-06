@@ -180,7 +180,7 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
               Note
             </label>
             <div
-              className="text-lg whitespace-pre-wrap break-words"
+              className="log-note-content text-lg whitespace-pre-wrap break-words"
               style={{ color: 'var(--text-primary)' }}
               dangerouslySetInnerHTML={{ __html: formatNote(currentLog.note) }}
             />

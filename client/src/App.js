@@ -8,7 +8,7 @@ import UserLoginForm from './components/UserLoginForm';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import Footer from './components/Footer';
 import { fetchLogs, createLog, updateLog, archiveLog, deleteLog } from './services/api';
-import { formatDateTime } from './utils/dateFormat';
+import { formatDateTime, formatDateCompact } from './utils/dateFormat';
 import { fetchPublicConfig } from './services/configApi';
 import { userLogin, verifyUserToken } from './services/authApi';
 
@@ -342,9 +342,9 @@ function App() {
         <table>
           <thead>
             <tr>
-              <th style="width: 15%;">Date</th>
-              <th style="width: 18%;">Short Description</th>
-              <th style="width: 52%;">Note</th>
+              <th style="width: 10%;">Date</th>
+              <th style="width: 15%;">Short Description</th>
+              <th style="width: 60%;">Note</th>
               <th style="width: 15%;">Worker</th>
             </tr>
           </thead>
@@ -353,7 +353,7 @@ function App() {
               const noteText = log.note.replace(/<[^>]*>/g, '').replace(/\n/g, ' ');
               return `
                 <tr>
-                  <td>${formatDateTime(log.log_date)}</td>
+                  <td>${formatDateCompact(log.log_date)}</td>
                   <td>${log.short_description}</td>
                   <td>${noteText}</td>
                   <td><span class="worker-badge">${log.worker_name}</span></td>

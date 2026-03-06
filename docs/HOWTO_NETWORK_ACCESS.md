@@ -196,5 +196,5 @@ New-NetFirewallRule -DisplayName "Shift Handover" -Direction Inbound -LocalPort 
 
 ---
 
-**Version:** Alpha v0.26.03-Alpha.2  
+**Version:** Alpha v0.26.03-Alpha.3  
 **Last Updated:** 2025

@@ -5,6 +5,7 @@
    ======================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 * {
   margin: 0;
@@ -704,6 +705,7 @@ html.carbon .log-color-red { background: rgba(239, 68, 68, 0.2); }
 .tiptap-editor-wrapper .tiptap-editor-content {
   color: var(--text-primary);
   background: var(--bg-primary);
+  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .tiptap-editor-wrapper .ProseMirror:focus {
@@ -731,6 +733,11 @@ html.carbon .log-color-red { background: rgba(239, 68, 68, 0.2); }
   float: left;
   pointer-events: none;
   height: 0;
+}
+
+/* Log notes - Source Sans 3 for optimal screen readability */
+.log-note-content {
+  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* @mention highlight - works in light and dark mode */

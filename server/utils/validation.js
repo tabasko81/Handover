@@ -97,8 +97,8 @@ function validateLogEntry(data, isUpdate = false) {
       const textLength = data.note.replace(/<[^>]*>/g, '').trim().length;
       if (textLength === 0) {
         errors.note = 'Note cannot be empty (HTML tags only)';
-      } else if (textLength > 1000) {
-        errors.note = `Note must be 1000 characters or less (currently ${textLength})`;
+      } else if (textLength > 2500) {
+        errors.note = `Note must be 2500 characters or less (currently ${textLength})`;
       }
     }
 
@@ -126,8 +126,8 @@ function validateLogEntry(data, isUpdate = false) {
         const textLength = data.note.replace(/<[^>]*>/g, '').trim().length;
         if (textLength === 0) {
           errors.note = 'Note cannot be empty (HTML tags only)';
-        } else if (textLength > 1000) {
-          errors.note = `Note must be 1000 characters or less (currently ${textLength})`;
+        } else if (textLength > 2500) {
+          errors.note = `Note must be 2500 characters or less (currently ${textLength})`;
         }
       }
     }
@@ -175,13 +175,13 @@ function sanitizeInput(data) {
       
       // First, check text length before sanitization (for validation)
       const textLength = note.replace(/<[^>]*>/g, '').length;
-      if (textLength > 1000) {
+      if (textLength > 2500) {
         // Truncate intelligently before sanitization
         let truncated = '';
         let count = 0;
         let inTag = false;
         
-        for (let i = 0; i < note.length && count < 1000; i++) {
+        for (let i = 0; i < note.length && count < 2500; i++) {
           if (note[i] === '<') {
             inTag = true;
             truncated += note[i];

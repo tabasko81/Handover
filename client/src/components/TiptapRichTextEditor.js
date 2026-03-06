@@ -70,7 +70,7 @@ const VIBRANT_COLORS = [
   '#6600FF', '#9900FF', '#CC00FF', '#FF00FF', '#FF00CC'
 ];
 
-function TiptapRichTextEditor({ value, onChange, maxLength = 1000, placeholder = '' }) {
+function TiptapRichTextEditor({ value, onChange, maxLength = 2500, placeholder = '' }) {
   const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);

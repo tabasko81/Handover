@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ExpandedLogView from './ExpandedLogView';
 import { parseMarkdown } from '../utils/markdownParser';
-import { formatDateTime } from '../utils/dateFormat';
+import { formatDateCompact } from '../utils/dateFormat';
 
 function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onPrint, onCreateLog, flashId }) {
   const [expandedNotes, setExpandedNotes] = useState({});
@@ -34,26 +34,24 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
   const truncateNote = (note, id) => {
     if (!note) return <div></div>;
     
-    // Show double the characters (600) before "read more"
-    const maxLength = 600;
+    // ~5 lines at ~100 chars/line before "read more"
+    const maxLength = 500;
     
     if (note.length <= maxLength) {
-      // Format note with newlines and @mentions
       const html = formatNote(note);
-      return <div dangerouslySetInnerHTML={{ __html: html }} />;
+      return <div className="log-note-content" dangerouslySetInnerHTML={{ __html: html }} />;
     }
     
     const isExpanded = expandedNotes[id];
     if (isExpanded) {
-      // Show full note
       const html = formatNote(note);
       return (
         <>
-          <div dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="log-note-content" dangerouslySetInnerHTML={{ __html: html }} />
           <button
             onClick={() => toggleNote(id)}
-            className="ml-1 font-semibold"
-            style={{ color: 'var(--accent)' }}
+            className="ml-1 font-medium hover:underline"
+            style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
           >
             Read less
           </button>
@@ -61,22 +59,24 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
       );
     }
     
-    // Truncate text (simple truncation)
     let truncated = note.substring(0, maxLength);
-    // Try to truncate at word boundary
     const lastSpace = truncated.lastIndexOf(' ');
     if (lastSpace > maxLength * 0.8) {
       truncated = truncated.substring(0, lastSpace);
     }
     
-    // Format truncated note
     const html = formatNote(truncated + '...');
     return (
       <>
-        <div dangerouslySetInnerHTML={{ __html: html }} />
+        <div
+          className="log-note-content"
+          style={{ display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
         <button
           onClick={() => toggleNote(id)}
-          className="btn btn-primary ml-1"
+          className="ml-1 font-medium hover:underline"
+          style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
         >
           Read more
         </button>
@@ -161,11 +161,11 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
         <table className="dn-table" style={{ fontSize: '0.8125rem' }}>
           <thead>
             <tr>
-              <th style={{ width: '12%' }}>Date</th>
-              <th style={{ width: '15%' }}>Short Description</th>
-              <th style={{ width: '45%' }}>Note</th>
+              <th style={{ width: '7%' }}>Date</th>
+              <th style={{ width: '12%' }}>Short Description</th>
+              <th style={{ width: '55%' }}>Note</th>
               <th style={{ width: '8%' }}>Worker</th>
-              <th style={{ width: '20%' }}>Actions</th>
+              <th style={{ width: '18%' }}>Actions</th>
             </tr>
           </thead>
           <tbody id="logs-table-body">
@@ -185,11 +185,13 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                 className={`print-row ${rowClass}`}
               >
                 <td style={{ whiteSpace: 'nowrap' }}>
-                  {formatDateTime(log.log_date)}
+                  {formatDateCompact(log.log_date)}
                 </td>
-                <td style={{ whiteSpace: 'nowrap', fontWeight: 500 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <span>{log.short_description}</span>
+                <td style={{ fontWeight: 500 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.25rem' }}>
+                    <span style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
+                      {log.short_description}
+                    </span>
                     {log.reminder_date && new Date(log.reminder_date) > new Date() && (
                       <span
                         className="badge badge-orange"
@@ -236,8 +238,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     <button
                       onClick={() => onEdit(log)}
-                      className="btn btn-header"
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                      className="font-medium hover:underline"
+                      style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}
                       title="Edit this log entry - modify date, description, note, worker, color, or reminder"
                     >
                       Edit
