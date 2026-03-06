@@ -168,17 +168,11 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
 
           {/* Short Description */}
           <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-surface)' }}>
-            <label className="block text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-              Short Description
-            </label>
             <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{currentLog.short_description}</p>
           </div>
 
           {/* Note */}
           <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-surface)' }}>
-            <label className="block text-sm font-bold mb-2 uppercase tracking-wide" style={{ color: 'var(--text-primary)' }}>
-              Note
-            </label>
             <div
               className="log-note-content text-lg whitespace-pre-wrap break-words"
               style={{ color: 'var(--text-primary)' }}
@@ -247,8 +241,8 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
             <span style={{ color: 'var(--text-secondary)' }}>|</span>
             <button
               onClick={() => {
-                onArchive(currentLog.id, !currentLog.is_archived);
-                onClose();
+                onArchive(currentLog);
+                if (!currentLog.is_archived) onClose();
               }}
               className="bg-transparent border-none p-0 font-medium hover:underline cursor-pointer"
               style={{ color: 'var(--accent)' }}

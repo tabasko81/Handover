@@ -238,14 +238,14 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     <button
                       onClick={() => onEdit(log)}
-                      className="font-medium hover:underline"
-                      style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}
+                      className="btn btn-ghost"
+                      style={{ color: 'var(--accent)', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                       title="Edit this log entry - modify date, description, note, worker, color, or reminder"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => onArchive(log.id, !log.is_archived)}
+                      onClick={() => onArchive(log)}
                       className="btn btn-ghost"
                       style={{
                         color: log.is_archived ? 'var(--success)' : 'var(--warning)',

@@ -6,6 +6,7 @@ import Header from './components/Header';
 import InfoSlide from './components/InfoSlide';
 import UserLoginForm from './components/UserLoginForm';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import ArchiveConfirmationModal from './components/ArchiveConfirmationModal';
 import Footer from './components/Footer';
 import { fetchLogs, createLog, updateLog, archiveLog, deleteLog } from './services/api';
 import { formatDateTime, formatDateCompact } from './utils/dateFormat';
@@ -253,6 +254,47 @@ function App() {
     }
   };
 
+  const [archiveModal, setArchiveModal] = useState({ isOpen: false, logId: null, logInfo: null });
+  const [archiveSuccessMessage, setArchiveSuccessMessage] = useState(false);
+  const [blinkArchivedCheckbox, setBlinkArchivedCheckbox] = useState(false);
+
+  const handleArchiveClick = (log) => {
+    if (log.is_archived) {
+      handleArchiveLog(log.id, false);
+    } else {
+      setArchiveModal({ isOpen: true, logId: log.id, logInfo: log });
+    }
+  };
+
+  const handleArchiveConfirm = async () => {
+    if (archiveModal.logId) {
+      try {
+        await archiveLog(archiveModal.logId, true);
+        loadLogs();
+        setArchiveModal({ isOpen: false, logId: null, logInfo: null });
+        setArchiveSuccessMessage(true);
+        setBlinkArchivedCheckbox(true);
+      } catch (err) {
+        setError(err.message || 'Failed to archive log');
+        setArchiveModal({ isOpen: false, logId: null, logInfo: null });
+      }
+    }
+  };
+
+  const handleArchiveCancel = () => {
+    setArchiveModal({ isOpen: false, logId: null, logInfo: null });
+  };
+
+  useEffect(() => {
+    if (archiveSuccessMessage || blinkArchivedCheckbox) {
+      const timer = setTimeout(() => {
+        setArchiveSuccessMessage(false);
+        setBlinkArchivedCheckbox(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [archiveSuccessMessage, blinkArchivedCheckbox]);
+
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, logId: null, logInfo: null });
 
   const handleDeleteClick = (log) => {
@@ -453,12 +495,29 @@ function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', gap: '0.5rem' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <Filters
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          onToggleArchived={() => handleFilterChange({ ...filters, archived: !filters.archived })}
-        />
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onToggleArchived={() => handleFilterChange({ ...filters, archived: !filters.archived })}
+              blinkArchivedCheckbox={blinkArchivedCheckbox}
+            />
           </div>
         </div>
+
+        {archiveSuccessMessage && (
+          <div
+            className="card"
+            style={{
+              marginBottom: '0.75rem',
+              padding: '0.5rem 0.75rem',
+              background: 'var(--accent-light)',
+              border: '1px solid var(--accent)',
+              color: 'var(--text-primary)',
+              fontSize: '0.875rem'
+            }}
+          >
+            Log archived. Enable <strong>Show Archived</strong> in the search section to view it again.
+          </div>
+        )}
 
         {showForm && (
           <LogForm
@@ -472,7 +531,7 @@ function App() {
           logs={logs}
           loading={loading}
           onEdit={handleEditClick}
-          onArchive={handleArchiveLog}
+          onArchive={handleArchiveClick}
           onDelete={handleDeleteClick}
           showArchived={filters.archived}
           onPrint={handlePrint}
@@ -485,6 +544,13 @@ function App() {
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}
           logInfo={deleteModal.logInfo}
+        />
+
+        <ArchiveConfirmationModal
+          isOpen={archiveModal.isOpen}
+          onConfirm={handleArchiveConfirm}
+          onCancel={handleArchiveCancel}
+          logInfo={archiveModal.logInfo}
         />
 
         {pagination.total_pages > 1 && (

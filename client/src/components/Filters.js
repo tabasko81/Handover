@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Filters({ filters, onFilterChange, onToggleArchived }) {
+function Filters({ filters, onFilterChange, onToggleArchived, blinkArchivedCheckbox }) {
   const [localFilters, setLocalFilters] = useState(filters);
 
   const handleChange = (field, value) => {
@@ -64,7 +64,11 @@ function Filters({ filters, onFilterChange, onToggleArchived }) {
         onKeyPress={handleKeyPress}
         style={{ ...inputStyle, minWidth: '150px' }}
       />
-      <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-secondary)' }} title="Archived">
+      <label
+        className={blinkArchivedCheckbox ? 'blink-archived' : ''}
+        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-secondary)' }}
+        title="Archived"
+      >
         <input
           type="checkbox"
           checked={localFilters.archived}
@@ -73,7 +77,7 @@ function Filters({ filters, onFilterChange, onToggleArchived }) {
             onToggleArchived();
           }}
         />
-        Arch
+        Show Archived
       </label>
       <button onClick={handleApply} className="btn btn-header" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }} title="Apply">✓</button>
       <button onClick={handleReset} className="btn btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }} title="Reset">✕</button>

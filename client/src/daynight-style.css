@@ -630,6 +630,18 @@ html.carbon .log-color-red { background: rgba(239, 68, 68, 0.2); }
   50% { background: rgba(34, 197, 94, 0.3); }
 }
 
+.blink-archived {
+  animation: blink-archived 0.5s ease-in-out 6;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+}
+
+@keyframes blink-archived {
+  0%, 100% { background: transparent; }
+  50% { background: var(--accent-light); }
+}
+
 /* ===== Modal ===== */
 .modal-backdrop {
   position: fixed;
