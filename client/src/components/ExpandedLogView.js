@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { parseMarkdown } from '../utils/markdownParser';
-import { formatDateTime } from '../utils/dateFormat';
+import { formatDateTime, formatDateCompact } from '../utils/dateFormat';
 import { clearReminder } from '../services/api';
 
 function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, onDelete }) {
@@ -168,7 +168,14 @@ function ExpandedLogView({ log, logs, onClose, onEdit, onArchive, onNavigate, on
 
           {/* Short Description */}
           <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-surface)' }}>
-            <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{currentLog.short_description}</p>
+            <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {currentLog.short_description}
+              {currentLog.original_log_date && (
+                <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>
+                  {' '}({formatDateCompact(currentLog.original_log_date)})
+                </span>
+              )}
+            </p>
           </div>
 
           {/* Note */}

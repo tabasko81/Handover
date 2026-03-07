@@ -41,10 +41,6 @@ function App() {
   // headerColor is used to update CSS variable, but not directly in JSX
   // eslint-disable-next-line no-unused-vars
   const [headerColor, setHeaderColor] = useState('#2563eb'); // eslint-disable-line no-unused-vars
-  const [lastLogCheck, setLastLogCheck] = useState(null);
-  const [newLogsCount, setNewLogsCount] = useState(0);
-  const [showNewLogsNotification, setShowNewLogsNotification] = useState(false);
-
   useEffect(() => {
     checkLoginStatus();
     loadGlobalConfig();
@@ -83,17 +79,13 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadLogs();
-      // Poll every 2 minutes to check for expired reminders and new logs
+      // Poll every 2 minutes to check for expired reminders
       const reminderPollingInterval = setInterval(() => {
         loadLogs();
       }, 2 * 60 * 1000);
-      
-      // Check for updates more frequently (every 30 seconds) but silently
-      const updateCheckInterval = setInterval(checkForUpdates, 30 * 1000);
-      
+
       return () => {
         clearInterval(reminderPollingInterval);
-        clearInterval(updateCheckInterval);
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,51 +138,6 @@ function App() {
   };
 
   // Check for log updates periodically
-  const checkForUpdates = async () => {
-    if (isAuthenticated && !loading) {
-      try {
-        const response = await fetchLogs({
-          ...filters,
-          page: currentPage,
-          limit: 20
-        });
-        
-        // Check for new logs if we have previous logs
-        if (lastLogCheck && logs.length > 0) {
-          const newLogs = response.data.filter(newLog => {
-            // Check if it's a completely new log (not in our current list)
-            const isNew = !logs.some(existingLog => existingLog.id === newLog.id);
-            
-            // Also check if this log is newer than our last check
-            if (!isNew) {
-              const newLogDate = new Date(newLog.log_date);
-              const lastCheckDate = new Date(lastLogCheck);
-              return newLogDate > lastCheckDate;
-            }
-            
-            return isNew;
-          });
-          
-          if (newLogs.length > 0) {
-            setNewLogsCount(newLogs.length);
-            setShowNewLogsNotification(true);
-            
-            // Auto-hide notification after 10 seconds
-            setTimeout(() => {
-              setShowNewLogsNotification(false);
-            }, 10000);
-          }
-        }
-        
-        // Update last check time
-        setLastLogCheck(new Date().toISOString());
-      } catch (err) {
-        // Silently fail for update checks
-        console.error('Failed to check for updates:', err);
-      }
-    }
-  };
-
   const loadLogs = async (silent = false) => {
     if (!silent) {
       setLoading(true);
@@ -205,7 +152,6 @@ function App() {
       
       setLogs(response.data);
       setPagination(response.pagination);
-      setLastLogCheck(new Date().toISOString());
     } catch (err) {
       setError(err.message || 'Failed to load logs');
     } finally {
@@ -420,10 +366,13 @@ function App() {
           <tbody>
             ${logsToPrint.map(log => {
               const noteHtml = sanitizeNoteForPrint(log.note);
+              const shortDesc = log.original_log_date
+                ? `${log.short_description} (${formatDateCompact(log.original_log_date)})`
+                : log.short_description;
               return `
                 <tr>
                   <td class="col-date">${formatDateCompact(log.log_date)}</td>
-                  <td class="col-desc">${log.short_description}</td>
+                  <td class="col-desc">${shortDesc}</td>
                   <td class="col-note note-cell">${noteHtml}</td>
                   <td class="col-worker"><span class="worker-badge">${log.worker_name}</span></td>
                 </tr>
@@ -483,39 +432,6 @@ function App() {
         {error && (
           <div className="alert alert-error">
             {error}
-          </div>
-        )}
-
-        {showNewLogsNotification && newLogsCount > 0 && (
-          <div className="alert alert-info flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="text-lg mr-2">🔔</span>
-              <span>
-                {newLogsCount} new log{newLogsCount > 1 ? 's' : ''} available.
-                <button
-                  onClick={() => {
-                    setShowNewLogsNotification(false);
-                    setNewLogsCount(0);
-                    loadLogs();
-                  }}
-                  className="ml-2 font-semibold underline hover:no-underline"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  Refresh to view
-                </button>
-              </span>
-            </div>
-            <button
-              onClick={() => {
-                setShowNewLogsNotification(false);
-                setNewLogsCount(0);
-              }}
-              className="text-xl leading-none"
-              style={{ color: 'var(--text-secondary)' }}
-              title="Dismiss notification"
-            >
-              ×
-            </button>
           </div>
         )}
 

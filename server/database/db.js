@@ -89,6 +89,15 @@ function initialize() {
           database.run('CREATE INDEX IF NOT EXISTS idx_reminder_date ON shift_logs(reminder_date)', (err) => {
             if (err) console.error('Error creating reminder_date index:', err);
           });
+
+          // Add original_log_date for restored future reminders (stores original date when log_date becomes restoration date)
+          database.run(`
+            ALTER TABLE shift_logs ADD COLUMN original_log_date DATETIME DEFAULT NULL
+          `, (alterErr) => {
+            if (alterErr && !alterErr.message.includes('duplicate column') && process.env.NODE_ENV !== 'production') {
+              console.log('Note: original_log_date column may already exist');
+            }
+          });
           
           // Create users table
           database.run(`

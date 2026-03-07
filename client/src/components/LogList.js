@@ -191,6 +191,11 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.25rem' }}>
                     <span style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
                       {log.short_description}
+                      {log.original_log_date && (
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>
+                          {' '}({formatDateCompact(log.original_log_date)})
+                        </span>
+                      )}
                     </span>
                     {log.reminder_date && new Date(log.reminder_date) > new Date() && (
                       <span
