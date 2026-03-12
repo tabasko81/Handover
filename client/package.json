@@ -1,6 +1,6 @@
 {
   "name": "shift-handover-log-client",
-  "version": "0.26.03-Alpha.4",
+  "version": "0.26.03-Beta.1",
   "private": true,
   "dependencies": {
     "@tiptap/extension-character-count": "^3.20.0",

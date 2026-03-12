@@ -370,5 +370,5 @@ If issues persist:
 
 ---
 
-**Version:** Alpha v0.26.03-Alpha.4  
+**Version:** Beta v0.26.03-Beta.1  
 **Last Updated:** 2025

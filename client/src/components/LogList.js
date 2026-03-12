@@ -188,45 +188,71 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
                   {formatDateCompact(log.log_date)}
                 </td>
                 <td style={{ fontWeight: 500 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.25rem' }}>
-                    <span style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
-                      {log.short_description}
-                      {log.original_log_date && (
-                        <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>
-                          {' '}({formatDateCompact(log.original_log_date)})
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    {(log.reminder_date && new Date(log.reminder_date) > new Date()) && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <span
+                          className="badge badge-orange"
+                          title={`Future Reminder: Will activate on ${new Date(log.reminder_date).toLocaleString('de-DE')}`}
+                        >
+                          ⏰ {new Date(log.reminder_date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
                         </span>
-                      )}
-                    </span>
-                    {log.reminder_date && new Date(log.reminder_date) > new Date() && (
-                      <span
-                        className="badge badge-orange"
-                        style={{ marginLeft: '0.5rem' }}
-                        title={`Future Reminder: Will activate on ${new Date(log.reminder_date).toLocaleString('de-DE')}`}
-                      >
-                        ⏰ {new Date(log.reminder_date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
-                      </span>
+                        <button
+                          onClick={() => setExpandedLog(log)}
+                          className="btn btn-ghost"
+                          style={{ padding: '0.25rem', flexShrink: 0 }}
+                          title="View expanded"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     )}
-                    <button
-                      onClick={() => setExpandedLog(log)}
-                      className="btn btn-ghost"
-                      style={{ padding: '0.25rem', flexShrink: 0 }}
-                      title="View expanded"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.25rem' }}>
+                      <span style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
+                        {log.short_description}
+                        {log.original_log_date && (
+                          <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>
+                            {' '}({formatDateCompact(log.original_log_date)})
+                          </span>
+                        )}
+                      </span>
+                      {!(log.reminder_date && new Date(log.reminder_date) > new Date()) && (
+                        <button
+                          onClick={() => setExpandedLog(log)}
+                          className="btn btn-ghost"
+                          style={{ padding: '0.25rem', flexShrink: 0 }}
+                          title="View expanded"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td>
