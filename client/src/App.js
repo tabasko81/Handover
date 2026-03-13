@@ -287,10 +287,7 @@ function App() {
 
   const sanitizeNoteForPrint = (note) => {
     if (!note) return '';
-    const html = parseMarkdown(note);
-    return html
-      .replace(/\s*style="[^"]*"/gi, '')
-      .replace(/\s*class="[^"]*"/gi, '');
+    return parseMarkdown(note);
   };
 
   const handlePrint = (logsToPrint) => {

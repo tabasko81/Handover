@@ -149,7 +149,8 @@ router.get('/', (req, res) => {
           ...row,
           is_archived: Boolean(row.is_archived),
           is_deleted: Boolean(row.is_deleted),
-          reminder_date: row.reminder_date || null
+          reminder_date: row.reminder_date || null,
+          original_log_date: row.original_log_date || null
         })),
         pagination: {
           current_page: parseInt(page),
@@ -191,7 +192,8 @@ router.get('/:id', (req, res) => {
         ...row,
         is_archived: Boolean(row.is_archived),
         is_deleted: Boolean(row.is_deleted),
-        reminder_date: row.reminder_date || null
+        reminder_date: row.reminder_date || null,
+        original_log_date: row.original_log_date || null
       }
     });
   });
@@ -245,7 +247,8 @@ router.post('/', (req, res) => {
           ...row,
           is_archived: Boolean(row.is_archived),
           is_deleted: Boolean(row.is_deleted),
-          reminder_date: row.reminder_date || null
+          reminder_date: row.reminder_date || null,
+          original_log_date: row.original_log_date || null
         };
 
         res.status(201).json({
@@ -334,7 +337,8 @@ router.put('/:id', (req, res) => {
               ...updatedRow,
               is_archived: Boolean(updatedRow.is_archived),
               is_deleted: Boolean(updatedRow.is_deleted),
-              reminder_date: updatedRow.reminder_date || null
+              reminder_date: updatedRow.reminder_date || null,
+              original_log_date: updatedRow.original_log_date || null
             }
           });
         });
@@ -387,7 +391,8 @@ router.patch('/:id/archive', (req, res) => {
             ...row,
             is_archived: Boolean(row.is_archived),
             is_deleted: Boolean(row.is_deleted),
-            reminder_date: row.reminder_date || null
+            reminder_date: row.reminder_date || null,
+            original_log_date: row.original_log_date || null
           }
         });
       });
@@ -465,7 +470,8 @@ router.patch('/:id/reminder', (req, res) => {
               ...updatedRow,
               is_archived: Boolean(updatedRow.is_archived),
               is_deleted: Boolean(updatedRow.is_deleted),
-              reminder_date: updatedRow.reminder_date || null
+              reminder_date: updatedRow.reminder_date || null,
+              original_log_date: updatedRow.original_log_date || null
             }
           });
         });

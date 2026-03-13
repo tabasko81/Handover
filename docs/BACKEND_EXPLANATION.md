@@ -262,5 +262,5 @@ Both are **essential** and work together to create a complete application!
 
 ---
 
-**Version:** Beta v0.26.03-Beta.1  
+**Version:** Beta v0.26.03-Beta.2  
 **Last Updated:** 2025

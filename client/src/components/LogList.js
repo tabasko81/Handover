@@ -31,13 +31,17 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
     return parseMarkdown(note);
   };
 
+  const exceedsFiveLines = (note) => {
+    const plainText = note.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (plainText.length === 0) return false;
+    const lineBreaks = (note.match(/<br\s*\/?>|<p[^>]*>|<\/p>|\n/gi) || []).length;
+    return plainText.length > 400 || lineBreaks >= 5;
+  };
+
   const truncateNote = (note, id) => {
     if (!note) return <div></div>;
-    
-    // ~5 lines at ~100 chars/line before "read more"
-    const maxLength = 500;
-    
-    if (note.length <= maxLength) {
+
+    if (!exceedsFiveLines(note)) {
       const html = formatNote(note);
       return <div className="log-note-content" dangerouslySetInnerHTML={{ __html: html }} />;
     }
@@ -58,7 +62,8 @@ function LogList({ logs, loading, onEdit, onArchive, onDelete, showArchived, onP
         </>
       );
     }
-    
+
+    const maxLength = 500;
     let truncated = note.substring(0, maxLength);
     const lastSpace = truncated.lastIndexOf(' ');
     if (lastSpace > maxLength * 0.8) {

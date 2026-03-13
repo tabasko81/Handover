@@ -13,7 +13,7 @@ function processReminders() {
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
     
     db.all(
-      `SELECT id, reminder_date FROM shift_logs 
+      `SELECT id, log_date, reminder_date FROM shift_logs 
        WHERE reminder_date IS NOT NULL 
        AND datetime(reminder_date) <= datetime('now') 
        AND is_deleted = 0`,
@@ -29,12 +29,13 @@ function processReminders() {
         }
         
         // Activate all logs whose reminders have expired
+        // Set log_date to restoration time, store original in original_log_date
         const ids = rows.map(row => row.id);
         const placeholders = ids.map(() => '?').join(',');
         
         db.run(
           `UPDATE shift_logs 
-           SET reminder_date = NULL, is_archived = 0, updated_at = CURRENT_TIMESTAMP 
+           SET log_date = datetime('now'), original_log_date = log_date, reminder_date = NULL, is_archived = 0, updated_at = CURRENT_TIMESTAMP 
            WHERE id IN (${placeholders})`,
           ids,
           function(updateErr) {

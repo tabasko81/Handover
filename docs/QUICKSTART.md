@@ -142,4 +142,4 @@ If port 8500 is occupied, change it in the `server_config.json` file:
 
 ---
 
-**Version:** Beta v0.26.03-Beta.1
+**Version:** Beta v0.26.03-Beta.2

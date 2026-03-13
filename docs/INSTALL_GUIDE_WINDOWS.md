@@ -2,7 +2,7 @@
 
 This guide will help you install and run the Shift Handover Log application on Windows using the standalone executable. No technical knowledge required!
 
-**Version:** Beta v0.26.03-Beta.1  
+**Version:** Beta v0.26.03-Beta.2  
 **Last Updated:** 2025
 
 ---
@@ -309,5 +309,5 @@ Happy logging! 📝
 
 ---
 
-**Version:** Beta v0.26.03-Beta.1  
+**Version:** Beta v0.26.03-Beta.2  
 **Last Updated:** 2025
