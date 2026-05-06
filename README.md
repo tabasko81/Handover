@@ -108,6 +108,12 @@ The easiest way to get started! No installation required - just run the executab
 
 ---
 
+### Linux / server (Git + Node)
+
+For Debian/Ubuntu, Proxmox **LXC**, or other Linux hosts, use the install script and production start command documented in **[docs/INSTALL_LINUX.md](docs/INSTALL_LINUX.md)** (clone from GitHub, build, SQLite, `npm run start:prod`).
+
+---
+
 ## 📖 Usage Guide
 
 ![Application Usage View](screenshots/Screenshot_2.png)
@@ -174,6 +180,7 @@ All changes take effect immediately after saving.
 
 - **[User Manual](docs/USER_MANUAL.md)** - Complete feature documentation
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Fast installation guide
+- **[Linux / LXC install](docs/INSTALL_LINUX.md)** - Git-based server installation
 - **[Standalone Installation](INSTALL_GUIDE_DIST.md)** - Complete guide for dist folder
 - **[Network Access](docs/HOWTO_NETWORK_ACCESS.md)** - Configure network access
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions

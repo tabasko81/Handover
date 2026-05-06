@@ -10,7 +10,8 @@
     "build": "cd client && npm run build",
     "install-all": "npm install && cd client && npm install",
     "setup-db": "node server/database/setup.js",
-    "seed": "node server/database/seed.js"
+    "seed": "node server/database/seed.js",
+    "start:prod": "node server/index.js"
   },
   "keywords": [
     "shift-handover",
