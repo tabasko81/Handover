@@ -95,6 +95,24 @@ input, select, textarea {
   width: 100%;
 }
 
+/* Same horizontal bounds as .main-content (align header strip with logs table) */
+.content-width {
+  box-sizing: border-box;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.header-inner {
+  box-sizing: border-box;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 2rem;
+}
+
 /* ===== Cards ===== */
 .card {
   background: var(--bg-primary);
@@ -759,4 +777,311 @@ html.carbon .log-color-red { background: rgba(239, 68, 68, 0.2); }
   font-weight: 600;
   padding: 0 0.25rem;
   border-radius: 4px;
+}
+
+/* Dark mode: Tiptap inline text color + highlight marks stay readable */
+html.carbon .log-note-content mark,
+html.carbon .tiptap-editor-wrapper .ProseMirror mark {
+  color: var(--text-primary) !important;
+}
+
+html.carbon .log-note-content span[style^="color"],
+html.carbon .log-note-content span[style*="; color:"],
+html.carbon .tiptap-editor-wrapper .ProseMirror span[style^="color"],
+html.carbon .tiptap-editor-wrapper .ProseMirror span[style*="; color:"] {
+  color: var(--text-primary) !important;
+}
+
+/* ===== Print preview (in-page A4) ===== */
+#print-preview-mount {
+  position: relative;
+  z-index: 60;
+}
+
+.print-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.print-preview-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100vh;
+}
+
+.print-preview-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.print-preview-toolbar-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.print-preview-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.print-preview-fit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.print-preview-fit-toggle input {
+  cursor: pointer;
+}
+
+.print-preview-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 1.25rem;
+  background: #d1d5db;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.print-sheet {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  color: #000;
+  padding: 20px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.print-preview-fit .print-sheet {
+  width: min(210mm, 100%);
+  min-width: 0;
+}
+
+.print-preview-actual .print-sheet {
+  width: 210mm;
+  min-width: 210mm;
+}
+
+.print-sheet-title {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #000;
+}
+
+.print-sheet-info {
+  margin-bottom: 20px;
+  color: #000;
+  line-height: 1.5;
+}
+
+.print-sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.print-sheet-table th,
+.print-sheet-table td {
+  border: 1px solid #ddd;
+  text-align: left;
+  color: #000;
+}
+
+.print-sheet-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  padding: 4px;
+  font-size: 10px;
+}
+
+.print-sheet-table td {
+  padding: 4px;
+  font-size: 11px;
+}
+
+.print-sheet-table .col-date,
+.print-sheet-table .col-worker {
+  padding: 3px 4px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.print-sheet-table .col-desc {
+  padding: 3px 4px;
+  font-size: 10px;
+}
+
+.print-sheet-table .col-note {
+  padding: 4px 6px;
+}
+
+.print-sheet-table th.col-date,
+.print-sheet-table th.col-desc,
+.print-sheet-table th.col-worker {
+  width: 1%;
+}
+
+.print-sheet-table th.col-note {
+  width: auto;
+}
+
+.print-sheet-table .worker-badge {
+  background-color: #e5e7eb;
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 9px;
+  display: inline-block;
+}
+
+.print-sheet-table .note-cell {
+  color: #000;
+  vertical-align: top;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.print-sheet-table .note-cell * {
+  color: #000 !important;
+}
+
+.print-sheet-table .note-cell p,
+.print-sheet-table .note-cell div {
+  margin: 0.5em 0;
+}
+
+.print-sheet-table .note-cell p:first-child,
+.print-sheet-table .note-cell div:first-child {
+  margin-top: 0;
+}
+
+.print-sheet-table .note-cell p:last-child,
+.print-sheet-table .note-cell div:last-child {
+  margin-bottom: 0;
+}
+
+.print-sheet-table .note-cell ul,
+.print-sheet-table .note-cell ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.print-sheet-table .note-cell li {
+  margin: 0.25em 0;
+}
+
+.print-sheet-table .note-cell pre,
+.print-sheet-table .note-cell code {
+  background: #f5f5f5 !important;
+  color: #000 !important;
+  padding: 2px 4px;
+  margin: 0.25em 0;
+}
+
+.print-sheet-table .note-cell pre {
+  padding: 6px;
+  white-space: pre-wrap;
+}
+
+.print-sheet-table .note-cell a {
+  color: #000 !important;
+  text-decoration: underline;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  body > *:not(#print-preview-mount) {
+    display: none !important;
+  }
+
+  #print-preview-mount {
+    position: static !important;
+    z-index: auto !important;
+  }
+
+  #print-preview-mount .print-preview-toolbar {
+    display: none !important;
+  }
+
+  #print-preview-mount .print-preview-backdrop {
+    position: static !important;
+    background: transparent !important;
+    display: block !important;
+    inset: auto !important;
+  }
+
+  #print-preview-mount .print-preview-panel {
+    display: block !important;
+    max-height: none !important;
+  }
+
+  #print-preview-mount .print-preview-scroll {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: transparent !important;
+    display: block !important;
+  }
+
+  #print-preview-root.print-sheet {
+    min-height: auto !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    page-break-inside: auto;
+  }
+
+  .print-sheet-table .note-cell,
+  .print-sheet-table .note-cell * {
+    color: #000 !important;
+  }
+
+  .print-sheet-table .note-cell pre,
+  .print-sheet-table .note-cell code {
+    background: #f5f5f5 !important;
+    color: #000 !important;
+  }
+
+  .print-sheet-table .worker-badge {
+    background-color: #e5e7eb !important;
+    color: #000 !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
 }

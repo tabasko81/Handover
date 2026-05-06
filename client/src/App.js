@@ -7,10 +7,9 @@ import InfoSlide from './components/InfoSlide';
 import UserLoginForm from './components/UserLoginForm';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import ArchiveConfirmationModal from './components/ArchiveConfirmationModal';
+import PrintPreviewModal from './components/PrintPreviewModal';
 import Footer from './components/Footer';
 import { fetchLogs, createLog, updateLog, archiveLog, deleteLog } from './services/api';
-import { formatDateCompact } from './utils/dateFormat';
-import { parseMarkdown } from './utils/markdownParser';
 import { fetchPublicConfig } from './services/configApi';
 import { userLogin, verifyUserToken } from './services/authApi';
 
@@ -37,6 +36,7 @@ function App() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [flashId, setFlashId] = useState(null);
+  const [printPreview, setPrintPreview] = useState({ open: false, logs: [] });
   const [pageName, setPageName] = useState('Shift Handover Log');
   // headerColor is used to update CSS variable, but not directly in JSX
   // eslint-disable-next-line no-unused-vars
@@ -285,107 +285,11 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const sanitizeNoteForPrint = (note) => {
-    if (!note) return '';
-    return parseMarkdown(note);
-  };
-
   const handlePrint = (logsToPrint) => {
-    const printWindow = window.open('', '_blank');
-
-    // Format date and time as dd.mm.yyyy_hhmm (German format)
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    const hours = String(today.getHours()).padStart(2, '0');
-    const minutes = String(today.getMinutes()).padStart(2, '0');
-    const dateFormatted = `${day}.${month}.${year}_${hours}${minutes}`;
-
-    // Get page name from state or localStorage
-    const currentPageName = pageName || localStorage.getItem('page_name') || 'Shift Handover Log';
-    const printTitle = `${currentPageName} ${dateFormatted}`;
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${printTitle}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; color: #000; }
-          h1 { margin-bottom: 10px; color: #000; }
-          .info { margin-bottom: 20px; color: #000; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th, td { border: 1px solid #ddd; text-align: left; color: #000; }
-          th { background-color: #f2f2f2; font-weight: bold; padding: 4px 4px; font-size: 10px; }
-          td { padding: 4px 4px; font-size: 11px; }
-          .col-date, .col-worker { padding: 3px 4px; font-size: 10px; white-space: nowrap; }
-          .col-desc { padding: 3px 4px; font-size: 10px; }
-          .col-note { padding: 4px 6px; }
-          th.col-date, th.col-desc, th.col-worker { width: 1%; }
-          th.col-note { width: auto; }
-          .worker-badge { background-color: #e5e7eb; color: #000; padding: 1px 4px; border-radius: 4px; font-size: 9px; display: inline-block; }
-          .note-cell { color: #000; vertical-align: top; white-space: pre-wrap; }
-          .note-cell * { color: #000 !important; }
-          .note-cell p, .note-cell div { margin: 0.5em 0; }
-          .note-cell p:first-child, .note-cell div:first-child { margin-top: 0; }
-          .note-cell p:last-child, .note-cell div:last-child { margin-bottom: 0; }
-          .note-cell ul, .note-cell ol { margin: 0.5em 0; padding-left: 1.5em; }
-          .note-cell li { margin: 0.25em 0; }
-          .note-cell pre, .note-cell code { background: #f5f5f5 !important; color: #000 !important; padding: 2px 4px; margin: 0.25em 0; }
-          .note-cell pre { padding: 6px; white-space: pre-wrap; }
-          .note-cell a { color: #000 !important; text-decoration: underline; }
-          @page { margin: 1cm; }
-          @media print {
-            body { padding: 0; }
-            .note-cell, .note-cell * { color: #000 !important; }
-            .note-cell pre, .note-cell code { background: #f5f5f5 !important; color: #000 !important; }
-            .worker-badge { background-color: #e5e7eb !important; color: #000 !important; }
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${printTitle}</h1>
-        <div class="info">
-          Date: ${new Date().toLocaleDateString('de-DE')}<br>
-          Generated: ${new Date().toLocaleString('de-DE')}<br>
-          Total Entries: ${logsToPrint.length}
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th class="col-date">Date</th>
-              <th class="col-desc">Short Description</th>
-              <th class="col-note">Note</th>
-              <th class="col-worker">Worker</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${logsToPrint.map(log => {
-              const noteHtml = sanitizeNoteForPrint(log.note);
-              const shortDesc = log.original_log_date
-                ? `${log.short_description} (${formatDateCompact(log.original_log_date)})`
-                : log.short_description;
-              return `
-                <tr>
-                  <td class="col-date">${formatDateCompact(log.log_date)}</td>
-                  <td class="col-desc">${shortDesc}</td>
-                  <td class="col-note note-cell">${noteHtml}</td>
-                  <td class="col-worker"><span class="worker-badge">${log.worker_name}</span></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+    setPrintPreview({ open: true, logs: logsToPrint });
   };
+
+  const closePrintPreview = () => setPrintPreview({ open: false, logs: [] });
 
   const handleUserLogin = async (username, password) => {
     try {
@@ -491,6 +395,13 @@ function App() {
           onConfirm={handleArchiveConfirm}
           onCancel={handleArchiveCancel}
           logInfo={archiveModal.logInfo}
+        />
+
+        <PrintPreviewModal
+          open={printPreview.open}
+          logs={printPreview.logs}
+          onClose={closePrintPreview}
+          pageName={pageName}
         />
 
         {pagination.total_pages > 1 && (

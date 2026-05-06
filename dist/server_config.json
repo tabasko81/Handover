@@ -1,8 +1,8 @@
 {
-  "port": 8500,
+  "port": 7009,
   "auto_start_enabled": false,
   "auto_start_mode": "gui",
   "auto_start_delay": 0,
-  "firewall_port": null,
+  "firewall_port": 7009,
   "jwt_secret": "896f724387e091a0ee90834766c5fb93d6b92dc7e238eeb5df87443d0551029d"
 }

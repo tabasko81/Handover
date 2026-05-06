@@ -223,7 +223,7 @@ function Header() {
       className={`shadow-lg transition-colors duration-200 ${textColorClass}`}
       style={{ backgroundColor: headerColor }}
     >
-      <div className="container mx-auto px-4 py-4">
+      <div className="header-inner">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-4">
             {logoType === 'image' && logoImage && (

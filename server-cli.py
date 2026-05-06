@@ -13,12 +13,14 @@ import subprocess
 import signal
 import socket
 import time
+import shutil
 from pathlib import Path
 
 # Configuration
 CONFIG_FILE = "server_config.json"
 DEFAULT_CONFIG_FILE = "server_default_config.json"
 DEFAULT_PORT = 8500
+IS_WINDOWS = sys.platform.startswith("win")
 
 # Detect if running from dist folder (executable)
 # When running as PyInstaller exe: use executable's directory (cwd can be wrong)
@@ -55,7 +57,16 @@ else:
     CLIENT_BUILD_DIR = BASE_DIR / "client" / "build"
     DATA_DIR = BASE_DIR / "data"
 
-NODEJS_EXE = NODEJS_DIR / "node.exe"
+NODEJS_EXE = NODEJS_DIR / ("node.exe" if IS_WINDOWS else "node")
+
+def resolve_node_executable():
+    """Resolve Node.js executable path for current platform."""
+    if NODEJS_EXE.exists():
+        return str(NODEJS_EXE), None
+    node_from_path = shutil.which("node")
+    if node_from_path:
+        return node_from_path, None
+    return None, f"Node.js not found at {NODEJS_EXE} and not available in PATH."
 
 def check_port_available(port):
     """Check if port is available"""
@@ -118,12 +129,12 @@ def save_config(port, jwt_secret=None):
 
 def check_nodejs():
     """Check if Node.js is available"""
-    if not NODEJS_EXE.exists():
-        print(f"ERROR: Node.js not found at {NODEJS_EXE}")
-        print("\nPlease extract portable Node.js to the 'nodejs/' folder")
-        print("See README_SERVER.md for instructions.")
-        return False
-    return True
+    node_path, error = resolve_node_executable()
+    if not node_path:
+        print(f"ERROR: {error}")
+        print("\nSee README_SERVER.md for setup instructions.")
+        return False, None
+    return True, node_path
 
 def check_directories():
     """Check if necessary directories exist"""
@@ -145,9 +156,10 @@ def main():
     print()
     
     # Check Node.js
-    if not check_nodejs():
+    node_ok, node_path = check_nodejs()
+    if not node_ok:
         sys.exit(1)
-    print(f"✓ Node.js found: {NODEJS_EXE}")
+    print(f"✓ Node.js found: {node_path}")
     
     # Check directories
     errors = check_directories()
@@ -160,7 +172,7 @@ def main():
     print()
     
     # Get port
-    default_port = load_config()
+    default_port, jwt_secret = load_config()
     port = default_port
     
     if len(sys.argv) > 1:
@@ -251,7 +263,6 @@ def main():
     
     # Start Node.js process
     try:
-        node_path = str(NODEJS_EXE)
         server_script = str(server_path)
         working_dir = str(BASE_DIR)
         

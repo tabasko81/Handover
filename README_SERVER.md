@@ -1,11 +1,13 @@
 # Python Standalone Server - Shift Handover Log
 
-This Python server allows you to run the Shift Handover Log application on Windows without needing to install Node.js globally. You only need Python installed and a portable Node.js.
+This Python server allows you to run the Shift Handover Log application with a desktop GUI on Windows and Linux (including Linux Mint 22). On Linux, it can use your system Node.js from PATH. On Windows, it can use portable Node.js from `nodejs/`.
 
 ## Requirements
 
 - **Python 3.8 or higher** (with tkinter included)
-- **Portable Node.js** (see instructions below)
+- **Node.js 18+**:
+  - Linux: installed in PATH (`node --version`)
+  - Windows: portable Node.js in `nodejs/` or global Node.js in PATH
 
 ## Quick Installation
 
@@ -19,9 +21,23 @@ python --version
 
 If you don't have Python, download it from: https://www.python.org/downloads/
 
-### 2. Include Portable Node.js
+### 2. Node.js Setup
 
-#### Option A: Manual Download (Recommended)
+#### Linux (Mint 22 / Ubuntu based)
+
+```bash
+sudo apt update
+sudo apt install -y nodejs npm python3-tk
+```
+
+Then validate:
+
+```bash
+node --version
+python3 -m tkinter
+```
+
+#### Windows - Portable Node.js (Recommended)
 
 1. Download Node.js LTS for Windows x64:
    - Visit: https://nodejs.org/
@@ -59,7 +75,7 @@ Make sure you have:
 - ✅ `server/` - Backend folder
 - ✅ `client/build/` - Compiled frontend
 - ✅ `data/` - Data folder (will be created automatically if it doesn't exist)
-- ✅ `nodejs/node.exe` - Portable Node.js
+- ✅ `nodejs/node.exe` (Windows portable mode) or `node` available in PATH (Linux/global mode)
 
 ## Usage
 
@@ -69,6 +85,8 @@ Make sure you have:
 
 ```bash
 python server.py
+# Linux (recommended)
+python3 server.py
 ```
 
 2. A graphical window will open with:
@@ -110,15 +128,16 @@ After starting the server, access:
 - ✅ Automatic process management
 - ✅ Saves last used port
 - ✅ Dependency verification
-- ✅ No need to install Node.js globally
+- ✅ Works with portable Node.js or system Node.js
+- ✅ Linux auto-start support via `systemd --user`
 
 ## Troubleshooting
 
 ### Error: "Node.js not found"
 
-- Verify that `nodejs/node.exe` exists
-- Make sure you copied the correct file
-- Try downloading Node.js again
+- Verify that `node --version` works (Linux/global install)
+- Or verify that `nodejs/node.exe` exists (portable Windows mode)
+- Make sure Node.js is installed and accessible in PATH
 
 ### Error: "Port already in use"
 
@@ -131,6 +150,11 @@ After starting the server, access:
 - The frontend needs to be compiled
 - Run: `cd client && npm run build`
 - Make sure the `client/build/` folder exists
+
+### Linux Mint: tkinter error
+
+- If GUI does not start and mentions tkinter, install it:
+  - `sudo apt install -y python3-tk`
 
 ### Error: "Network Error" when configuring admin
 

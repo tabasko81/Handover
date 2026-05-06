@@ -14,6 +14,7 @@ import threading
 import socket
 import webbrowser
 import re
+import shutil
 from pathlib import Path
 from tkinter import Tk, Label, Entry, Button, Text, Scrollbar, Frame, messagebox, Toplevel, Radiobutton, IntVar
 from tkinter.scrolledtext import ScrolledText
@@ -25,6 +26,7 @@ DEBUG = True
 CONFIG_FILE = "server_config.json"
 DEFAULT_CONFIG_FILE = "server_default_config.json"
 DEFAULT_PORT = 8500
+IS_WINDOWS = sys.platform.startswith("win")
 
 # Detect if running from dist folder (executable)
 # When running as PyInstaller exe: use executable's directory (cwd can be wrong with shortcuts)
@@ -70,11 +72,12 @@ else:
     DATA_DIR = BASE_DIR / "data"
 
 CONFIG_PATH = BASE_DIR / CONFIG_FILE
-NODEJS_EXE = NODEJS_DIR / "node.exe"
+NODEJS_EXE = NODEJS_DIR / ("node.exe" if IS_WINDOWS else "node")
 
 class ServerManager:
     def __init__(self):
         self.process = None
+        self.node_executable = None
         self.port = DEFAULT_PORT
         self.is_running = False
         self.root = None
@@ -98,6 +101,28 @@ class ServerManager:
         self.firewall_button = None
         self.ip_label = None
         self.refresh_ip_button = None
+
+    def resolve_node_executable(self):
+        """Resolves Node.js executable path for current platform."""
+        if NODEJS_EXE.exists():
+            return str(NODEJS_EXE), None
+
+        node_from_path = shutil.which("node")
+        if node_from_path:
+            return node_from_path, None
+
+        portable_node = NODEJS_DIR / ("node.exe" if IS_WINDOWS else "node")
+        if IS_WINDOWS:
+            error = (
+                f"Node.js not found at {portable_node} and not available in PATH.\n\n"
+                "Please extract portable Node.js to the 'nodejs/' folder or install Node.js globally."
+            )
+        else:
+            error = (
+                f"Node.js not found at {portable_node} and not available in PATH.\n\n"
+                "Install Node.js (recommended on Linux) or place a portable binary in 'nodejs/'."
+            )
+        return None, error
         
     def log(self, message):
         """Adds message to the logs area"""
@@ -109,8 +134,10 @@ class ServerManager:
     
     def check_nodejs(self):
         """Checks if portable Node.js is available"""
-        if not NODEJS_EXE.exists():
-            return False, f"Node.js not found at {NODEJS_EXE}\n\nPlease extract portable Node.js to the 'nodejs/' folder\nSee README_SERVER.md for instructions."
+        node_path, error = self.resolve_node_executable()
+        if not node_path:
+            return False, error
+        self.node_executable = node_path
         return True, None
     
     def check_port_available(self, port):
@@ -247,8 +274,7 @@ class ServerManager:
             self.log(f"=== DEBUG INFO ===")
             self.log(f"BASE_DIR: {BASE_DIR}")
             self.log(f"BASE_DIR exists: {BASE_DIR.exists()}")
-            self.log(f"Node.js path: {NODEJS_EXE}")
-            self.log(f"Node.js exists: {NODEJS_EXE.exists()}")
+            self.log(f"Node.js path: {self.node_executable}")
             self.log(f"Server path: {server_path}")
             self.log(f"Server exists: {server_path.exists()}")
             
@@ -280,8 +306,8 @@ class ServerManager:
             else:
                 self.log(f"  [ERROR] client/build folder not found - frontend will not load!")
             
-            # Use portable Node.js
-            node_path = str(NODEJS_EXE)
+            # Use resolved Node.js path (portable or system)
+            node_path = self.node_executable
             server_script = str(server_path)
             
             # Set working directory to BASE_DIR so Node.js can find node_modules
@@ -394,6 +420,20 @@ class ServerManager:
     
     def check_auto_start_status(self):
         """Checks if auto-start is configured"""
+        if not IS_WINDOWS:
+            try:
+                result = subprocess.run(
+                    ['systemctl', '--user', 'is-enabled', 'handover-server.service'],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                return result.returncode == 0
+            except Exception as e:
+                if DEBUG:
+                    self.log(f"Error checking auto-start status: {e}")
+                return False
+
         try:
             result = subprocess.run(
                 ['schtasks', '/Query', '/TN', 'HandoverServer'],
@@ -409,6 +449,8 @@ class ServerManager:
     
     def get_firewall_port(self):
         """Gets the port from firewall rule if it exists"""
+        if not IS_WINDOWS:
+            return None
         try:
             # Check if firewall rule exists
             result = subprocess.run(
@@ -461,29 +503,14 @@ class ServerManager:
                 except:
                     pass
             
-            # Method 2: Use ipconfig
-            result = subprocess.run(
-                ['ipconfig'],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            # Method 2: Use platform-specific commands
+            cmd = ['ipconfig'] if IS_WINDOWS else ['hostname', '-I']
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
-                # Find IPv4 addresses
-                lines = result.stdout.split('\n')
-                ips_found = []
-                for line in lines:
-                    if 'IPv4' in line or 'IPv4 Address' in line:
-                        # Extract IP address
-                        match = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})', line)
-                        if match:
-                            ip = match.group(1)
-                            if ip != '127.0.0.1' and not ip.startswith('169.254'):
-                                ips_found.append(ip)
-                
-                # Return first valid IP found
-                if ips_found:
-                    return ips_found[0]
+                candidates = re.findall(r'(\d{1,3}(?:\.\d{1,3}){3})', result.stdout)
+                for ip in candidates:
+                    if ip != '127.0.0.1' and not ip.startswith('169.254'):
+                        return ip
             
             return None
         except Exception as e:
@@ -492,7 +519,51 @@ class ServerManager:
             return None
     
     def setup_auto_start(self, gui_mode=True, delay=0):
-        """Sets up auto-start using Windows Task Scheduler"""
+        """Sets up auto-start for current platform"""
+        if not IS_WINDOWS:
+            try:
+                if not self.node_executable:
+                    node_ok, error_msg = self.check_nodejs()
+                    if not node_ok:
+                        return False, error_msg
+
+                service_dir = Path.home() / ".config" / "systemd" / "user"
+                service_dir.mkdir(parents=True, exist_ok=True)
+                service_file = service_dir / "handover-server.service"
+                exec_start = f'"{self.node_executable}" "{SERVER_DIR / "index.js"}"'
+
+                service_content = f"""[Unit]
+Description=Shift Handover Log server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={BASE_DIR}
+ExecStart={exec_start}
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT={self.port}
+Environment=FRONTEND_URL=http://localhost:{self.port}
+Environment=JWT_SECRET={self.jwt_secret}
+
+[Install]
+WantedBy=default.target
+"""
+                service_file.write_text(service_content, encoding='utf-8')
+
+                subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True, timeout=10)
+                subprocess.run(['systemctl', '--user', 'enable', '--now', 'handover-server.service'], check=True, timeout=10)
+
+                self.auto_start_enabled = True
+                self.auto_start_mode = 'cli'
+                self.auto_start_delay = 0
+                self.save_config()
+                return True, "Auto-start configured successfully (systemd user service)"
+            except subprocess.CalledProcessError as e:
+                return False, f"Failed to configure systemd user service: {e}"
+            except Exception as e:
+                return False, f"Error setting up auto-start: {str(e)}"
+
         try:
             # Determine executable path
             if gui_mode:
@@ -542,7 +613,25 @@ class ServerManager:
             return False, f"Error setting up auto-start: {str(e)}"
     
     def remove_auto_start(self):
-        """Removes auto-start configuration"""
+        """Removes auto-start configuration for current platform"""
+        if not IS_WINDOWS:
+            try:
+                subprocess.run(
+                    ['systemctl', '--user', 'disable', '--now', 'handover-server.service'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                service_file = Path.home() / ".config" / "systemd" / "user" / "handover-server.service"
+                if service_file.exists():
+                    service_file.unlink()
+                subprocess.run(['systemctl', '--user', 'daemon-reload'], capture_output=True, text=True, timeout=10)
+                self.auto_start_enabled = False
+                self.save_config()
+                return True, "Auto-start removed successfully"
+            except Exception as e:
+                return False, f"Error removing auto-start: {str(e)}"
+
         try:
             result = subprocess.run(
                 ['schtasks', '/Delete', '/TN', 'HandoverServer', '/F'],
@@ -567,6 +656,8 @@ class ServerManager:
     
     def open_firewall_port(self, port):
         """Opens firewall port using PowerShell"""
+        if not IS_WINDOWS:
+            return False, "Firewall management from GUI is only available on Windows."
         try:
             # Check if rule already exists
             check_cmd = ['powershell', '-Command',
@@ -610,6 +701,8 @@ class ServerManager:
     
     def _open_firewall_with_elevation(self, port):
         """Opens firewall port with elevation (requires user interaction)"""
+        if not IS_WINDOWS:
+            return False, "Not supported on this platform."
         try:
             ps_script = f'''
             Start-Process powershell -ArgumentList '-NoProfile -Command New-NetFirewallRule -DisplayName "Handover Server" -Direction Inbound -LocalPort {port} -Protocol TCP -Action Allow -Description "Allow inbound connections for Shift Handover Log server on port {port}"' -Verb RunAs
@@ -666,7 +759,8 @@ class ServerManager:
             if self.auto_start_enabled:
                 self.auto_start_button.config(text="Remove Auto-Start")
             else:
-                self.auto_start_button.config(text="Setup Auto-Start")
+                text = "Setup Auto-Start" if IS_WINDOWS else "Setup Auto-Start (systemd)"
+                self.auto_start_button.config(text=text)
         
         # Update firewall status
         if self.firewall_status_label:
@@ -718,11 +812,34 @@ class ServerManager:
                     self.log(f"Failed to remove auto-start: {message}")
                 self.refresh_status()
         else:
-            # Setup auto-start - show dialog
-            self.show_auto_start_dialog()
+            if IS_WINDOWS:
+                # Setup auto-start - show dialog
+                self.show_auto_start_dialog()
+            else:
+                success, message = self.setup_auto_start(gui_mode=False, delay=0)
+                if success:
+                    messagebox.showinfo("Success", message)
+                    self.log(f"Auto-start configured: {message}")
+                else:
+                    messagebox.showerror("Error", message)
+                    self.log(f"Failed to setup auto-start: {message}")
+                self.refresh_status()
     
     def show_auto_start_dialog(self):
         """Shows dialog to configure auto-start"""
+        if not IS_WINDOWS:
+            messagebox.showinfo(
+                "Auto-Start",
+                "On Linux, auto-start is configured automatically as a systemd user service."
+            )
+            success, message = self.setup_auto_start(gui_mode=False, delay=0)
+            if success:
+                self.log(f"Auto-start configured: {message}")
+            else:
+                self.log(f"Failed to setup auto-start: {message}")
+            self.refresh_status()
+            return
+
         dialog = Toplevel(self.root)
         dialog.title("Configure Auto-Start")
         dialog.geometry("400x250")
@@ -799,6 +916,13 @@ class ServerManager:
     
     def handle_firewall(self):
         """Handles firewall port opening"""
+        if not IS_WINDOWS:
+            messagebox.showinfo(
+                "Firewall",
+                "Firewall management from this GUI is only available on Windows.\n"
+                "On Linux Mint use UFW (for example: sudo ufw allow <porta>/tcp)."
+            )
+            return
         if self.firewall_port:
             # Just refresh status
             self.refresh_status()
@@ -924,28 +1048,30 @@ class ServerManager:
                                             font=("Arial", 9), fg="gray")
         self.auto_start_status_label.pack(side='left', padx=(0, 10))
         
-        self.auto_start_button = Button(auto_start_frame, text="Setup Auto-Start",
+        auto_start_button_text = "Setup Auto-Start" if IS_WINDOWS else "Setup Auto-Start (systemd)"
+        self.auto_start_button = Button(auto_start_frame, text=auto_start_button_text,
                                         command=self.handle_auto_start,
                                         font=("Arial", 9),
                                         padx=10, pady=5)
         self.auto_start_button.pack(side='left')
         
-        # Firewall Configuration
-        firewall_frame = Frame(config_section_frame)
-        firewall_frame.pack(fill='x', pady=(0, 10))
-        
-        firewall_label = Label(firewall_frame, text="Firewall:", font=("Arial", 10, "bold"))
-        firewall_label.pack(side='left', padx=(0, 10))
-        
-        self.firewall_status_label = Label(firewall_frame, text="Status: Checking...", 
-                                          font=("Arial", 9), fg="gray")
-        self.firewall_status_label.pack(side='left', padx=(0, 10))
-        
-        self.firewall_button = Button(firewall_frame, text="Open Firewall Port",
-                                     command=self.handle_firewall,
-                                     font=("Arial", 9),
-                                     padx=10, pady=5)
-        self.firewall_button.pack(side='left')
+        if IS_WINDOWS:
+            # Firewall Configuration (Windows only)
+            firewall_frame = Frame(config_section_frame)
+            firewall_frame.pack(fill='x', pady=(0, 10))
+
+            firewall_label = Label(firewall_frame, text="Firewall:", font=("Arial", 10, "bold"))
+            firewall_label.pack(side='left', padx=(0, 10))
+
+            self.firewall_status_label = Label(firewall_frame, text="Status: Checking...",
+                                              font=("Arial", 9), fg="gray")
+            self.firewall_status_label.pack(side='left', padx=(0, 10))
+
+            self.firewall_button = Button(firewall_frame, text="Open Firewall Port",
+                                         command=self.handle_firewall,
+                                         font=("Arial", 9),
+                                         padx=10, pady=5)
+            self.firewall_button.pack(side='left')
         
         # IP Address
         ip_frame = Frame(config_section_frame)
@@ -984,7 +1110,7 @@ class ServerManager:
         if not node_ok:
             self.log(f"⚠️ {error_msg}")
         else:
-            self.log(f"✓ Node.js found: {NODEJS_EXE}")
+            self.log(f"✓ Node.js found: {self.node_executable}")
         
         # Check folders
         errors = self.check_directories()
